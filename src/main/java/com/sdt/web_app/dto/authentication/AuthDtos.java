@@ -37,4 +37,20 @@ public class AuthDtos {
             long expiresInSeconds
     ) {
     }
+
+    public record ForgotPasswordRequest(
+            @NotBlank(message = "Email cannot be blank")
+            @Email(message = "Invalid email format")
+            String email
+    ) {
+    }
+
+    public record ResetPasswordRequest(
+            @NotBlank(message = "Token is required")
+            String token,
+            @NotBlank(message = "Password cannot be blank")
+            @Size(min = 8, message = "Password must be atleast 8 characters")
+            String newPassword
+    ) {
+    }
 }

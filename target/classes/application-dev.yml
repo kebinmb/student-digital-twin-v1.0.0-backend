@@ -20,14 +20,20 @@ spring:
           jwk-set-uri: http://localhost:8080/realms/dev-realm/protocol/openid-connect/certs
 
   mail:
-    host: localhost
-    port: 1025
+    host: smtp.gmail.com
+    port: 587
+    username: johnkevin.moraca@chmsu.edu.ph      # Your sending Gmail address
+    password: yzai ukpt gwfh dlbh      # 16-character Google App Password (not your account password)
     properties:
       mail:
         smtp:
-          auth: false
+          auth: true
           starttls:
-            enable: false
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
   management:
     endpoint:
       health:
@@ -42,3 +48,6 @@ spring:
       com.sdt: DEBUG
       org.springframework.security: DEBUG
       org.springframework.web: DEBUG
+
+app:
+  frontend-url: http://localhost:4200

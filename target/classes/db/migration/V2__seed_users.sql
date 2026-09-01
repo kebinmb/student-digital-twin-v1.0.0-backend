@@ -36,3 +36,12 @@ VALUES
 
     -- Expired Token
     (6, '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed-expired-token-sample', DATE_SUB(NOW(), INTERVAL 1 DAY), FALSE, DATE_SUB(NOW(), INTERVAL 8 DAY));
+
+-- 4. Insert Sample Password Reset Tokens (Active and Expired states)
+INSERT INTO password_reset_tokens (user_id, token, expiry_date, created_at)
+VALUES
+    -- Active Token for student_john (Valid for 30 minutes)
+    (6, 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', DATE_ADD(NOW(), INTERVAL 30 MINUTE), NOW()),
+
+    -- Expired Token for faculty_alice (Expired 10 minutes ago)
+    (4, 'f9e8d7c6-b5a4-3f2e-1d0c-9b8a7f6e5d4c', DATE_SUB(NOW(), INTERVAL 10 MINUTE), DATE_SUB(NOW(), INTERVAL 40 MINUTE));
