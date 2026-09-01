@@ -1,0 +1,3 @@
+A **Predictive Analytics Module for Identifying Academically Vulnerable Students** is an advanced machine learning and statistical modeling system that forecasts student academic distress and dropout probability weeks or months before failure occurs.
+
+Unlike descriptive dashboards that merely summarize past performance, this module uses supervised classification and time-series modeling to detect subtle behavioral degradation, shifting institutional data from reactive intervention to proactive prevention.

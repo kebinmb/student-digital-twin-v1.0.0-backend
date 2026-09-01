@@ -1,0 +1,1 @@
+Implements program curricula structured according to specific CHED Memorandum Orders (CMOs) for each degree program (tracking core, elective, and prerequisite subjects).

@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.authentication.AuthDtos;
 import com.sdt.web_app.service.authentication.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,12 +20,14 @@ public class AuthenticationController {
         this.authService = authService;
     }
 
+    @Auditable(action = "REGISTER", entityName = "User")
     @PostMapping("register")
     public ResponseEntity<Void> register(@Valid @RequestBody AuthDtos.RegisterRequest request) {
         authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @Auditable(action = "LOGIN", entityName = "User")
     @PostMapping("/login")
     public ResponseEntity<AuthDtos.AuthResponse> login(
             @Valid @RequestBody AuthDtos.LoginRequest request,
@@ -47,6 +50,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(new AuthDtos.AuthResponse(result.accessToken(), "Bearer", result.expiresInSeconds()));
     }
 
+    @Auditable(action = "LOGOUT", entityName = "User")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,

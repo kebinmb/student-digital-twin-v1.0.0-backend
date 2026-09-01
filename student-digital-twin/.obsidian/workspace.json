@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "6685e4ff751889d8",
+        "id": "9732592d835fa9e7",
         "type": "tabs",
         "children": [
           {
-            "id": "2363f1a8bce91242",
+            "id": "289ee6244a829c5e",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
+                "file": "00 AI Audit/00 Audit and Testing using AI.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "01 Login and Authentication Backend and Frontend Implementation"
+              "title": "00 Audit and Testing using AI"
             }
           }
         ]
@@ -188,30 +188,45 @@
       "bases:Create new base": false
     }
   },
-  "active": "2363f1a8bce91242",
+  "active": "289ee6244a829c5e",
   "lastOpenFiles": [
-    "00 AI Audit/00 Audit and Testing using AI.md",
+    "00 AI Audit/02 Phase 1 AI Audit.md",
     "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
-    "00 Project/00 Login and Authentication Backend + Frontend.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/07 Cors Configuration.md",
+    "00 Project/00 Module Implementation.md",
+    "00 AI Audit/00 Audit and Testing using AI.md",
+    "00 Project/01 Layer 1 System Master Data & RBAC.md",
+    "Pasted image 20260901220019.png",
+    "00 Project/02 Curriculum & Program Architecture.md",
+    "02 Resources/02 Curriculum & Enrollment Management/00 Curriculum Mapping.md",
+    "02 Resources/07 Student Digital Twin/01 Attendance Monitoring Module.md",
+    "02 Resources/07 Student Digital Twin/02 Academic Performance Dashboard.md",
+    "03 Archives/00 Login and Authentication Backend + Frontend.md",
+    "02 Resources/07 Student Digital Twin/04 Predictive Analytics for Identifying Academically Vulnerable Students.md",
+    "02 Resources/07 Student Digital Twin/03 Student Risk Assessment.md",
+    "02 Resources/07 Student Digital Twin/00 Equity Target Profiling Module.md",
+    "02 Resources/06 Stakeholder Portals & LMS Integration/02 Data Privacy & Security.md",
+    "02 Resources/07 Student Digital Twin",
+    "02 Resources/06 Stakeholder Portals & LMS Integration/01 LMS Integration.md",
+    "02 Resources/06 Stakeholder Portals & LMS Integration/00 Student & Faculty Self-Service.md",
+    "02 Resources/05 Regulatory Compliance & CHED Reporting/01 Interoperability.md",
+    "02 Resources/06 Stakeholder Portals & LMS Integration",
+    "02 Resources/05 Regulatory Compliance & CHED Reporting/00 Statistical Data Generation.md",
+    "02 Resources/04 Financial & Fee Management/02 Scholarship & UniFAST Billing.md",
+    "02 Resources/05 Regulatory Compliance & CHED Reporting",
+    "02 Resources/04 Financial & Fee Management/01 Billing, Cashiering & Ledgering.md",
+    "02 Resources/04 Financial & Fee Management/00 Tuition & Miscellaneous Assessment.md",
+    "02 Resources/03 Faculty & Grade Management/02 Grade Encoding & Verification.md",
+    "02 Resources/04 Financial & Fee Management",
+    "02 Resources/03 Faculty & Grade Management/01 Teaching Workload.md",
+    "02 Resources/03 Faculty & Grade Management/00 Faculty Profiling.md",
+    "02 Resources/02 Curriculum & Enrollment Management/02 Enrollment & Registration.md",
+    "02 Resources/03 Faculty & Grade Management",
+    "02 Resources/02 Curriculum & Enrollment Management/01 Scheduling & Subject Loading.md",
+    "02 Resources/02 Curriculum & Enrollment Management",
+    "02 Resources/01 Student Information & Registrar Management",
     "00 AI Audit",
-    "02 Resources/00 Oneway Print.md",
     "03 Archives",
     "01 Areas",
-    "Untitled.canvas",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/06 Modern Security Headers & CHIPS Cookies.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/05 Actuator Port Segregation & Filter Chains.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/04 Jackson 3 Polymorphic Deserialization Hardening.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/03 gRPC 1.1 Security Interceptors.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/02 OAuth 2.1 Strict Compliance & JWT Validation.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/01 Outbound SSRF Mitigation in RestClient.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/00 Spring  Security - Virtual Threads Context Propagation.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0",
-    "03 Archives",
-    "02 Resources",
-    "01 Area",
-    "00 Project",
-    "Untitled.base",
-    "Welcome.md"
+    "Untitled.canvas"
   ]
 }

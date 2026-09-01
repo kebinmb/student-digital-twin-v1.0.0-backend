@@ -19,3 +19,6 @@
 
 ## Frontend Implementation
 PrimeNG v18+
+
+### AI Audit
+[[01 Login and Authentication Backend and Frontend Implementation]]

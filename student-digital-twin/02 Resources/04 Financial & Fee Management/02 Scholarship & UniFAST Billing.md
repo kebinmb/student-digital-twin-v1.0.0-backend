@@ -1,0 +1,1 @@
+Tracks institutional grants, private scholarships, and billing requirements under the Unified Financial Assistance System for Tertiary Education (UniFAST / RA 10931 for SUCs, LUCs, and TES beneficiaries).

@@ -1,0 +1,1 @@
+Manages degree audits, honors/awards criteria, and documentary processing required for graduation and issuance of CHED Special Orders (for private HEIs).

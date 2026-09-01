@@ -31,8 +31,7 @@ public class PasswordResetService {
     @Value("${spring.mail.username:no-reply@chmsu.edu.ph}")
     private String fromEmail;
 
-    @Value("${app.frontend.url:http://localhost:4200}")
-    private String frontendUrl;
+    public record PasswordResetResult(Long userId, String username, String email) {}
 
     @Transactional
     public void initiatePasswordReset(String email, String frontendUrl) {
@@ -43,14 +42,13 @@ public class PasswordResetService {
             PasswordResetToken resetToken = PasswordResetToken.createTokenForUser(rawToken, user, EXPIRATION_MINUTES);
             passwordResetTokenRepository.save(resetToken);
 
-            // Point to Angular Frontend route instead of Spring Boot API endpoint
             String resetLink = frontendUrl + "/reset-password?token=" + rawToken;
             sendResetEmail(user.getEmail(), resetLink);
         });
     }
 
     @Transactional
-    public void completePasswordReset(String token, String newRawPassword) {
+    public PasswordResetResult completePasswordReset(String token, String newRawPassword) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or non-existent token"));
 
@@ -67,9 +65,14 @@ public class PasswordResetService {
         // Invalidate token upon successful reset
         passwordResetTokenRepository.delete(resetToken);
         log.info("Password successfully updated for user: {}", user.getUsername());
+
+        return new PasswordResetResult(user.getId(), user.getUsername(), user.getEmail());
     }
 
     public void sendResetEmail(String toEmail, String resetLink) {
+        log.info("Preparing password reset email for: {}", toEmail);
+        log.info("[DEV MODE] Password Reset Link: {}", resetLink);
+
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
@@ -89,8 +92,8 @@ public class PasswordResetService {
             log.info("Password reset email successfully dispatched to {}", toEmail);
 
         } catch (MailException e) {
-            log.error("Failed to send password reset email to {}. Root cause: {}", toEmail, e.getMessage(), e);
-            throw new IllegalStateException("Unable to send reset email at this time. Please try again later.");
+            log.error("Failed to send password reset email to {}. Root cause: {}", toEmail, e.getMessage());
+            log.warn("[DEV FALLBACK] SMTP dispatch failed, but you can use this reset link for testing: {}", resetLink);
         }
     }
 }

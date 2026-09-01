@@ -1,0 +1,1 @@
+Maintains faculty credentials, highest educational attainment, academic ranks, PRC licenses, and administrative designations.

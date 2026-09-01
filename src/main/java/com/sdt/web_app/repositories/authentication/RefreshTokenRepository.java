@@ -1,6 +1,7 @@
 package com.sdt.web_app.repositories.authentication;
 
 import com.sdt.web_app.entities.authentication.RefreshToken;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
+
+    @EntityGraph(attributePaths = {"user"})
     Optional<RefreshToken> findByToken(String token);
 
     @Modifying

@@ -17,7 +17,7 @@ VALUES
     (2, 'FACULTY'),
     (3, 'CHAIRPERSON'),
     (3, 'FACULTY'),
-    (4, 'FACULTY'),
+    (4, 'GUIDANCE'),
     (5, 'REGISTRAR'),
     (6, 'STUDENT'),
     (7, 'FACULTY');

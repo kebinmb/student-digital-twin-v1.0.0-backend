@@ -1,0 +1,1 @@
+Configures approved tuition fees and CHED-sanctioned miscellaneous fees.

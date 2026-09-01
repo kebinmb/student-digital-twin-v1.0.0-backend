@@ -1,0 +1,1 @@
+Automates student pre-enrollment, validation of allowable maximum units per term, subject adding/dropping, and status changes (regular, irregular, LOA).

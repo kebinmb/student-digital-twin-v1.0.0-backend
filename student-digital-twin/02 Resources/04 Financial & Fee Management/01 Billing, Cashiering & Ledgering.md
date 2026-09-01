@@ -1,0 +1,1 @@
+Manages real-time student ledgers, official receipt generation, installment schedules, and payment processing.

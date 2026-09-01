@@ -435,4 +435,156 @@ The `PasswordReset` implementation provides self-service credential recovery usi
   - *Current State*: `password-reset-service.ts` imports unused `Service` symbol from `@angular/core`.
   - *Recommendation*: Remove `Service` from `@angular/core` import declaration.
 
+---
+
+## 8. Comprehensive Repository Audit Report (Full-Stack)
+
+**Audit Execution Timestamp**: `2026-09-01T21:54:00+08:00`  
+**Target Codebases**: `student-digital-twin-v1.0.0-backend` (Git commit `da03e0c`) & `student-digital-twin-v1.0.0-frontend` (Git commit `d72193e`)  
+**Audit Scope**: End-to-end Password Reset feature, Security Filter Chains, Git Commit Diff Analysis, API Contract Alignment, and Resilience.
+
+### 8.1 Executive Summary
+
+A comprehensive full-stack code audit was conducted across both backend (Spring Boot 3.5+) and frontend (Angular 21) repositories following recent feature commits (`da03e0c` and `d72193e`). While the data layer schema, DTO validation, and component structure follow modern architectural patterns, critical authorization and link construction discrepancies prevent unauthenticated users from executing the password reset flow end-to-end. Immediate remediation items have been prioritized below.
+
+### 8.2 Key Changes Audited
+
+| Repository | Component / File | Audit Observations |
+| :--- | :--- | :--- |
+| **Backend** | `PasswordResetController.java` | Exposes `/forgot-password` and `/reset-password` endpoints under `/api/auth`. Manually catches `IllegalArgumentException`. |
+| **Backend** | `PasswordResetService.java` | Handles 30-min token generation, single-use invalidation (`deleteByUser` / `delete`), password hashing via `PasswordEncoder`, and email dispatch. |
+| **Backend** | `PasswordResetToken.java` & `Repository` | Entity mapped to `password_reset_tokens` with `@OneToOne(fetch = LAZY)` and database indexes on `token` and `user_id`. |
+| **Backend** | `V1__init_auth_schema.sql` | Flyway schema DDL creating table constraints and indexes. |
+| **Frontend** | `password-reset-service.ts` | Injectable service utilizing Angular Signals (`signal`, `computed`) for reactive state management. |
+| **Frontend** | `forgot-password-component` | Standalone view for email submission with `InputText` and PrimeNG button controls. |
+| **Frontend** | `reset-password-component` | Standalone view for token-based password reset enforcing `passwordMatchValidator` group validation. |
+| **Frontend** | `app.routes.ts` | Configures `/forgot-password` and `/reset-password` routes protected by `guestGuard`. |
+
+### 8.3 Categorized Bugs, Edge Cases & Risks
+
+#### High Severity
+1. **[SEC/AUTH-01] Spring Security Authorization Blocker (`401 Unauthorized`)**:
+   - *Issue*: `PasswordResetController` uses `@RequestMapping("/api/auth")`. However, `WebSecurityConfig` line 76 explicitly requires authentication for non-`/api/public/**` endpoints (`.requestMatchers("/api/public/**").permitAll().anyRequest().authenticated()`). Unauthenticated users submitting password reset requests receive `401 Unauthorized`.
+   - *Risk*: Complete functional failure for forgot-password requests.
+
+2. **[BUG/FLOW-01] Mismatched Reset Link Host & Route (Backend Port 8080 vs SPA Port 4200)**:
+   - *Issue*: `PasswordResetController` extracts `baseUrl` from `servletRequest` (`http://localhost:8080`), and `PasswordResetService` constructs `resetLink = appUrl + "/api/auth/reset-password?token=" + rawToken`.
+   - *Risk*: Users receiving the email click a link pointing to `http://localhost:8080/api/auth/reset-password?token=...`. The browser issues a `GET` request to the backend port 8080 where no `GET` endpoint exists, returning an HTTP 405 error instead of loading the Angular SPA on port 4200.
+
+#### Medium Severity
+3. **[PERF/TX-01] Synchronous SMTP Dispatch Inside Database Transaction**:
+   - *Issue*: `sendResetEmail()` is executed synchronously within the `@Transactional` method `initiatePasswordReset()`.
+   - *Risk*: Slow or unresponsive SMTP connections hold MySQL database connections open during network I/O, risking HikariCP pool exhaustion under high traffic.
+
+4. **[BUG/ERR-01] Non-Standard Error Format from Reset Controller**:
+   - *Issue*: `PasswordResetController` catches `IllegalArgumentException` and returns a raw string response (`ResponseEntity.badRequest().body(...)`).
+   - *Risk*: Breaks RFC 7807 `ProblemDetail` JSON contract expected by `ResetPasswordComponent` (`err.error.detail`), displaying generic fallback text in the UI.
+
+#### Low Severity
+5. **[UI/CLEAN-01] Leftover Starter Boilerplate in Component Template**:
+   - *Issue*: `reset-password-component.html:1` contains `<p>reset-password-component works!</p>`.
+   - *Risk*: Minor layout degradation on frontend reset page.
+
+6. **[CODE/CLEAN-01] Unused Imports in Angular Service**:
+   - *Issue*: `password-reset-service.ts:2` imports unused `Service` from `@angular/core`.
+
+### 8.4 Recommended Fixes & Action Items
+
+1. **Fix Route Security Mapping (Backend)**:
+   - Change `@RequestMapping("/api/auth")` in `PasswordResetController.java` to `@RequestMapping("/api/public/auth")`.
+   - Update `baseUrl` in frontend `password-reset-service.ts` to `${environment.apiUrl}/public/auth`.
+2. **Fix Reset Email Link Construction (Backend)**:
+   - Configure `app.frontend-url: http://localhost:4200` in `application-dev.yml`.
+   - Update `PasswordResetService` to build reset links as `${frontendUrl}/reset-password?token=${rawToken}`.
+3. **Decouple Mail Sending from Transaction (Backend)**:
+   - Annotate email dispatch with `@Async` or use `@TransactionalEventListener(phase = AFTER_COMMIT)`.
+4. **Unify Error Responses (Backend)**:
+   - Allow `IllegalArgumentException` to be caught by `GlobalExceptionHandler` returning `ProblemDetail`.
+5. **Clean Up Frontend Template & Imports (Frontend)**:
+   - Remove `<p>reset-password-component works!</p>` from `reset-password-component.html`.
+   - Clean up unused imports in `password-reset-service.ts`.
+
+---
+
+## 9. AOP Audit Logging Architecture & Security Refactor
+
+**Execution Timestamp**: `2026-09-01T23:26:50+08:00`  
+**Target Module**: `student-digital-twin-v1.0.0-backend`  
+**Status**: **PASSED (32/32 Tests Passing)**
+
+### 9.1 Summary of Refactoring & Fixes
+
+1. **Recursive Sensitive Data Masking (Cleartext Credential Exposure Fix)**:
+   - Updated `AuditLogAspect.java` to recursively inspect and sanitize nested argument trees (`Map`, `Collection`, Records, and DTOs).
+   - Keys matching sensitive patterns (`password`, `secret`, `rawtoken`, `refreshtoken`, `creditcard`, `cvv`, `authorization`) are automatically replaced with `"[REDACTED]"`.
+   - Prevents cleartext credentials inside `LoginRequest`, `RegisterRequest`, or `ResetPasswordRequest` from leaking into `audit_logs.details`.
+
+2. **Missing Identifiers & SpEL Entity ID Resolution**:
+   - Updated `UserIdentity` resolution: checks active Spring Security context first; falls back to inspecting method arguments for attempted username/email during unauthenticated actions (`LOGIN`, `REGISTER`, `FORGOT_PASSWORD`); resolves `userId` via `UserRepository`.
+   - Enhanced `@Auditable` annotation with `entityId` SpEL expression parameter (e.g. `@Auditable(action = "UPDATE", entityName = "User", entityId = "#id")`). Evaluates SpEL expressions against method arguments and return objects (`#result.id`), falling back to parameter named `id` or `entityId`.
+
+3. **Proxy-Backed Async Persistence & Non-Serializable Filtering**:
+   - Created dedicated `@Service` bean `AuditLogService.java` with `@Async("applicationTaskExecutor")` to ensure Spring AOP proxying correctly offloads database writes to Virtual Threads without blocking request threads.
+   - Filtered out non-serializable web and framework objects (`HttpServletRequest`, `HttpServletResponse`, `BindingResult`, `HttpSession`, `MultipartFile`, `InputStream`, `OutputStream`, `Principal`, `Authentication`) before Jackson serialization, preventing `getOutputStream() has already been called` errors.
+
+### 9.2 File Diffs Summary
+
+- `src/main/java/com/sdt/web_app/annotation/Auditable.java`: Added `entityId()` default `""` for SpEL resolution.
+- `src/main/java/com/sdt/web_app/entities/audit/AuditLog.java`: Mapped `audit_logs` table with indexed fields.
+- `src/main/java/com/sdt/web_app/repositories/audit/AuditLogRepository.java`: Added query methods for audit retrieval.
+- `src/main/java/com/sdt/web_app/service/audit/AuditLogService.java`: Created `@Async` service for DB persistence.
+- `src/main/java/com/sdt/web_app/aspect/AuditLogAspect.java`: Refactored recursive sanitization, identity resolution, SpEL evaluation, and async delegation.
+- `src/main/resources/db/migration/V3__add_audit_logs_schema.sql`: Flyway DDL for `audit_logs` table.
+- `src/test/resources/application-test.yml`: Configured test mail host and disabled mail health check indicator.
+
+---
+
+## 11. Unauthenticated Password Reset Audit Log Attribution Refactor
+
+**Execution Timestamp**: `2026-09-01T23:57:51+08:00`  
+**Target Module**: `student-digital-twin-v1.0.0-backend`  
+**Status**: **PASSED (32/32 Tests Passing)**
+
+### 11.1 Summary of Refactoring & Verification
+
+1. **Password Reset DTO Return & Controller Annotation**:
+   - Refactored `PasswordResetService.completePasswordReset(...)` to return a `PasswordResetResult` record containing `userId`, `username`, and `email`.
+   - Updated `PasswordResetController.resetPassword(...)` to return `ResponseEntity<PasswordResetResult>` and annotated the endpoint with `@Auditable(action = "RESET_PASSWORD", entityName = "User", entityId = "#result?.userId")`.
+
+2. **Pre-Execution Reset Token User Resolution**:
+   - Added `preResolveResetTokenUser` in `AuditLogAspect.java` to extract and look up the `PasswordResetToken` via `PasswordResetTokenRepository` **BEFORE** `joinPoint.proceed()` is invoked (prior to token deletion from the database).
+   - Added `@EntityGraph(attributePaths = {"user"})` to `PasswordResetTokenRepository.findByToken(...)` to eagerly fetch the associated `User` entity in a single query.
+
+3. **Execution Result Inspection & Automatic Entity ID Assignment**:
+   - Enhanced `resolveUserIdentity` to inspect execution results (`PasswordResetResult`, `User`, `ResponseEntity<?>`).
+   - Automatically assigns `entityId = String.valueOf(identity.userId())` when `entityName = "User"` and `entityId` is unassigned.
+
+4. **Security & Redaction Verification**:
+   - Confirmed that raw token strings and cleartext passwords remain strictly redacted as `"[REDACTED]"` in the JSON `details` column while `username`, `user_id`, and `entity_id` are populated with the target user's identity.
+
+
+---
+
+## 10. Pre-Sanitization Token Extraction & Eager JPA Entity Graph Audit Refactor
+
+**Execution Timestamp**: `2026-09-01T23:48:05+08:00`  
+**Target Module**: `student-digital-twin-v1.0.0-backend`  
+**Status**: **PASSED (32/32 Tests Passing)**
+
+### 10.1 Key Refactoring Highlights
+
+1. **Pre-Sanitization Raw Metadata Extraction**:
+   - Extract raw tokens (`extractRawRefreshToken`) and attempted usernames/emails (`extractRawAttemptedIdentifier`) directly from `joinPoint.getArgs()` **BEFORE** running recursive argument sanitization.
+   - Preserves raw token values for database token lookup during unauthenticated `/logout` and `/refresh` operations, while ensuring `detailsJson` persisted in `audit_logs` continues to mask all tokens, passwords, and secrets as `[REDACTED]`.
+
+2. **Eager Entity Graph Resolution against `LazyInitializationException`**:
+   - Updated `RefreshTokenRepository.java` with `@EntityGraph(attributePaths = {"user"})` on `findByToken(String token)`.
+   - Ensures single-query eager fetching of the associated `User` entity, guaranteeing `tokenOpt.get().getUser().getUsername()` and `tokenOpt.get().getUser().getId()` evaluate safely outside JPA transaction boundaries without triggering `LazyInitializationException`.
+
+3. **Pre-Execution Context Capture**:
+   - Captures `preAuthUsername` prior to executing `joinPoint.proceed()` to capture the authenticated user identity before session teardown or token revocation occurs.
+
+
+
+
 

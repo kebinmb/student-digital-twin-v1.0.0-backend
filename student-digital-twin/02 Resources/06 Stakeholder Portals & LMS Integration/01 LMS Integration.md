@@ -1,0 +1,1 @@
+Interoperability (e.g., via LTI/API) with Learning Management Systems to support flexible learning modalities in compliance with CHED CMO No. 4, s. 2020.

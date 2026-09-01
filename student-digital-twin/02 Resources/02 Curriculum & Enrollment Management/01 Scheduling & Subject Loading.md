@@ -1,0 +1,1 @@
+Handles classroom allocation, time scheduling, section capacity, and automated prerequisite checking.
