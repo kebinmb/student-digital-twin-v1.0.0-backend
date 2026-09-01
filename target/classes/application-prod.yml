@@ -1,0 +1,67 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+  tomcat:
+    remote-ip-header: x-forwarded-for
+    protocol-header: x-forwarded-proto
+
+spring:
+  # Production Database (Supplied via Env Vars / Secret Manager)
+  datasource:
+    url: ${DB_JDBC_URL:jdbc:mysql://prod-db.internal:3306/webapp_prod?useSSL=true&requireSSL=true}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  # Production OAuth2 / OIDC Token Verification
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:https://auth.production.com/oauth2/v1}
+          jwk-set-uri: ${OIDC_JWKS_URI:https://auth.production.com/oauth2/v1/keys}
+
+  # Production Mail Relay
+  mail:
+    host: ${SMTP_HOST:smtp.sendgrid.net}
+    port: 587
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# Production Actuator Hardening
+management:
+  server:
+    port: 8081 # Kept on internal network interface only
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus" # Block heapdump, env, and threaddump
+  endpoint:
+    health:
+      show-details: never # Never expose DB exception traces to health callers
+      show-components: when_authorized
+
+# Structured JSON / Production Logging
+logging:
+  level:
+    root: WARN
+    com.sdt: INFO
+    org.springframework.security: INFO
+    org.flywaydb: INFO

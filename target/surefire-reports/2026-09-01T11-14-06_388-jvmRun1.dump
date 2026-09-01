@@ -1,0 +1,419 @@
+# Created at 2026-09-01T11:24:43.571
+Thread dump for process (23220@DESKTOP-7HN1F3N) after 30 seconds shutdown timeout:
+"main" 
+   java.lang.Thread.State: WAITING
+        at java.base@21.0.11/java.lang.Object.wait0(Native Method)
+        at java.base@21.0.11/java.lang.Object.wait(Object.java:366)
+        at java.base@21.0.11/java.lang.Thread.join(Thread.java:2079)
+        at java.base@21.0.11/java.lang.Thread.join(Thread.java:2155)
+        at java.base@21.0.11/java.lang.ApplicationShutdownHooks.runHooks(ApplicationShutdownHooks.java:114)
+        at java.base@21.0.11/java.lang.ApplicationShutdownHooks$1.run(ApplicationShutdownHooks.java:47)
+        at java.base@21.0.11/java.lang.Shutdown.runHooks(Shutdown.java:130)
+        at java.base@21.0.11/java.lang.Shutdown.exit(Shutdown.java:167)
+        at java.base@21.0.11/java.lang.Runtime.exit(Runtime.java:188)
+        at java.base@21.0.11/java.lang.System.exit(System.java:1921)
+        at app//org.apache.maven.surefire.booter.ForkedBooter.acknowledgedExit(ForkedBooter.java:381)
+        at app//org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:178)
+        at app//org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+        at app//org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+"Reference Handler" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/java.lang.ref.Reference.waitForReferencePendingList(Native Method)
+        at java.base@21.0.11/java.lang.ref.Reference.processPendingReferences(Reference.java:246)
+        at java.base@21.0.11/java.lang.ref.Reference$ReferenceHandler.run(Reference.java:208)
+
+"Finalizer" 
+   java.lang.Thread.State: WAITING
+        at java.base@21.0.11/java.lang.Object.wait0(Native Method)
+        at java.base@21.0.11/java.lang.Object.wait(Object.java:366)
+        at java.base@21.0.11/java.lang.Object.wait(Object.java:339)
+        at java.base@21.0.11/java.lang.ref.NativeReferenceQueue.await(NativeReferenceQueue.java:48)
+        at java.base@21.0.11/java.lang.ref.ReferenceQueue.remove0(ReferenceQueue.java:158)
+        at java.base@21.0.11/java.lang.ref.NativeReferenceQueue.remove(NativeReferenceQueue.java:89)
+        at java.base@21.0.11/java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:173)
+
+"Signal Dispatcher" 
+   java.lang.Thread.State: RUNNABLE
+
+"Attach Listener" 
+   java.lang.Thread.State: RUNNABLE
+
+"Notification Thread" 
+   java.lang.Thread.State: RUNNABLE
+
+"Common-Cleaner" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+        at java.base@21.0.11/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1886)
+        at java.base@21.0.11/java.lang.ref.ReferenceQueue.await(ReferenceQueue.java:71)
+        at java.base@21.0.11/java.lang.ref.ReferenceQueue.remove0(ReferenceQueue.java:143)
+        at java.base@21.0.11/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:218)
+        at java.base@21.0.11/jdk.internal.ref.CleanerImpl.run(CleanerImpl.java:140)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+        at java.base@21.0.11/jdk.internal.misc.InnocuousThread.run(InnocuousThread.java:186)
+
+"Thread-1" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-2" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-3" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-4" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-5" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-6" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-7" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-8" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-9" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-10" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-11" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-12" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-13" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-14" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-15" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-16" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"Thread-17" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.Iocp.getQueuedCompletionStatus(Native Method)
+        at java.base@21.0.11/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:323)
+        at java.base@21.0.11/sun.nio.ch.AsynchronousChannelGroupImpl$1.run(AsynchronousChannelGroupImpl.java:113)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"testcontainers-ryuk" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/java.lang.Object.wait0(Native Method)
+        at java.base@21.0.11/java.lang.Object.wait(Object.java:366)
+        at app//org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$0(RyukResourceReaper.java:102)
+        at app//org.testcontainers.utility.RyukResourceReaper$$Lambda/0x0000020a5e36c690.run(Unknown Source)
+        at app//org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+        at app//org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$1(RyukResourceReaper.java:88)
+        at app//org.testcontainers.utility.RyukResourceReaper$$Lambda/0x0000020a5e36c468.run(Unknown Source)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"mysql-cj-abandoned-connection-cleanup" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+        at java.base@21.0.11/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1886)
+        at java.base@21.0.11/java.lang.ref.ReferenceQueue.await(ReferenceQueue.java:71)
+        at java.base@21.0.11/java.lang.ref.ReferenceQueue.remove0(ReferenceQueue.java:143)
+        at java.base@21.0.11/java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:218)
+        at app//com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.run(AbandonedConnectionCleanupThread.java:84)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"prometheus-metrics-scheduler-0" 
+   java.lang.Thread.State: WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+        at java.base@21.0.11/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+        at java.base@21.0.11/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+        at java.base@21.0.11/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1170)
+        at java.base@21.0.11/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"HttpClient-1-SelectorManager" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.WEPoll.wait(Native Method)
+        at java.base@21.0.11/sun.nio.ch.WEPollSelectorImpl.doSelect(WEPollSelectorImpl.java:114)
+        at java.base@21.0.11/sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:130)
+        at java.base@21.0.11/sun.nio.ch.SelectorImpl.select(SelectorImpl.java:142)
+        at platform/java.net.http@21.0.11/jdk.internal.net.http.HttpClientImpl$SelectorManager.run(HttpClientImpl.java:1376)
+
+"ForkJoinPool.commonPool-worker-2" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.parkUntil(LockSupport.java:449)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1891)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1809)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)
+
+"Thread-36" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:410)
+        at java.base@21.0.11/java.util.concurrent.LinkedTransferQueue$DualNode.await(LinkedTransferQueue.java:452)
+        at java.base@21.0.11/java.util.concurrent.SynchronousQueue$Transferer.xferLifo(SynchronousQueue.java:194)
+        at java.base@21.0.11/java.util.concurrent.SynchronousQueue.xfer(SynchronousQueue.java:235)
+        at java.base@21.0.11/java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:338)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1069)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"SecureHikariCP:housekeeper" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:269)
+        at java.base@21.0.11/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1797)
+        at java.base@21.0.11/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+        at java.base@21.0.11/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1070)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"HttpClient-2-SelectorManager" 
+   java.lang.Thread.State: RUNNABLE
+        at java.base@21.0.11/sun.nio.ch.WEPoll.wait(Native Method)
+        at java.base@21.0.11/sun.nio.ch.WEPollSelectorImpl.doSelect(WEPollSelectorImpl.java:114)
+        at java.base@21.0.11/sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:130)
+        at java.base@21.0.11/sun.nio.ch.SelectorImpl.select(SelectorImpl.java:142)
+        at platform/java.net.http@21.0.11/jdk.internal.net.http.HttpClientImpl$SelectorManager.run(HttpClientImpl.java:1376)
+
+"surefire-forkedjvm-last-ditch-daemon-shutdown-thread-30s" 
+   java.lang.Thread.State: RUNNABLE
+        at java.management@21.0.11/sun.management.ThreadImpl.getThreadInfo1(Native Method)
+        at java.management@21.0.11/sun.management.ThreadImpl.getThreadInfo(ThreadImpl.java:187)
+        at app//org.apache.maven.surefire.booter.ForkedBooter.generateThreadDump(ForkedBooter.java:579)
+        at app//org.apache.maven.surefire.booter.ForkedBooter.access$600(ForkedBooter.java:79)
+        at app//org.apache.maven.surefire.booter.ForkedBooter$7.run(ForkedBooter.java:424)
+        at java.base@21.0.11/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+        at java.base@21.0.11/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+        at java.base@21.0.11/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"SpringApplicationShutdownHook" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:410)
+        at java.base@21.0.11/java.util.concurrent.LinkedTransferQueue$DualNode.await(LinkedTransferQueue.java:452)
+        at java.base@21.0.11/java.util.concurrent.LinkedTransferQueue.xfer(LinkedTransferQueue.java:613)
+        at java.base@21.0.11/java.util.concurrent.SynchronousQueue.xfer(SynchronousQueue.java:235)
+        at java.base@21.0.11/java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:338)
+        at app//com.zaxxer.hikari.util.ConcurrentBag.borrow(ConcurrentBag.java:163)
+        at app//com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:160)
+        at app//com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:142)
+        at app//com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:127)
+        at java.base@21.0.11/java.lang.invoke.LambdaForm$DMH/0x0000020a5e011c00.invokeInterface(LambdaForm$DMH)
+        at java.base@21.0.11/java.lang.invoke.LambdaForm$MH/0x0000020a5e012400.invoke(LambdaForm$MH)
+        at java.base@21.0.11/java.lang.invoke.Invokers$Holder.invokeExact_MT(Invokers$Holder)
+        at java.base@21.0.11/jdk.internal.reflect.DirectMethodHandleAccessor.invokeImpl(DirectMethodHandleAccessor.java:153)
+        at java.base@21.0.11/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base@21.0.11/java.lang.reflect.Method.invoke(Method.java:580)
+        at app//net.ttddyy.dsproxy.proxy.ProxyLogicSupport.proceedExecution(ProxyLogicSupport.java:72)
+        at app//net.ttddyy.dsproxy.proxy.DataSourceProxyLogic.performProxyLogic(DataSourceProxyLogic.java:41)
+        at app//net.ttddyy.dsproxy.proxy.ProxyLogicSupport.proceedMethodExecution(ProxyLogicSupport.java:103)
+        at app//net.ttddyy.dsproxy.proxy.DataSourceProxyLogic.invoke(DataSourceProxyLogic.java:28)
+        at app//net.ttddyy.dsproxy.proxy.jdk.DataSourceInvocationHandler.invoke(DataSourceInvocationHandler.java:24)
+        at app//net.ttddyy.observation.boot.SpringJdbcProxyFactory.lambda$createProxy$0(SpringJdbcProxyFactory.java:130)
+        at app//net.ttddyy.observation.boot.SpringJdbcProxyFactory$$Lambda/0x0000020a5e7ae050.invoke(Unknown Source)
+        at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+        at app//org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:222)
+        at app/jdk.proxy2/jdk.proxy2.$Proxy163.getConnection(Unknown Source)
+        at app//org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider.getConnection(DataSourceConnectionProvider.java:149)
+        at app//org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:508)
+        at app//org.hibernate.resource.transaction.backend.jdbc.internal.DdlTransactionIsolatorNonJtaImpl.getIsolatedConnection(DdlTransactionIsolatorNonJtaImpl.java:44)
+        at app//org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.getIsolatedConnection(GenerationTargetToDatabase.java:57)
+        at app//org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.jdbcStatement(GenerationTargetToDatabase.java:121)
+        at app//org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:85)
+        at app//org.hibernate.tool.schema.internal.SchemaDropperImpl$DelayedDropActionImpl.perform(SchemaDropperImpl.java:619)
+        at app//org.hibernate.boot.internal.SessionFactoryObserverForSchemaExport.sessionFactoryClosing(SessionFactoryObserverForSchemaExport.java:46)
+        at app//org.hibernate.internal.SessionFactoryObserverChain.sessionFactoryClosing(SessionFactoryObserverChain.java:46)
+        at app//org.hibernate.internal.SessionFactoryImpl.close(SessionFactoryImpl.java:805)
+        at java.base@21.0.11/java.lang.invoke.LambdaForm$DMH/0x0000020a5e114000.invokeInterface(LambdaForm$DMH)
+        at java.base@21.0.11/java.lang.invoke.LambdaForm$MH/0x0000020a5e78c400.invoke(LambdaForm$MH)
+        at java.base@21.0.11/java.lang.invoke.Invokers$Holder.invokeExact_MT(Invokers$Holder)
+        at java.base@21.0.11/jdk.internal.reflect.DirectMethodHandleAccessor.invokeImpl(DirectMethodHandleAccessor.java:153)
+        at java.base@21.0.11/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base@21.0.11/java.lang.reflect.Method.invoke(Method.java:580)
+        at app//org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.invokeProxyMethod(AbstractEntityManagerFactoryBean.java:547)
+        at app//org.springframework.orm.jpa.AbstractEntityManagerFactoryBean$ManagedEntityManagerFactoryInvocationHandler.invoke(AbstractEntityManagerFactoryBean.java:782)
+        at app/jdk.proxy2/jdk.proxy2.$Proxy213.close(Unknown Source)
+        at app//org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.destroy(AbstractEntityManagerFactoryBean.java:695)
+        at app//org.springframework.beans.factory.support.DisposableBeanAdapter.destroy(DisposableBeanAdapter.java:209)
+        at app//org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroyBean(DefaultSingletonBeanRegistry.java:795)
+        at app//org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingleton(DefaultSingletonBeanRegistry.java:745)
+        at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingleton(DefaultListableBeanFactory.java:1507)
+        at app//org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingletons(DefaultSingletonBeanRegistry.java:704)
+        at app//org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingletons(DefaultListableBeanFactory.java:1500)
+        at app//org.springframework.context.support.AbstractApplicationContext.destroyBeans(AbstractApplicationContext.java:1246)
+        at app//org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1207)
+        at app//org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1153)
+        at app//org.springframework.boot.SpringApplicationShutdownHook.closeAndWait(SpringApplicationShutdownHook.java:147)
+        at app//org.springframework.boot.SpringApplicationShutdownHook$$Lambda/0x0000020a5f35a7a0.accept(Unknown Source)
+        at java.base@21.0.11/java.lang.Iterable.forEach(Iterable.java:75)
+        at app//org.springframework.boot.SpringApplicationShutdownHook.run(SpringApplicationShutdownHook.java:116)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+"ForkJoinPool-1-worker-6" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/jdk.internal.misc.Unsafe.park(Native Method)
+        at java.base@21.0.11/java.util.concurrent.locks.LockSupport.parkUntil(LockSupport.java:449)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinPool.awaitWork(ForkJoinPool.java:1891)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1809)
+        at java.base@21.0.11/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)
+
+"SecureHikariCP:connection-adder" 
+   java.lang.Thread.State: TIMED_WAITING
+        at java.base@21.0.11/java.lang.Thread.sleep0(Native Method)
+        at java.base@21.0.11/java.lang.Thread.sleep(Thread.java:509)
+        at app//com.zaxxer.hikari.util.UtilityElf.quietlySleep(UtilityElf.java:80)
+        at app//com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:762)
+        at app//com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:731)
+        at java.base@21.0.11/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+        at java.base@21.0.11/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+        at java.base@21.0.11/java.lang.Thread.runWith(Thread.java:1596)
+        at java.base@21.0.11/java.lang.Thread.run(Thread.java:1583)
+
+
+
