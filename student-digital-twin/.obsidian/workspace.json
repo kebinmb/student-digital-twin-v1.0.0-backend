@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 AI Audit/00 Audit and Testing using AI.md",
+                "file": "00 Project/00 Module Implementation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 Audit and Testing using AI"
+              "title": "00 Module Implementation"
             }
           }
         ]
@@ -190,11 +190,13 @@
   },
   "active": "289ee6244a829c5e",
   "lastOpenFiles": [
-    "00 AI Audit/02 Phase 1 AI Audit.md",
-    "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
-    "00 Project/00 Module Implementation.md",
-    "00 AI Audit/00 Audit and Testing using AI.md",
+    "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
     "00 Project/01 Layer 1 System Master Data & RBAC.md",
+    "00 Project/00 Module Implementation.md",
+    "00 AI Audit/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",
+    "00 AI Audit/02 Phase 1 AI Audit.md",
+    "00 AI Audit/00 Audit and Testing using AI.md",
+    "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
     "Pasted image 20260901220019.png",
     "00 Project/02 Curriculum & Program Architecture.md",
     "02 Resources/02 Curriculum & Enrollment Management/00 Curriculum Mapping.md",
@@ -219,9 +221,7 @@
     "02 Resources/04 Financial & Fee Management",
     "02 Resources/03 Faculty & Grade Management/01 Teaching Workload.md",
     "02 Resources/03 Faculty & Grade Management/00 Faculty Profiling.md",
-    "02 Resources/02 Curriculum & Enrollment Management/02 Enrollment & Registration.md",
     "02 Resources/03 Faculty & Grade Management",
-    "02 Resources/02 Curriculum & Enrollment Management/01 Scheduling & Subject Loading.md",
     "02 Resources/02 Curriculum & Enrollment Management",
     "02 Resources/01 Student Information & Registrar Management",
     "00 AI Audit",

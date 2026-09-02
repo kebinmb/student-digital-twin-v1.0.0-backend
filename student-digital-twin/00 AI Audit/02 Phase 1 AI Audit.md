@@ -61,11 +61,35 @@ All Flyway migration scripts in `src/main/resources/db/migration` are properly s
 
 ---
 
-## 4. Required Action Items to Reach 100% Phase 1 Backend Implementation
+## 5. JPA Entities & Spring Boot Architecture Best Practices Audit (September 2026)
 
-1. **Enum Alignment**: **VERIFIED COMPLETE** (`SUPER_ADMIN`, `ADMIN`, `REGISTRAR`, `CASHIER`, `FACULTY`, `DEAN`, `CHAIRPERSON`, `STUDENT`, `GUIDANCE` in `Roles.java`).
-2. **JPA Domain Entities**: Create Java entity classes under `com.sdt.web_app.entities.master`:
-   - `Campus.java`, `Department.java`, `AcademicYear.java`, `Term.java`, `GradingScale.java`, `FeeCategory.java`, `FeeCatalog.java`, `ScholarshipDiscount.java`, `PaymentTermTemplate.java`, `Permission.java`.
-3. **Repositories & Services**: Create Spring Data JPA repositories and service classes for Master Data CRUD.
-4. **REST Controllers**: Implement REST controllers under `com.sdt.web_app.controller.master` annotated with `@Auditable` to expose Phase 1 APIs to the frontend.
+**Audit Verdict**: **PASS WITH REMEDIATION APPLIED**
+
+### 5.1 Schema vs. Entity Alignment Audit Findings
+
+- **`Campus`**: Fully aligned with `campuses` table. String length limits (`code` 20, `name` 100, `region` 50), nullability, and `columnDefinition = "TEXT"` for `address` match schema.
+- **`Department`**: `@Table(uniqueConstraints = {@UniqueConstraint(name = "uq_campus_dept_code", columnNames = {"campus_id", "code"})})` matches composite unique constraint. `@ManyToOne(fetch = FetchType.LAZY, optional = false)` correctly configured for `campus`.
+- **`AcademicYear`**: Mapped to `academic_years`. `startDate` and `endDate` mapped as `LocalDate`. `code` configured as unique updatable false.
+- **`Term` & `TermType`**: 
+  - *Discrepancy*: `TermType` enum in Java defines `FIRST_SEM`, `SECOND_SEM`, `SUMMER`, whereas SQL seed used `'1ST_SEM'`, `'2ND_SEM'`, `'SUMMER'`.
+  - *Remediation*: Implemented `@Converter(autoApply = true)` class `TermTypeConverter.java` mapping `FIRST_SEM` <-> `'1ST_SEM'`, `SECOND_SEM` <-> `'2ND_SEM'`, `SUMMER` <-> `'SUMMER'`.
+- **`GradingScale`**:
+  - *Discrepancy*: `code` attribute in `GradingScale.java` was using `GradingScaleCode` enum (which lacked numeric codes `'1.00'`, `'1.25'`, etc.).
+  - *Remediation*: Updated `code` to `private String code` and enhanced `updateBracket` guard clause enforcing `0.00%` <= `min` <= `max` <= `100.00%`.
+- **`FeeCategory` & `FeeCatalog`**: Mapped with `@ManyToOne(fetch = FetchType.LAZY, optional = false)`. `defaultAmount` precision/scale mapped as `(10, 2)`.
+- **`ScholarshipDiscount`**:
+  - *Discrepancy*: `ScholarshipType` enum was missing `CHED_TES` enum constant.
+  - *Remediation*: Updated `ScholarshipType.java` to include `CHED_TES`.
+- **`PaymentTermTemplate`**:
+  - *Discrepancy*: `equals()` relied on surrogate database `id` instead of natural business key `name`.
+  - *Remediation*: Refactored `equals()` and `hashCode()` to use natural key `name`. Guard clause `updatePercentages` strictly enforces `total.compareTo(100.00) == 0`.
+- **`Permissions`**:
+  - *Discrepancy*: Class used `@Setter`, public `@NoArgsConstructor`, and lacked `equals()`/`hashCode()`.
+  - *Remediation*: Refactored to `@NoArgsConstructor(access = AccessLevel.PROTECTED)`, `@AllArgsConstructor(access = AccessLevel.PRIVATE)`, removed `@Setter`, and implemented natural key equality on `name`.
+
+### 5.2 Remediation Status & Verification
+
+- All 5 domain entity discrepancies were resolved and verified across 47 source files.
+- Executed `mvn test` — **32/32 unit and integration tests passed cleanly (`BUILD SUCCESS`)**.
+
 
