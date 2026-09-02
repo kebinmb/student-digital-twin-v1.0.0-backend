@@ -1,4 +1,4 @@
-package com.sdt.web_app.controller;
+package com.sdt.web_app.controller.authentication;
 
 import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.authentication.AuthDtos;

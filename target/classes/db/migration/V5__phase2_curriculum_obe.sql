@@ -42,6 +42,8 @@ CREATE TABLE curricula
     program_id              BIGINT       NOT NULL,
     code                    VARCHAR(30)  NOT NULL UNIQUE, -- e.g., 'BSIT-2026'
     name                    VARCHAR(150) NOT NULL,        -- e.g., 'BSIT Curriculum 2026-2030'
+    status                  VARCHAR(20)  NOT NULL DEFAULT 'DRAFT',
+    version_number          INT          NOT NULL DEFAULT 1,
     effective_academic_year VARCHAR(20)  NOT NULL,        -- e.g., '2026-2027'
     is_active               BOOLEAN      NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_curriculum_program FOREIGN KEY (program_id) REFERENCES programs (id)
@@ -50,11 +52,13 @@ CREATE TABLE curricula
 -- 4. Curriculum Courses (Mapping courses to specific Year / Semester blocks in a curriculum)
 CREATE TABLE curriculum_courses
 (
-    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-    curriculum_id BIGINT      NOT NULL,
-    course_id     BIGINT      NOT NULL,
-    year_level    INT         NOT NULL, -- 1, 2, 3, 4, 5
-    semester      VARCHAR(20) NOT NULL, -- '1ST_SEM', '2ND_SEM', 'SUMMER'
+    id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    curriculum_id  BIGINT      NOT NULL,
+    course_id      BIGINT      NOT NULL,
+    year_level     INT         NOT NULL, -- 1, 2, 3, 4, 5
+    sequence_order INT         NOT NULL DEFAULT 1,
+    category       VARCHAR(30) NOT NULL DEFAULT 'PROFESSIONAL_MAJOR',
+    semester       VARCHAR(20) NOT NULL, -- '1ST_SEM', '2ND_SEM', 'SUMMER'
     CONSTRAINT fk_curr_course_curriculum FOREIGN KEY (curriculum_id) REFERENCES curricula (id),
     CONSTRAINT fk_curr_course_course FOREIGN KEY (course_id) REFERENCES courses (id),
     CONSTRAINT uq_curriculum_course UNIQUE (curriculum_id, course_id)
@@ -67,6 +71,7 @@ CREATE TABLE course_prerequisites
     course_id              BIGINT      NOT NULL,                -- The target course needing prerequisites
     prerequisite_course_id BIGINT      NOT NULL,                -- The required prerequisite course
     rule_type              VARCHAR(20) NOT NULL DEFAULT 'HARD', -- 'HARD', 'CO_REQUISITE', 'STANDING'
+    min_grade_required     VARCHAR(10) NOT NULL DEFAULT '3.00',
     CONSTRAINT fk_prereq_course FOREIGN KEY (course_id) REFERENCES courses (id),
     CONSTRAINT fk_prereq_required FOREIGN KEY (prerequisite_course_id) REFERENCES courses (id),
     CONSTRAINT uq_course_prereq UNIQUE (course_id, prerequisite_course_id)

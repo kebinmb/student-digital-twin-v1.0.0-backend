@@ -8,9 +8,7 @@ import java.util.Objects;
 @Entity
 @Table(
         name = "curriculum_courses",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uq_curriculum_course", columnNames = {"curriculum_id", "course_id"})
-        }
+        uniqueConstraints = @UniqueConstraint(name = "uq_curriculum_course", columnNames = {"curriculum_id", "course_id"})
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -35,29 +33,29 @@ public class CurriculumCourse {
     private int yearLevel;
 
     @Column(nullable = false, length = 20)
-    private String semester;
+    private String semester; // '1ST_SEM', '2ND_SEM', 'SUMMER'
 
-    public void updateCurriculumPosition(int yearLevel, String semester) {
-        if (yearLevel < 1 || yearLevel > 6) {
-            throw new IllegalArgumentException("Invalid year level: " + yearLevel);
-        }
-        if (semester == null || semester.isBlank()) {
-            throw new IllegalArgumentException("Semester cannot be blank");
-        }
+    @Column(name = "sequence_order", nullable = false)
+    @Builder.Default
+    private int sequenceOrder = 1;
+
+    @Column(nullable = false, length = 30)
+    @Builder.Default
+    private String category = "PROFESSIONAL_MAJOR"; // GEN_ED, PROFESSIONAL_MAJOR, ELECTIVE, MANDATED
+
+    public void relocatePosition(int yearLevel, String semester, int sequenceOrder) {
         this.yearLevel = yearLevel;
         this.semester = semester;
+        this.sequenceOrder = sequenceOrder;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof CurriculumCourse that)) return false;
-        String thisCurrCode = curriculum != null ? curriculum.getCode() : null;
-        String thatCurrCode = that.curriculum != null ? that.curriculum.getCode() : null;
-        String thisCourseCode = course != null ? course.getCode() : null;
-        String thatCourseCode = that.course != null ? that.course.getCode() : null;
-
-        return Objects.equals(thisCurrCode, thatCurrCode) && Objects.equals(thisCourseCode, thatCourseCode);
+        return curriculum != null && course != null &&
+                Objects.equals(curriculum.getCode(), that.curriculum != null ? that.curriculum.getCode() : null) &&
+                Objects.equals(course.getCode(), that.course != null ? that.course.getCode() : null);
     }
 
     @Override

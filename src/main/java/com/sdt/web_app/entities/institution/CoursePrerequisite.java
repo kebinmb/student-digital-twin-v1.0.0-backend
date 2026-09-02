@@ -35,11 +35,33 @@ public class CoursePrerequisite {
     @Builder.Default
     private String ruleType = "HARD";
 
+    @Column(name = "min_grade_required", nullable = false, length = 10)
+    @Builder.Default
+    private String minGradeRequired = "3.00";
+
+    public void updateRule(String ruleType, String minGradeRequired) {
+        if (ruleType == null || ruleType.isBlank()) {
+            throw new IllegalArgumentException("Rule type cannot be blank");
+        }
+        if (minGradeRequired == null || minGradeRequired.isBlank()) {
+            throw new IllegalArgumentException("Minimum grade required cannot be blank");
+        }
+        this.ruleType = ruleType;
+        this.minGradeRequired = minGradeRequired;
+    }
+
     public void updateRuleType(String ruleType) {
         if (ruleType == null || ruleType.isBlank()) {
             throw new IllegalArgumentException("Rule type cannot be blank");
         }
         this.ruleType = ruleType;
+    }
+
+    public void updateMinGradeRequired(String minGradeRequired) {
+        if (minGradeRequired == null || minGradeRequired.isBlank()) {
+            throw new IllegalArgumentException("Minimum grade required cannot be blank");
+        }
+        this.minGradeRequired = minGradeRequired;
     }
 
     @Override
