@@ -18,6 +18,7 @@ public class CurriculumDesignerService {
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final CourseRepository courseRepository;
     private final CoursePrerequisiteRepository prerequisiteRepository;
+    private final ProgramRepository programRepository;
     private final CurriculumValidationService validationService;
 
     public CurriculumDesignerService(
@@ -25,11 +26,13 @@ public class CurriculumDesignerService {
             CurriculumCourseRepository curriculumCourseRepository,
             CourseRepository courseRepository,
             CoursePrerequisiteRepository prerequisiteRepository,
+            ProgramRepository programRepository,
             CurriculumValidationService validationService) {
         this.curriculumRepository = curriculumRepository;
         this.curriculumCourseRepository = curriculumCourseRepository;
         this.courseRepository = courseRepository;
         this.prerequisiteRepository = prerequisiteRepository;
+        this.programRepository = programRepository;
         this.validationService = validationService;
     }
 
@@ -145,6 +148,134 @@ public class CurriculumDesignerService {
             }
         }
         curriculum.transitionTo(targetStatus);
+    }
+
+    public CurriculumSummaryResponse createCurriculum(CreateCurriculumRequest request) {
+        if (curriculumRepository.existsByCode(request.code())) {
+            throw new IllegalArgumentException("Curriculum code already exists: " + request.code());
+        }
+
+        Program program = programRepository.findById(request.programId())
+                .orElseThrow(() -> new IllegalArgumentException("Program not found with ID: " + request.programId()));
+
+        Curriculum curriculum = Curriculum.builder()
+                .program(program)
+                .code(request.code())
+                .name(request.name())
+                .effectiveAcademicYear(request.effectiveAcademicYear())
+                .status(Curriculum.Status.DRAFT)
+                .versionNumber(1)
+                .isActive(true)
+                .build();
+
+        Curriculum saved = curriculumRepository.save(curriculum);
+
+        return new CurriculumSummaryResponse(
+                saved.getId(),
+                saved.getCode(),
+                saved.getName(),
+                program.getCode(),
+                saved.getEffectiveAcademicYear(),
+                saved.getStatus().name(),
+                saved.getVersionNumber()
+        );
+    }
+
+    public void addCourseToCurriculum(Long curriculumId, AddCourseToCurriculumRequest request) {
+        Curriculum curriculum = getCurriculum(curriculumId);
+        assertEditable(curriculum);
+
+        Course course = courseRepository.findById(request.courseId())
+                .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + request.courseId()));
+
+        if (curriculumCourseRepository.existsByCurriculumIdAndCourseId(curriculumId, request.courseId())) {
+            throw new IllegalArgumentException("Course is already assigned to this curriculum: " + course.getCode());
+        }
+
+        int seqOrder;
+        if (request.sequenceOrder() != null) {
+            seqOrder = request.sequenceOrder();
+        } else {
+            int maxSeq = curriculumCourseRepository
+                    .findByCurriculumIdAndYearLevelAndSemester(curriculumId, request.yearLevel(), request.semester())
+                    .stream()
+                    .mapToInt(CurriculumCourse::getSequenceOrder)
+                    .max()
+                    .orElse(0);
+            seqOrder = maxSeq + 1;
+        }
+
+        String category = (request.category() != null && !request.category().isBlank())
+                ? request.category()
+                : "PROFESSIONAL_MAJOR";
+
+        CurriculumCourse curriculumCourse = CurriculumCourse.builder()
+                .curriculum(curriculum)
+                .course(course)
+                .yearLevel(request.yearLevel())
+                .semester(request.semester())
+                .category(category)
+                .sequenceOrder(seqOrder)
+                .build();
+
+        curriculumCourseRepository.save(curriculumCourse);
+    }
+
+    public void removeCourseFromCurriculum(Long curriculumId, Long curriculumCourseId) {
+        Curriculum curriculum = getCurriculum(curriculumId);
+        assertEditable(curriculum);
+
+        CurriculumCourse curriculumCourse = curriculumCourseRepository.findById(curriculumCourseId)
+                .orElseThrow(() -> new IllegalArgumentException("CurriculumCourse not found with ID: " + curriculumCourseId));
+
+        if (!curriculumCourse.getCurriculum().getId().equals(curriculumId)) {
+            throw new IllegalArgumentException("CurriculumCourse " + curriculumCourseId + " does not belong to curriculum " + curriculumId);
+        }
+
+        curriculumCourseRepository.delete(curriculumCourse);
+    }
+
+    public CurriculumSummaryResponse cloneCurriculumAsNewRevision(Long sourceCurriculumId, CloneCurriculumRequest request) {
+        Curriculum source = getCurriculum(sourceCurriculumId);
+
+        if (curriculumRepository.existsByCode(request.newCode())) {
+            throw new IllegalArgumentException("Curriculum code already exists: " + request.newCode());
+        }
+
+        Curriculum cloned = Curriculum.builder()
+                .program(source.getProgram())
+                .code(request.newCode())
+                .name(request.newName())
+                .effectiveAcademicYear(request.effectiveAcademicYear())
+                .status(Curriculum.Status.DRAFT)
+                .versionNumber(source.getVersionNumber() + 1)
+                .isActive(true)
+                .build();
+
+        Curriculum savedCloned = curriculumRepository.save(cloned);
+
+        List<CurriculumCourse> sourceCourses = curriculumCourseRepository.findByCurriculumId(sourceCurriculumId);
+        for (CurriculumCourse cc : sourceCourses) {
+            CurriculumCourse clonedCc = CurriculumCourse.builder()
+                    .curriculum(savedCloned)
+                    .course(cc.getCourse())
+                    .yearLevel(cc.getYearLevel())
+                    .semester(cc.getSemester())
+                    .category(cc.getCategory())
+                    .sequenceOrder(cc.getSequenceOrder())
+                    .build();
+            curriculumCourseRepository.save(clonedCc);
+        }
+
+        return new CurriculumSummaryResponse(
+                savedCloned.getId(),
+                savedCloned.getCode(),
+                savedCloned.getName(),
+                source.getProgram().getCode(),
+                savedCloned.getEffectiveAcademicYear(),
+                savedCloned.getStatus().name(),
+                savedCloned.getVersionNumber()
+        );
     }
 
     private Curriculum getCurriculum(Long id) {

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 AI Audit/04 Phase 2 Backend Readiness Audit & Curriculum Designer Roadmap.md",
+                "file": "00 AI Audit/00 Current Project Focus.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "04 Phase 2 Backend Readiness Audit & Curriculum Designer Roadmap"
+              "title": "00 Current Project Focus"
             }
           }
         ]
@@ -83,8 +83,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "cd5569e06477ea45",
@@ -191,13 +190,14 @@
   },
   "active": "289ee6244a829c5e",
   "lastOpenFiles": [
-    "00 Project/00 Module Implementation.md",
     "00 AI Audit/04 Phase 2 Backend Readiness Audit & Curriculum Designer Roadmap.md",
+    "00 AI Audit/00 Current Project Focus.md",
+    "00 AI Audit/00 Audit and Testing using AI.md",
+    "00 Project/00 Module Implementation.md",
     "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
     "00 Project/01 Layer 1 System Master Data & RBAC.md",
     "00 AI Audit/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",
     "00 AI Audit/02 Phase 1 AI Audit.md",
-    "00 AI Audit/00 Audit and Testing using AI.md",
     "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
     "Pasted image 20260901220019.png",
     "00 Project/02 Curriculum & Program Architecture.md",
@@ -221,7 +221,6 @@
     "02 Resources/04 Financial & Fee Management/00 Tuition & Miscellaneous Assessment.md",
     "02 Resources/03 Faculty & Grade Management/02 Grade Encoding & Verification.md",
     "02 Resources/04 Financial & Fee Management",
-    "02 Resources/03 Faculty & Grade Management/01 Teaching Workload.md",
     "02 Resources/03 Faculty & Grade Management",
     "02 Resources/02 Curriculum & Enrollment Management",
     "02 Resources/01 Student Information & Registrar Management",

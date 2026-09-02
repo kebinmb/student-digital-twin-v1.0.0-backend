@@ -5,6 +5,7 @@ import com.sdt.web_app.entities.institution.Curriculum;
 
 import com.sdt.web_app.service.institution.CurriculumDesignerService;
 import com.sdt.web_app.service.institution.CurriculumValidationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,30 @@ public class CurriculumController {
                                 CurriculumValidationService validationService) {
         this.designerService = designerService;
         this.validationService = validationService;
+    }
+
+    @PostMapping
+    public ResponseEntity<CurriculumSummaryResponse> createCurriculum(@RequestBody CreateCurriculumRequest request) {
+        CurriculumSummaryResponse response = designerService.createCurriculum(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/{id}/courses")
+    public ResponseEntity<Void> addCourseToCurriculum(@PathVariable Long id, @RequestBody AddCourseToCurriculumRequest request) {
+        designerService.addCourseToCurriculum(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/{id}/courses/{curriculumCourseId}")
+    public ResponseEntity<Void> removeCourseFromCurriculum(@PathVariable Long id, @PathVariable Long curriculumCourseId) {
+        designerService.removeCourseFromCurriculum(id, curriculumCourseId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/clone")
+    public ResponseEntity<CurriculumSummaryResponse> cloneCurriculumAsNewRevision(@PathVariable Long id, @RequestBody CloneCurriculumRequest request) {
+        CurriculumSummaryResponse response = designerService.cloneCurriculumAsNewRevision(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}/designer")

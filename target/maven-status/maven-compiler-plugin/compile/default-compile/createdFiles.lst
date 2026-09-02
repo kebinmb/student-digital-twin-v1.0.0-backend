@@ -14,6 +14,7 @@ com\sdt\web_app\repositories\institution\CurriculumRepository.class
 com\sdt\web_app\entities\institution\GradingScale.class
 com\sdt\web_app\entities\institution\ProgramOutcome.class
 com\sdt\web_app\entities\institution\CoursePrerequisite.class
+com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CloneCurriculumRequest.class
 com\sdt\web_app\entities\institution\ScholarshipType.class
 com\sdt\web_app\config\ActuatorSecurityConfig.class
 com\sdt\web_app\entities\institution\Campus.class
@@ -30,6 +31,7 @@ com\sdt\web_app\service\institution\PrerequisiteEvaluationService.class
 com\sdt\web_app\repositories\institution\CiloPiloMappingRepository.class
 com\sdt\web_app\entities\institution\Course$CourseBuilder.class
 com\sdt\web_app\entities\institution\PaymentTermTemplate$PaymentTermTemplateBuilder.class
+com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CurriculumSummaryResponse.class
 com\sdt\web_app\entities\institution\Department.class
 com\sdt\web_app\entities\institution\AcademicYear$AcademicYearBuilder.class
 com\sdt\web_app\repositories\institution\CoursePrerequisiteRepository.class
@@ -72,7 +74,6 @@ com\sdt\web_app\entities\audit\AuditLog.class
 com\sdt\web_app\repositories\institution\CurriculumCourseRepository.class
 com\sdt\web_app\entities\institution\FeeCategory.class
 com\sdt\web_app\config\GrpcAuthInterceptor$1.class
-com\sdt\web_app\controller\AuthenticationController.class
 com\sdt\web_app\exceptions\UserAlreadyExistsException.class
 com\sdt\web_app\config\WebSecurityConfig.class
 com\sdt\web_app\entities\institution\CourseOutcome.class
@@ -90,6 +91,7 @@ com\sdt\web_app\entities\institution\CiloPiloMapping.class
 com\sdt\web_app\entities\institution\ScholarshipDiscount$ScholarshipDiscountBuilder.class
 com\sdt\web_app\entities\authentication\Permissions.class
 com\sdt\web_app\config\GrpcAuthInterceptor$2.class
+com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CreateCurriculumRequest.class
 com\sdt\web_app\entities\institution\FeeCategory$FeeCategoryBuilder.class
 com\sdt\web_app\entities\authentication\User$UserBuilder.class
 com\sdt\web_app\repositories\institution\PaymentTermTemplateRepository.class
@@ -97,4 +99,5 @@ com\sdt\web_app\entities\institution\ScholarshipCategory.class
 com\sdt\web_app\config\SsrfProtectingClientInterceptor.class
 com\sdt\web_app\entities\institution\Term.class
 com\sdt\web_app\repositories\institution\CourseRepository.class
+com\sdt\web_app\dto\institution\CurriculumDesignerDtos$AddCourseToCurriculumRequest.class
 com\sdt\web_app\aspect\AuditLogAspect$UserIdentity.class

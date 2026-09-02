@@ -8,9 +8,11 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\JwtRoleConverter.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\SsrfProtectingClientInterceptor.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\WebSecurityConfig.java
-C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\AuthenticationController.java
-C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\PasswordResetController.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\AuthenticationController.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\PasswordResetController.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\CurriculumController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\authentication\AuthDtos.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\CurriculumDesignerDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\audit\AuditLog.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\authentication\PasswordResetToken.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\authentication\Permissions.java
@@ -69,6 +71,8 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\AuthService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\PasswordResetService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\TokenService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\CurriculumDesignerService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\CurriculumValidationService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\GradeTransmutationService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\PrerequisiteEvaluationService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\TermLifecycleService.java

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.sdt.web_app.AsyncSecurityConfigTest" time="0.074" tests="1" errors="0" skipped="0" failures="0" flakes="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.sdt.web_app.service.institution.CurriculumValidationTest" time="5.052" tests="1" errors="0" skipped="0" failures="0" flakes="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -36,6 +36,7 @@
     <property name="java.awt.headless" value="true"/>
     <property name="surefire.real.class.path" value="C:\Users\jkmor\AppData\Local\Temp\surefire13611670750169601398\surefirebooter-20260902234231364_3.jar"/>
     <property name="user.script" value=""/>
+    <property name="polyglot.engine.WarnInterpreterOnly" value="false"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.8+12-LTS-250"/>
     <property name="LOG_CORRELATION_PATTERN" value="%correlationId"/>
@@ -66,12 +67,257 @@
     <property name="java.class.version" value="65.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[sdt-webapp] "/>
   </properties>
-  <testcase name="shouldPropagateSecurityContextAndExecuteTask" classname="com.sdt.web_app.AsyncSecurityConfigTest" time="0.04">
-    <system-out><![CDATA[2026-09-02T23:42:48.829+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.sdt.web_app.AsyncSecurityConfigTest]: AsyncSecurityConfigTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-02T23:42:48.843+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.sdt.web_app.WebAppApplication for test class com.sdt.web_app.AsyncSecurityConfigTest
-2026-09-02T23:42:48.846+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.sdt.web_app.AsyncSecurityConfigTest]: AsyncSecurityConfigTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-02T23:42:48.846+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.sdt.web_app.BaseIntegrationTest]: BaseIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-02T23:42:48.856+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.sdt.web_app.WebAppApplication for test class com.sdt.web_app.AsyncSecurityConfigTest
+  <testcase name="shouldDetectCircularPrerequisiteDependency" classname="com.sdt.web_app.service.institution.CurriculumValidationTest" time="0.213">
+    <system-out><![CDATA[2026-09-02T23:42:58.425+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.sdt.web_app.service.institution.CurriculumValidationTest]: CurriculumValidationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-02T23:42:58.486+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.sdt.web_app.WebAppApplication for test class com.sdt.web_app.service.institution.CurriculumValidationTest
+2026-09-02T23:42:58.486+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.sdt.web_app.service.institution.CurriculumValidationTest]: CurriculumValidationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-02T23:42:58.500+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.sdt.web_app.WebAppApplication for test class com.sdt.web_app.service.institution.CurriculumValidationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-09-02T23:42:58.562+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] c.s.w.s.i.CurriculumValidationTest       : Starting CurriculumValidationTest using Java 21.0.8 with PID 29304 (started by jkmor in C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend)
+2026-09-02T23:42:58.562+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] c.s.w.s.i.CurriculumValidationTest       : The following 1 profile is active: "dev"
+2026-09-02T23:42:59.151+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-02T23:42:59.210+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 58 ms. Found 21 JPA repository interfaces.
+2026-09-02T23:42:59.935+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] com.zaxxer.hikari.HikariDataSource       : SecureHikariCP - Starting...
+2026-09-02T23:43:00.316+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] com.zaxxer.hikari.pool.HikariPool        : SecureHikariCP - Added connection com.mysql.cj.jdbc.ConnectionImpl@3ced8b72
+2026-09-02T23:43:00.318+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] com.zaxxer.hikari.HikariDataSource       : SecureHikariCP - Start completed.
+2026-09-02T23:43:00.405+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] org.flywaydb.core.FlywayExecutor         : Database: jdbc:mysql://localhost:3306/sdt_webapp_dev?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC (MySQL 8.0)
+2026-09-02T23:43:00.751+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] o.f.core.internal.command.DbValidate     : Successfully validated 5 migrations (execution time 00:00.124s)
+2026-09-02T23:43:00.824+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] o.f.core.internal.command.DbMigrate      : Current version of schema `sdt_webapp_dev`: 5
+2026-09-02T23:43:00.832+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] o.f.core.internal.command.DbMigrate      : Schema `sdt_webapp_dev` is up to date. No migration necessary.
+2026-09-02T23:43:00.927+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-02T23:43:00.990+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-02T23:43:01.038+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/sdt_webapp_dev?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.44
+	Default catalog/schema: sdt_webapp_dev/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-02T23:43:01.625+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-02T23:43:01.627+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] org.hibernate.orm.jdbc.batch             : HHH100501: Automatic JDBC statement batching enabled (maximum batch size 25)
+2026-09-02T23:43:01.703+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-02T23:43:03.244+08:00  INFO 29304 --- [sdt-webapp] [           main] [                                                 ] c.s.w.s.i.CurriculumValidationTest       : Started CurriculumValidationTest in 4.737 seconds (process running for 31.667)
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.address,
+        c1_0.ched_institutional_code,
+        c1_0.code,
+        c1_0.contact_number,
+        c1_0.email,
+        c1_0.is_active,
+        c1_0.is_main,
+        c1_0.name,
+        c1_0.region 
+    from
+        campuses c1_0
+Hibernate: 
+    select
+        d1_0.id,
+        d1_0.campus_id,
+        d1_0.code,
+        d1_0.dean_user_id,
+        d1_0.is_active,
+        d1_0.name,
+        d1_0.parent_department_id,
+        d1_0.type 
+    from
+        departments d1_0
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.ched_cmo_reference,
+        p1_0.code,
+        p1_0.degree_level,
+        p1_0.department_id,
+        p1_0.government_permit,
+        p1_0.is_active,
+        p1_0.major,
+        p1_0.name,
+        p1_0.total_units_required 
+    from
+        programs p1_0
+Hibernate: 
+    insert 
+    into
+        programs
+        (ched_cmo_reference, code, degree_level, department_id, government_permit, is_active, major, name, total_units_required) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        curricula
+        (code, effective_academic_year, is_active, name, program_id, status, version_number) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        courses
+        (code, contact_hours_lab, contact_hours_lec, credit_units, description, is_active, lab_units, lecture_units, title) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        courses
+        (code, contact_hours_lab, contact_hours_lec, credit_units, description, is_active, lab_units, lecture_units, title) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        curriculum_courses
+        (category, course_id, curriculum_id, semester, sequence_order, year_level) 
+    values
+        (?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        curriculum_courses
+        (category, course_id, curriculum_id, semester, sequence_order, year_level) 
+    values
+        (?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        course_prerequisites
+        (course_id, min_grade_required, prerequisite_course_id, rule_type) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        course_prerequisites
+        (course_id, min_grade_required, prerequisite_course_id, rule_type) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    select
+        cc1_0.id,
+        cc1_0.category,
+        cc1_0.course_id,
+        c1_0.id,
+        c1_0.code,
+        c1_0.contact_hours_lab,
+        c1_0.contact_hours_lec,
+        c1_0.credit_units,
+        c1_0.description,
+        c1_0.is_active,
+        c1_0.lab_units,
+        c1_0.lecture_units,
+        c1_0.title,
+        cc1_0.curriculum_id,
+        c2_0.id,
+        c2_0.code,
+        c2_0.effective_academic_year,
+        c2_0.is_active,
+        c2_0.name,
+        c2_0.program_id,
+        c2_0.status,
+        c2_0.version_number,
+        cc1_0.semester,
+        cc1_0.sequence_order,
+        cc1_0.year_level 
+    from
+        curriculum_courses cc1_0 
+    join
+        courses c1_0 
+            on c1_0.id=cc1_0.course_id 
+    join
+        curricula c2_0 
+            on c2_0.id=cc1_0.curriculum_id 
+    where
+        cc1_0.curriculum_id=?
+Hibernate: 
+    select
+        cp1_0.id,
+        cp1_0.course_id,
+        c1_0.id,
+        c1_0.code,
+        c1_0.contact_hours_lab,
+        c1_0.contact_hours_lec,
+        c1_0.credit_units,
+        c1_0.description,
+        c1_0.is_active,
+        c1_0.lab_units,
+        c1_0.lecture_units,
+        c1_0.title,
+        cp1_0.min_grade_required,
+        cp1_0.prerequisite_course_id,
+        pc1_0.id,
+        pc1_0.code,
+        pc1_0.contact_hours_lab,
+        pc1_0.contact_hours_lec,
+        pc1_0.credit_units,
+        pc1_0.description,
+        pc1_0.is_active,
+        pc1_0.lab_units,
+        pc1_0.lecture_units,
+        pc1_0.title,
+        cp1_0.rule_type 
+    from
+        course_prerequisites cp1_0 
+    join
+        courses c1_0 
+            on c1_0.id=cp1_0.course_id 
+    join
+        courses pc1_0 
+            on pc1_0.id=cp1_0.prerequisite_course_id 
+    where
+        cp1_0.course_id=?
+Hibernate: 
+    select
+        cp1_0.id,
+        cp1_0.course_id,
+        c1_0.id,
+        c1_0.code,
+        c1_0.contact_hours_lab,
+        c1_0.contact_hours_lec,
+        c1_0.credit_units,
+        c1_0.description,
+        c1_0.is_active,
+        c1_0.lab_units,
+        c1_0.lecture_units,
+        c1_0.title,
+        cp1_0.min_grade_required,
+        cp1_0.prerequisite_course_id,
+        pc1_0.id,
+        pc1_0.code,
+        pc1_0.contact_hours_lab,
+        pc1_0.contact_hours_lec,
+        pc1_0.credit_units,
+        pc1_0.description,
+        pc1_0.is_active,
+        pc1_0.lab_units,
+        pc1_0.lecture_units,
+        pc1_0.title,
+        cp1_0.rule_type 
+    from
+        course_prerequisites cp1_0 
+    join
+        courses c1_0 
+            on c1_0.id=cp1_0.course_id 
+    join
+        courses pc1_0 
+            on pc1_0.id=cp1_0.prerequisite_course_id 
+    where
+        cp1_0.course_id=?
 ]]></system-out>
   </testcase>
 </testsuite>

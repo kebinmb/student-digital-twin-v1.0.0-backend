@@ -86,4 +86,39 @@ public class CurriculumDesignerDtos {
             String semester
     ) {
     }
+
+    public record CreateCurriculumRequest(
+            Long programId,
+            String code,
+            String name,
+            String effectiveAcademicYear
+    ) {
+    }
+
+    public record AddCourseToCurriculumRequest(
+            Long courseId,
+            int yearLevel,
+            String semester,
+            String category,
+            Integer sequenceOrder
+    ) {
+    }
+
+    public record CloneCurriculumRequest(
+            String newCode,
+            String newName,
+            String effectiveAcademicYear
+    ) {
+    }
+
+    public record CurriculumSummaryResponse(
+            Long id,
+            String code,
+            String name,
+            String programCode,
+            String effectiveAcademicYear,
+            String status,
+            int versionNumber
+    ) {
+    }
 }

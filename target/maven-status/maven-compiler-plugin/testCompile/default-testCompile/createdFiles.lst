@@ -15,6 +15,7 @@ com\sdt\web_app\AsyncSecurityConfigTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$1.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$StringMarshaller.class
 com\sdt\web_app\service\institution\GradeTransmutationServiceTest.class
+com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.class
 com\sdt\web_app\SsrfProtectionTest.class
 com\sdt\web_app\service\institution\TermLifecycleServiceTest.class
 com\sdt\web_app\controller\TestSecurityControllers.class

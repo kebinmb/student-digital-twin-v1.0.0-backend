@@ -5,6 +5,8 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\controller\PublicHealthController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\controller\TestSecurityControllers.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumValidationTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\GradeTransmutationServiceTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\TermLifecycleServiceTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\SsrfProtectionTest.java
