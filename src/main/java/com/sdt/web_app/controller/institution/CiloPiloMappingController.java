@@ -28,6 +28,26 @@ public class CiloPiloMappingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<List<CiloPiloMappingResponse>> getMatrixMappings(
+            @RequestParam(required = false) Long courseId,
+            @RequestParam(required = false) Long programId) {
+        return ResponseEntity.ok(mappingService.getMatrixMappings(courseId, programId));
+    }
+
+    @GetMapping("/course/{courseId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<List<CiloPiloMappingResponse>> getMappingsByCourse(@PathVariable Long courseId) {
+        return ResponseEntity.ok(mappingService.getMappingsByCourseId(courseId));
+    }
+
+    @GetMapping("/program/{programId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<List<CiloPiloMappingResponse>> getMappingsByProgram(@PathVariable Long programId) {
+        return ResponseEntity.ok(mappingService.getMappingsByProgramId(programId));
+    }
+
     @GetMapping("/course-outcome/{ciloId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CiloPiloMappingResponse>> getMappingsByCourseOutcome(@PathVariable Long ciloId) {
@@ -40,8 +60,8 @@ public class CiloPiloMappingController {
         return ResponseEntity.ok(mappingService.getMappingsByProgramOutcomeId(piloId));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @DeleteMapping("/{id:\\d+}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> deleteMapping(@PathVariable Long id) {
         mappingService.deleteMapping(id);
         return ResponseEntity.noContent().build();

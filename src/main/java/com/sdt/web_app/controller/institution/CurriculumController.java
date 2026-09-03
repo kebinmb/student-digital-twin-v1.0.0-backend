@@ -60,7 +60,7 @@ public class CurriculumController {
     }
 
     @PostMapping("/{id}/courses")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> addCourseToCurriculum(
             @PathVariable Long id,
             @Valid @RequestBody AddCourseToCurriculumRequest request) {
@@ -69,7 +69,7 @@ public class CurriculumController {
     }
 
     @DeleteMapping("/{id}/courses/{curriculumCourseId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> removeCourseFromCurriculum(
             @PathVariable Long id,
             @PathVariable Long curriculumCourseId) {
@@ -78,7 +78,7 @@ public class CurriculumController {
     }
 
     @PostMapping("/{id}/clone")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<CurriculumSummaryResponse> cloneCurriculumAsNewRevision(
             @PathVariable Long id,
             @Valid @RequestBody CloneCurriculumRequest request) {
@@ -93,7 +93,7 @@ public class CurriculumController {
     }
 
     @PutMapping("/{id}/courses/position")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> updateCoursePosition(
             @PathVariable Long id,
             @Valid @RequestBody RelocateCourseRequest request) {
@@ -102,7 +102,7 @@ public class CurriculumController {
     }
 
     @PostMapping("/{id}/prerequisites")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> addPrerequisite(
             @PathVariable Long id,
             @Valid @RequestBody AddPrerequisiteRequest request) {
@@ -127,7 +127,7 @@ public class CurriculumController {
 
     // 1. Available Courses Drawer (Palette of unassigned subjects)
     @GetMapping("/{id}/available-courses")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<List<AvailableCourseDto>> getAvailableCourses(
             @PathVariable Long id,
             @RequestParam(required = false) String search) {
@@ -136,7 +136,7 @@ public class CurriculumController {
 
     // 2. Batch Reorder (Prevents N+1 requests during Angular CDK Drag-and-Drop)
     @PutMapping("/{id}/courses/batch-positions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> updateBatchCoursePositions(
             @PathVariable Long id,
             @RequestBody List<@Valid RelocateCourseRequest> requests) {
@@ -145,7 +145,7 @@ public class CurriculumController {
     }
 
     @DeleteMapping("/{id}/prerequisites/{prerequisiteId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> removePrerequisite(
             @PathVariable Long id,
             @PathVariable Long prerequisiteId) {

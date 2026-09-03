@@ -83,6 +83,37 @@ public class CiloPiloMappingService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<CiloPiloMappingResponse> getMappingsByCourseId(Long courseId) {
+        return mappingRepository.findByCourseId(courseId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CiloPiloMappingResponse> getMappingsByProgramId(Long programId) {
+        return mappingRepository.findByProgramId(programId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CiloPiloMappingResponse> getMatrixMappings(Long courseId, Long programId) {
+        List<CiloPiloMapping> mappings;
+        if (courseId != null && programId != null) {
+            mappings = mappingRepository.findByCourseIdAndProgramId(courseId, programId);
+        } else if (courseId != null) {
+            mappings = mappingRepository.findByCourseId(courseId);
+        } else if (programId != null) {
+            mappings = mappingRepository.findByProgramId(programId);
+        } else {
+            mappings = mappingRepository.findAll();
+        }
+        return mappings.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private CiloPiloMappingResponse mapToResponse(CiloPiloMapping m) {
         return new CiloPiloMappingResponse(
                 m.getId(),

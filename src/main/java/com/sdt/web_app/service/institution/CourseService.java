@@ -2,6 +2,7 @@ package com.sdt.web_app.service.institution;
 
 import com.sdt.web_app.dto.institution.CourseDtos.*;
 import com.sdt.web_app.entities.institution.Course;
+import com.sdt.web_app.repositories.institution.CourseOutcomeRepository;
 import com.sdt.web_app.repositories.institution.CoursePrerequisiteRepository;
 import com.sdt.web_app.repositories.institution.CourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
@@ -23,6 +24,7 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final CoursePrerequisiteRepository prerequisiteRepository;
+    private final CourseOutcomeRepository courseOutcomeRepository;
 
     public CourseResponse createCourse(CreateCourseRequest request) {
         if (courseRepository.existsByCode(request.code())) {
@@ -78,6 +80,9 @@ public class CourseService {
         if (prerequisiteRepository.existsByCourseIdOrPrerequisiteCourseId(id, id)) {
             throw new IllegalStateException("Cannot delete course referenced in prerequisite rules");
         }
+        if (courseOutcomeRepository.existsByCourseId(id)) {
+            throw new IllegalStateException("Cannot delete course with associated learning outcomes (CILOs). Remove its CILOs first.");
+        }
         courseRepository.delete(course);
     }
 
@@ -89,6 +94,13 @@ public class CourseService {
     @Transactional(readOnly = true)
     public List<CourseResponse> getAllCourses() {
         return courseRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseResponse> getActiveCourses() {
+        return courseRepository.findByIsActiveTrue().stream()
                 .map(this::mapToResponse)
                 .toList();
     }

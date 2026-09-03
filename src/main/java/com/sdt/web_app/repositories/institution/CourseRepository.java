@@ -21,6 +21,10 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByIsActiveTrue();
 
+    Page<Course> findByIsActiveTrue(Pageable pageable);
+
+    Page<Course> findByIsActiveTrueAndIdNotIn(Collection<Long> assignedIds, Pageable pageable);
+
     @Query("SELECT c FROM Course c WHERE c.isActive = true AND c.id NOT IN :assignedIds AND (:search IS NULL OR :search = '' OR LOWER(c.code) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(c.title) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Course> findAvailableCoursesExcluding(@Param("assignedIds") Collection<Long> assignedIds, @Param("search") String search, Pageable pageable);
 

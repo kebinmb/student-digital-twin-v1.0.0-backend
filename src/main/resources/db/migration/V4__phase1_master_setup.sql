@@ -177,8 +177,8 @@ VALUES (1, 'AY 2025-2026', '2025-08-11', '2026-07-17', FALSE),
 ON DUPLICATE KEY UPDATE is_current = VALUES(is_current);
 
 INSERT INTO terms (id, academic_year_id, term_type, term_name, start_date, end_date, enrollment_open, grading_open, add_drop_open, is_active)
-VALUES (1, 2, '1ST_SEM', '1st Semester AY 2026-2027', '2026-08-10', '2026-12-18', TRUE, FALSE, TRUE, TRUE),
-       (2, 2, '2ND_SEM', '2nd Semester AY 2026-2027', '2027-01-18', '2027-05-28', FALSE, FALSE, FALSE, FALSE),
+VALUES (1, 2, 'FIRST_SEM', '1st Semester AY 2026-2027', '2026-08-10', '2026-12-18', TRUE, FALSE, TRUE, TRUE),
+       (2, 2, 'SECOND_SEM', '2nd Semester AY 2026-2027', '2027-01-18', '2027-05-28', FALSE, FALSE, FALSE, FALSE),
        (3, 2, 'SUMMER', 'Midyear Term 2027', '2027-06-14', '2027-07-23', FALSE, FALSE, FALSE, FALSE)
 ON DUPLICATE KEY UPDATE term_name = VALUES(term_name);
 

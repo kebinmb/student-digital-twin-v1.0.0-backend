@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
+                "file": "04 Manual Testing/01 Institutional Setup & Curriculum Designer Manual Testing Guide (CHED CMO 25 s. 2015).md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "05 Phase 2 Frontend Curriculum Designer Readiness & Architecture"
+              "title": "01 Institutional Setup & Curriculum Designer Manual Testing Guide (CHED CMO 25 s. 2015)"
             }
           }
         ]
@@ -192,33 +192,34 @@
   "active": "289ee6244a829c5e",
   "lastOpenFiles": [
     "00 AI Audit/08 Curriculum Designer Implementation Audit & Verification Report.md",
+    "04 Manual Testing/01 Institutional Setup & Curriculum Designer Manual Testing Guide (CHED CMO 25 s. 2015).md",
+    "04 Manual Testing",
+    "02 Resources/00 Login and Authentication Springboot 4.1.0/00 Spring  Security - Virtual Threads Context Propagation.md",
+    "02 Resources/00 Login and Authentication Springboot 4.1.0/01 Outbound SSRF Mitigation in RestClient.md",
+    "02 Resources/00 Login and Authentication Springboot 4.1.0/03 gRPC 1.1 Security Interceptors.md",
+    "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
+    "03 Archives/00 Login and Authentication Backend + Frontend.md",
+    "02 Resources/00 Login and Authentication Springboot 4.1.0/05 Actuator Port Segregation & Filter Chains.md",
+    "02 Resources/00 Login and Authentication Springboot 4.1.0/06 Modern Security Headers & CHIPS Cookies.md",
+    "02 Resources/00 Login and Authentication Springboot 4.1.0/04 Jackson 3 Polymorphic Deserialization Hardening.md",
+    "02 Resources/00 Login and Authentication Springboot 4.1.0/02 OAuth 2.1 Strict Compliance & JWT Validation.md",
+    "00 Project/00 Module Implementation.md",
+    "00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
     "00 Project/00 AI Audit/08 Curriculum Designer Implementation Audit & Verification Report.md",
     "00 AI Audit/06 Phase 2 Curriculum Designer Implementation Complete.md",
     "00 AI Audit/07 Frontend Curriculum Designer Completeness & UI Uniformity Audit.md",
     "00 AI Audit/00 Current Project Focus.md",
     "00 Project/00 AI Audit/07 Frontend Curriculum Designer Completeness & UI Uniformity Audit.md",
     "00 Project/00 AI Audit/06 Phase 2 Curriculum Designer Implementation Complete.md",
-    "00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
     "00 Project/00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
     "00 Project/00 AI Audit",
     "00 AI Audit/04 Phase 2 Backend Readiness Audit & Curriculum Designer Roadmap.md",
     "00 AI Audit/00 Audit and Testing using AI.md",
-    "00 Project/00 Module Implementation.md",
     "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
     "00 Project/01 Layer 1 System Master Data & RBAC.md",
     "00 AI Audit/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",
     "00 AI Audit/02 Phase 1 AI Audit.md",
-    "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
     "Pasted image 20260901220019.png",
-    "00 Project/02 Curriculum & Program Architecture.md",
-    "02 Resources/02 Curriculum & Enrollment Management/00 Curriculum Mapping.md",
-    "02 Resources/07 Student Digital Twin/01 Attendance Monitoring Module.md",
-    "02 Resources/07 Student Digital Twin/02 Academic Performance Dashboard.md",
-    "03 Archives/00 Login and Authentication Backend + Frontend.md",
-    "02 Resources/07 Student Digital Twin/04 Predictive Analytics for Identifying Academically Vulnerable Students.md",
-    "02 Resources/07 Student Digital Twin/03 Student Risk Assessment.md",
-    "02 Resources/07 Student Digital Twin/00 Equity Target Profiling Module.md",
-    "02 Resources/06 Stakeholder Portals & LMS Integration/02 Data Privacy & Security.md",
     "02 Resources/07 Student Digital Twin",
     "02 Resources/06 Stakeholder Portals & LMS Integration",
     "02 Resources/05 Regulatory Compliance & CHED Reporting",
@@ -227,7 +228,6 @@
     "02 Resources/02 Curriculum & Enrollment Management",
     "02 Resources/01 Student Information & Registrar Management",
     "00 AI Audit",
-    "03 Archives",
     "Untitled.canvas"
   ]
 }

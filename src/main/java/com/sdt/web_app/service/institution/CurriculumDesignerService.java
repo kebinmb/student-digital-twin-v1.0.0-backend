@@ -314,10 +314,18 @@ public class CurriculumDesignerService {
 
         Page<Course> paged;
         String cleanSearch = (search != null && !search.isBlank()) ? search.trim() : null;
-        if (assignedCourseIds.isEmpty()) {
-            paged = courseRepository.findAvailableCoursesAll(cleanSearch, pageable);
+        if (cleanSearch == null) {
+            if (assignedCourseIds.isEmpty()) {
+                paged = courseRepository.findByIsActiveTrue(pageable);
+            } else {
+                paged = courseRepository.findByIsActiveTrueAndIdNotIn(assignedCourseIds, pageable);
+            }
         } else {
-            paged = courseRepository.findAvailableCoursesExcluding(assignedCourseIds, cleanSearch, pageable);
+            if (assignedCourseIds.isEmpty()) {
+                paged = courseRepository.findAvailableCoursesAll(cleanSearch, pageable);
+            } else {
+                paged = courseRepository.findAvailableCoursesExcluding(assignedCourseIds, cleanSearch, pageable);
+            }
         }
 
         return paged.getContent().stream()

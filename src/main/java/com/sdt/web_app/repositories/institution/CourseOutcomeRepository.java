@@ -19,4 +19,6 @@ public interface CourseOutcomeRepository extends JpaRepository<CourseOutcome, Lo
     List<CourseOutcome> findByCourseId(Long courseId);
 
     List<CourseOutcome> findByBloomsLevel(String bloomsLevel);
+
+    boolean existsByCourseId(Long courseId);
 }

@@ -39,7 +39,7 @@ public class CampusController {
         return ResponseEntity.ok(campusService.getActiveCampuses());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<CampusResponse> getCampusById(@PathVariable Long id) {
         return ResponseEntity.ok(campusService.getCampusById(id));

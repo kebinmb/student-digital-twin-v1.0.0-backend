@@ -44,7 +44,13 @@ public class CourseController {
         return ResponseEntity.ok(courseService.searchCourses(search, pageable));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<List<CourseResponse>> getActiveCourses() {
+        return ResponseEntity.ok(courseService.getActiveCourses());
+    }
+
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<CourseResponse> getCourseById(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
@@ -66,8 +72,8 @@ public class CourseController {
         return ResponseEntity.ok(courseService.toggleCourseActive(id, active));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id:\\d+}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
