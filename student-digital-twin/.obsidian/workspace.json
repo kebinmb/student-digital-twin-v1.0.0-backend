@@ -185,8 +185,7 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false,
-      "templater-obsidian:Templater": false
+      "bases:Create new base": false
     }
   },
   "active": "289ee6244a829c5e",
