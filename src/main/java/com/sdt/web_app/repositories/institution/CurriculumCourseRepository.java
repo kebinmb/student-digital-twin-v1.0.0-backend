@@ -15,6 +15,8 @@ public interface CurriculumCourseRepository extends JpaRepository<CurriculumCour
 
     boolean existsByCurriculumIdAndCourseId(Long curriculumId, Long courseId);
 
+    boolean existsByCourseId(Long courseId);
+
     @EntityGraph(attributePaths = {"curriculum", "course"})
     List<CurriculumCourse> findByCurriculumId(Long curriculumId);
 

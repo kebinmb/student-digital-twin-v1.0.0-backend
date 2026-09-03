@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 AI Audit/00 Current Project Focus.md",
+                "file": "00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 Current Project Focus"
+              "title": "05 Phase 2 Frontend Curriculum Designer Readiness & Architecture"
             }
           }
         ]
@@ -185,13 +185,23 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "templater-obsidian:Templater": false
     }
   },
   "active": "289ee6244a829c5e",
   "lastOpenFiles": [
-    "00 AI Audit/04 Phase 2 Backend Readiness Audit & Curriculum Designer Roadmap.md",
+    "00 AI Audit/08 Curriculum Designer Implementation Audit & Verification Report.md",
+    "00 Project/00 AI Audit/08 Curriculum Designer Implementation Audit & Verification Report.md",
+    "00 AI Audit/06 Phase 2 Curriculum Designer Implementation Complete.md",
+    "00 AI Audit/07 Frontend Curriculum Designer Completeness & UI Uniformity Audit.md",
     "00 AI Audit/00 Current Project Focus.md",
+    "00 Project/00 AI Audit/07 Frontend Curriculum Designer Completeness & UI Uniformity Audit.md",
+    "00 Project/00 AI Audit/06 Phase 2 Curriculum Designer Implementation Complete.md",
+    "00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
+    "00 Project/00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
+    "00 Project/00 AI Audit",
+    "00 AI Audit/04 Phase 2 Backend Readiness Audit & Curriculum Designer Roadmap.md",
     "00 AI Audit/00 Audit and Testing using AI.md",
     "00 Project/00 Module Implementation.md",
     "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
@@ -210,23 +220,14 @@
     "02 Resources/07 Student Digital Twin/00 Equity Target Profiling Module.md",
     "02 Resources/06 Stakeholder Portals & LMS Integration/02 Data Privacy & Security.md",
     "02 Resources/07 Student Digital Twin",
-    "02 Resources/06 Stakeholder Portals & LMS Integration/01 LMS Integration.md",
-    "02 Resources/06 Stakeholder Portals & LMS Integration/00 Student & Faculty Self-Service.md",
-    "02 Resources/05 Regulatory Compliance & CHED Reporting/01 Interoperability.md",
     "02 Resources/06 Stakeholder Portals & LMS Integration",
-    "02 Resources/05 Regulatory Compliance & CHED Reporting/00 Statistical Data Generation.md",
-    "02 Resources/04 Financial & Fee Management/02 Scholarship & UniFAST Billing.md",
     "02 Resources/05 Regulatory Compliance & CHED Reporting",
-    "02 Resources/04 Financial & Fee Management/01 Billing, Cashiering & Ledgering.md",
-    "02 Resources/04 Financial & Fee Management/00 Tuition & Miscellaneous Assessment.md",
-    "02 Resources/03 Faculty & Grade Management/02 Grade Encoding & Verification.md",
     "02 Resources/04 Financial & Fee Management",
     "02 Resources/03 Faculty & Grade Management",
     "02 Resources/02 Curriculum & Enrollment Management",
     "02 Resources/01 Student Information & Registrar Management",
     "00 AI Audit",
     "03 Archives",
-    "01 Areas",
     "Untitled.canvas"
   ]
 }

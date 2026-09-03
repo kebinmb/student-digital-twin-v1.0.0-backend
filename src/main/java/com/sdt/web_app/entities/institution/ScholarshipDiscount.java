@@ -70,6 +70,18 @@ public class ScholarshipDiscount {
         this.fundingSource = fundingSource;
     }
 
+    public void updateDetails(String name, ScholarshipCategory category, ScholarshipType type, String fundingSource, boolean appliesToTuition, boolean appliesToMisc) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Scholarship name cannot be blank");
+        }
+        this.name = name;
+        if (category != null) this.category = category;
+        if (type != null) this.type = type;
+        this.fundingSource = fundingSource;
+        this.appliesToTuition = appliesToTuition;
+        this.appliesToMisc = appliesToMisc;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

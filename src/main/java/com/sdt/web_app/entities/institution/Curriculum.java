@@ -57,6 +57,20 @@ public class Curriculum {
         return this.status == Status.DRAFT || this.status == Status.UNDER_REVIEW;
     }
 
+    public void updateDetails(String name, String effectiveAcademicYear) {
+        if (!isEditable()) {
+            throw new IllegalStateException("Curriculum is locked under status: " + this.status);
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Curriculum name cannot be blank");
+        }
+        if (effectiveAcademicYear == null || effectiveAcademicYear.isBlank()) {
+            throw new IllegalArgumentException("Effective academic year cannot be blank");
+        }
+        this.name = name;
+        this.effectiveAcademicYear = effectiveAcademicYear;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

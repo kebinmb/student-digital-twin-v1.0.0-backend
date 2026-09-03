@@ -20,4 +20,9 @@ public interface CoursePrerequisiteRepository extends JpaRepository<CoursePrereq
 
     @EntityGraph(attributePaths = {"course", "prerequisiteCourse"})
     List<CoursePrerequisite> findByPrerequisiteCourseId(Long prerequisiteCourseId);
+
+    boolean existsByCourseIdOrPrerequisiteCourseId(Long courseId, Long prerequisiteCourseId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT cp FROM CoursePrerequisite cp JOIN FETCH cp.prerequisiteCourse WHERE cp.course.id IN :courseIds")
+    List<CoursePrerequisite> findPrerequisitesForCourseIds(@org.springframework.data.repository.query.Param("courseIds") java.util.Collection<Long> courseIds);
 }

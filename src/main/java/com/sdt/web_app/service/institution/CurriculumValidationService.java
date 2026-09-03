@@ -110,9 +110,12 @@ public class CurriculumValidationService {
                 .collect(Collectors.toMap(Course::getId, c -> c, (a, b) -> a));
 
         Map<Long, List<Course>> adjList = new HashMap<>();
-        for (Long courseId : courseMap.keySet()) {
-            List<CoursePrerequisite> prereqs = coursePrerequisiteRepository.findByCourseId(courseId);
-            adjList.put(courseId, prereqs.stream().map(CoursePrerequisite::getPrerequisiteCourse).toList());
+        if (!courseMap.isEmpty()) {
+            List<CoursePrerequisite> allPrereqs = coursePrerequisiteRepository.findPrerequisitesForCourseIds(courseMap.keySet());
+            for (CoursePrerequisite cp : allPrereqs) {
+                adjList.computeIfAbsent(cp.getCourse().getId(), k -> new ArrayList<>())
+                        .add(cp.getPrerequisiteCourse());
+            }
         }
 
         Map<Long, Integer> state = new HashMap<>(); // 0: White (unvisited), 1: Grey (visiting), 2: Black (visited)

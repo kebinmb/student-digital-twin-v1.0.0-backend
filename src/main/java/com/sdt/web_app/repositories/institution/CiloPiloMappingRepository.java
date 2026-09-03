@@ -20,4 +20,8 @@ public interface CiloPiloMappingRepository extends JpaRepository<CiloPiloMapping
 
     @EntityGraph(attributePaths = {"courseOutcome", "programOutcome"})
     List<CiloPiloMapping> findByProgramOutcomeId(Long programOutcomeId);
+
+    boolean existsByCourseOutcomeId(Long courseOutcomeId);
+
+    boolean existsByProgramOutcomeId(Long programOutcomeId);
 }

@@ -3,6 +3,9 @@ package com.sdt.web_app.service.institution;
 import com.sdt.web_app.dto.institution.CurriculumDesignerDtos.*;
 import com.sdt.web_app.entities.institution.*;
 import com.sdt.web_app.repositories.institution.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,13 +52,30 @@ public class CurriculumDesignerService {
                 .mapToInt(cc -> cc.getCourse().getContactHoursLec() + cc.getCourse().getContactHoursLab())
                 .sum();
 
-        // Group into Year Blocks
-        Map<Integer, Map<String, List<CurriculumCourse>>> grouped = courses.stream()
-                .collect(Collectors.groupingBy(
-                        CurriculumCourse::getYearLevel,
-                        TreeMap::new,
-                        Collectors.groupingBy(CurriculumCourse::getSemester, TreeMap::new, Collectors.toList())
-                ));
+        // Batch-fetch all prerequisites for all courses in this curriculum in a single query (Eliminates N+1)
+        List<Long> courseIds = courses.stream().map(cc -> cc.getCourse().getId()).distinct().toList();
+        Map<Long, List<String>> prereqMap = courseIds.isEmpty() ? Collections.emptyMap() :
+                prerequisiteRepository.findPrerequisitesForCourseIds(courseIds).stream()
+                        .collect(Collectors.groupingBy(
+                                cp -> cp.getCourse().getId(),
+                                Collectors.mapping(cp -> cp.getPrerequisiteCourse().getCode(), Collectors.toList())
+                        ));
+
+        // Initialize standard 4-year undergraduate structure with 1st & 2nd Semesters
+        Map<Integer, Map<String, List<CurriculumCourse>>> grouped = new TreeMap<>();
+        for (int y = 1; y <= 4; y++) {
+            Map<String, List<CurriculumCourse>> semMap = new TreeMap<>();
+            semMap.put("1ST_SEM", new ArrayList<>());
+            semMap.put("2ND_SEM", new ArrayList<>());
+            grouped.put(y, semMap);
+        }
+
+        // Merge existing assigned courses
+        for (CurriculumCourse cc : courses) {
+            grouped.computeIfAbsent(cc.getYearLevel(), k -> new TreeMap<>())
+                    .computeIfAbsent(cc.getSemester(), k -> new ArrayList<>())
+                    .add(cc);
+        }
 
         List<YearBlockDto> yearBlocks = grouped.entrySet().stream().map(yearEntry -> {
             List<SemesterBlockDto> semesterBlocks = yearEntry.getValue().entrySet().stream().map(semEntry -> {
@@ -72,9 +92,7 @@ public class CurriculumDesignerService {
 
                 List<CourseItemDto> courseDtos = semCourses.stream().map(cc -> {
                     Course c = cc.getCourse();
-                    List<String> prereqs = prerequisiteRepository.findByCourseId(c.getId()).stream()
-                            .map(p -> p.getPrerequisiteCourse().getCode())
-                            .toList();
+                    List<String> prereqs = prereqMap.getOrDefault(c.getId(), Collections.emptyList());
 
                     return new CourseItemDto(
                             cc.getId(), c.getId(), c.getCode(), c.getTitle(),
@@ -112,6 +130,10 @@ public class CurriculumDesignerService {
 
         if (request.courseId().equals(request.prerequisiteCourseId())) {
             throw new IllegalArgumentException("A course cannot have itself as a prerequisite.");
+        }
+
+        if (prerequisiteRepository.existsByCourseIdAndPrerequisiteCourseId(request.courseId(), request.prerequisiteCourseId())) {
+            throw new IllegalArgumentException("Prerequisite relationship already exists between these courses.");
         }
 
         Course course = courseRepository.findById(request.courseId())
@@ -278,6 +300,85 @@ public class CurriculumDesignerService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public List<AvailableCourseDto> getAvailableCourses(Long curriculumId, String search) {
+        return getAvailableCourses(curriculumId, search, PageRequest.of(0, 50));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AvailableCourseDto> getAvailableCourses(Long curriculumId, String search, Pageable pageable) {
+        List<CurriculumCourse> assigned = curriculumCourseRepository.findByCurriculumId(curriculumId);
+        Set<Long> assignedCourseIds = assigned.stream()
+                .map(cc -> cc.getCourse().getId())
+                .collect(Collectors.toSet());
+
+        Page<Course> paged;
+        String cleanSearch = (search != null && !search.isBlank()) ? search.trim() : null;
+        if (assignedCourseIds.isEmpty()) {
+            paged = courseRepository.findAvailableCoursesAll(cleanSearch, pageable);
+        } else {
+            paged = courseRepository.findAvailableCoursesExcluding(assignedCourseIds, cleanSearch, pageable);
+        }
+
+        return paged.getContent().stream()
+                .map(c -> new AvailableCourseDto(
+                        c.getId(),
+                        c.getCode(),
+                        c.getTitle(),
+                        c.getLectureUnits(),
+                        c.getLabUnits(),
+                        c.getCreditUnits(),
+                        c.getContactHoursLec(),
+                        c.getContactHoursLab()
+                ))
+                .toList();
+    }
+
+    public void batchRelocatePositions(Long curriculumId, List<RelocateCourseRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return;
+        }
+
+        Curriculum curriculum = getCurriculum(curriculumId);
+        assertEditable(curriculum);
+        List<Long> targetIds = requests.stream()
+                .map(RelocateCourseRequest::curriculumCourseId)
+                .toList();
+
+        Map<Long, CurriculumCourse> courseMap = curriculumCourseRepository.findAllById(targetIds).stream()
+                .collect(Collectors.toMap(CurriculumCourse::getId, cc -> cc));
+
+        for (RelocateCourseRequest req : requests) {
+            CurriculumCourse cc = courseMap.get(req.curriculumCourseId());
+            if (cc == null) {
+                throw new IllegalArgumentException("CurriculumCourse not found with ID: " + req.curriculumCourseId());
+            }
+            if (!cc.getCurriculum().getId().equals(curriculumId)) {
+                throw new IllegalArgumentException("Course ID " + req.curriculumCourseId() + " does not belong to curriculum ID: " + curriculumId);
+            }
+
+            cc.relocatePosition(req.targetYearLevel(), req.targetSemester(), req.targetSequenceOrder());
+        }
+
+    }
+
+    public void removePrerequisite(Long curriculumId, Long prerequisiteId) {
+        Curriculum curriculum = getCurriculum(curriculumId);
+        assertEditable(curriculum);
+
+        CoursePrerequisite rule = prerequisiteRepository.findById(prerequisiteId)
+                .orElseThrow(() -> new IllegalArgumentException("CoursePrerequisite rule not found with ID: " + prerequisiteId));
+
+        prerequisiteRepository.delete(rule);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CurriculumSummaryResponse> getCurriculaByProgram(Long programId) {
+        return curriculumRepository.findByProgramId(programId).stream()
+                .map(this::toSummaryResponse)
+                .toList();
+    }
+
     private Curriculum getCurriculum(Long id) {
         return curriculumRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Curriculum not found with ID: " + id));
@@ -287,5 +388,17 @@ public class CurriculumDesignerService {
         if (!curriculum.isEditable()) {
             throw new IllegalStateException("Curriculum is locked under status: " + curriculum.getStatus());
         }
+    }
+
+    private CurriculumSummaryResponse toSummaryResponse(Curriculum c) {
+        return new CurriculumSummaryResponse(
+                c.getId(),
+                c.getCode(),
+                c.getName(),
+                c.getProgram().getCode(),
+                c.getEffectiveAcademicYear(),
+                c.getStatus().name(),
+                c.getVersionNumber()
+        );
     }
 }

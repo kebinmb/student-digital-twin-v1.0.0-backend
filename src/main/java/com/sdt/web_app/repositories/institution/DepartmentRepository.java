@@ -19,8 +19,12 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     @EntityGraph(attributePaths = {"campus", "parentDepartment"})
     Optional<Department> findWithDetailsById(Long id);
 
-    @EntityGraph(attributePaths = {"campus"})
+    @EntityGraph(attributePaths = {"campus", "parentDepartment"})
     List<Department> findByCampusId(Long campusId);
+
+    boolean existsByParentDepartmentId(Long parentDepartmentId);
+
+    boolean existsByCampusId(Long campusId);
 
     List<Department> findByParentDepartmentId(Long parentDepartmentId);
 

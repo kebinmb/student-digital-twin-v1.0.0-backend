@@ -18,6 +18,8 @@ public interface CurriculumRepository extends JpaRepository<Curriculum, Long> {
     @EntityGraph(attributePaths = {"program"})
     List<Curriculum> findByProgramId(Long programId);
 
+    boolean existsByProgramId(Long programId);
+
     @EntityGraph(attributePaths = {"program"})
     List<Curriculum> findByIsActiveTrue();
 }

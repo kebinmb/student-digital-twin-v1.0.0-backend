@@ -18,6 +18,8 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
     @EntityGraph(attributePaths = {"department"})
     List<Program> findByDepartmentId(Long departmentId);
 
+    boolean existsByDepartmentId(Long departmentId);
+
     @EntityGraph(attributePaths = {"department"})
     List<Program> findByIsActiveTrue();
 }

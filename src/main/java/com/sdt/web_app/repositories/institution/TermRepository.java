@@ -16,6 +16,8 @@ public interface TermRepository extends JpaRepository<Term, Long> {
 
     boolean existsByAcademicYearIdAndTermType(Long academicYearId, TermType termType);
 
+    boolean existsByAcademicYearId(Long academicYearId);
+
     @EntityGraph(attributePaths = {"academicYear"})
     Optional<Term> findWithAcademicYearById(Long id);
 

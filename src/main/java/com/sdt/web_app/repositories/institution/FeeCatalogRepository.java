@@ -18,6 +18,8 @@ public interface FeeCatalogRepository extends JpaRepository<FeeCatalog, Long> {
     @EntityGraph(attributePaths = {"category"})
     List<FeeCatalog> findByCategoryId(Long categoryId);
 
+    boolean existsByCategoryId(Long categoryId);
+
     @EntityGraph(attributePaths = {"category"})
     List<FeeCatalog> findByIsFheBillableTrue();
 
