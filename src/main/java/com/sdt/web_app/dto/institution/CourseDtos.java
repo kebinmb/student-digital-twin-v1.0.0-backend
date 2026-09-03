@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -33,8 +34,26 @@ public class CourseDtos {
             @Min(value = 0, message = "Contact hours (lab) must be non-negative")
             int contactHoursLab,
 
+            @NotBlank(message = "Course category is required")
+            @Pattern(
+                    regexp = "^(GEN_ED|PROFESSIONAL_MAJOR|ELECTIVE|CAPSTONE|PRACTICUM|MANDATED)$",
+                    message = "Invalid course category"
+            )
+            String category,
+
             String description
     ) {
+        public CreateCourseRequest(
+                String code,
+                String title,
+                BigDecimal lectureUnits,
+                BigDecimal labUnits,
+                int contactHoursLec,
+                int contactHoursLab,
+                String description
+        ) {
+            this(code, title, lectureUnits, labUnits, contactHoursLec, contactHoursLab, "PROFESSIONAL_MAJOR", description);
+        }
     }
 
     public record UpdateCourseRequest(
@@ -56,8 +75,25 @@ public class CourseDtos {
             @Min(value = 0, message = "Contact hours (lab) must be non-negative")
             int contactHoursLab,
 
+            @NotBlank(message = "Course category is required")
+            @Pattern(
+                    regexp = "^(GEN_ED|PROFESSIONAL_MAJOR|ELECTIVE|CAPSTONE|PRACTICUM|MANDATED)$",
+                    message = "Invalid course category"
+            )
+            String category,
+
             String description
     ) {
+        public UpdateCourseRequest(
+                String title,
+                BigDecimal lectureUnits,
+                BigDecimal labUnits,
+                int contactHoursLec,
+                int contactHoursLab,
+                String description
+        ) {
+            this(title, lectureUnits, labUnits, contactHoursLec, contactHoursLab, "PROFESSIONAL_MAJOR", description);
+        }
     }
 
     public record CourseResponse(
@@ -69,6 +105,7 @@ public class CourseDtos {
             BigDecimal creditUnits,
             int contactHoursLec,
             int contactHoursLab,
+            String category,
             String description,
             boolean isActive
     ) {

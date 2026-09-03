@@ -337,7 +337,8 @@ public class CurriculumDesignerService {
                         c.getLabUnits(),
                         c.getCreditUnits(),
                         c.getContactHoursLec(),
-                        c.getContactHoursLab()
+                        c.getContactHoursLab(),
+                        c.getCategory()
                 ))
                 .toList();
     }

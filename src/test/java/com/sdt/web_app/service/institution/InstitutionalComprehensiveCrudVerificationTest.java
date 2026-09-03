@@ -341,9 +341,9 @@ class InstitutionalComprehensiveCrudVerificationTest {
     class CourseCatalogAndOutcomesTests {
 
         @Test
-        @DisplayName("Course CRUD: Auto-calculation of creditUnits and deletion guard")
+        @DisplayName("Course CRUD: Auto-calculation of creditUnits, category persistence, and deletion guard")
         void testCourse_CrudAndGuards() {
-            // Create Course with Lec: 2, Lab: 1 -> Credit Units: 3
+            // Create Course with default category (PROFESSIONAL_MAJOR)
             CourseResponse course = courseService.createCourse(new CreateCourseRequest(
                     "CS-100-VERIF",
                     "Discrete Structures",
@@ -354,17 +354,33 @@ class InstitutionalComprehensiveCrudVerificationTest {
                     "Discrete mathematics foundations."
             ));
             assertThat(course.creditUnits()).isEqualByComparingTo(new BigDecimal("3.00"));
+            assertThat(course.category()).isEqualTo("PROFESSIONAL_MAJOR");
 
-            // Update Course
+            // Update Course with explicit Category (ELECTIVE)
             CourseResponse updated = courseService.updateCourse(course.id(), new UpdateCourseRequest(
                     "Discrete Mathematics & Graph Theory",
                     new BigDecimal("3.00"),
                     new BigDecimal("0.00"),
                     3,
                     0,
+                    "ELECTIVE",
                     "Updated description."
             ));
             assertThat(updated.creditUnits()).isEqualByComparingTo(new BigDecimal("3.00"));
+            assertThat(updated.category()).isEqualTo("ELECTIVE");
+
+            // Create Course with specific category (CAPSTONE)
+            CourseResponse capstone = courseService.createCourse(new CreateCourseRequest(
+                    "IT-413-CAP",
+                    "Capstone Project 1",
+                    new BigDecimal("3.00"),
+                    BigDecimal.ZERO,
+                    3,
+                    0,
+                    "CAPSTONE",
+                    "Capstone proposal."
+            ));
+            assertThat(capstone.category()).isEqualTo("CAPSTONE");
 
             // Search with pagination
             var page = courseService.searchCourses("Discrete", PageRequest.of(0, 10));

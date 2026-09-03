@@ -33,6 +33,10 @@ public class CourseService {
 
         BigDecimal creditUnits = request.lectureUnits().add(request.labUnits());
 
+        String category = (request.category() != null && !request.category().isBlank())
+                ? request.category()
+                : "PROFESSIONAL_MAJOR";
+
         Course course = Course.builder()
                 .code(request.code().trim().toUpperCase())
                 .title(request.title().trim())
@@ -41,6 +45,7 @@ public class CourseService {
                 .creditUnits(creditUnits)
                 .contactHoursLec(request.contactHoursLec())
                 .contactHoursLab(request.contactHoursLab())
+                .category(category)
                 .description(request.description())
                 .isActive(true)
                 .build();
@@ -57,7 +62,8 @@ public class CourseService {
                 request.labUnits(),
                 request.contactHoursLec(),
                 request.contactHoursLab(),
-                request.description()
+                request.description(),
+                request.category()
         );
         return mapToResponse(course);
     }
@@ -126,6 +132,7 @@ public class CourseService {
                 c.getCreditUnits(),
                 c.getContactHoursLec(),
                 c.getContactHoursLab(),
+                c.getCategory(),
                 c.getDescription(),
                 c.isActive()
         );

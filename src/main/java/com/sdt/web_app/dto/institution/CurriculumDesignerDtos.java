@@ -140,7 +140,7 @@ public class CurriculumDesignerDtos {
             String semester,
 
             @NotBlank(message = "Category is required")
-            @Pattern(regexp = "^(GEN_ED|PROFESSIONAL_MAJOR|ELECTIVE|MANDATED)$", message = "Category must be GEN_ED, PROFESSIONAL_MAJOR, ELECTIVE, or MANDATED")
+            @Pattern(regexp = "^(GEN_ED|PROFESSIONAL_MAJOR|ELECTIVE|CAPSTONE|PRACTICUM|MANDATED)$", message = "Category must be GEN_ED, PROFESSIONAL_MAJOR, ELECTIVE, CAPSTONE, PRACTICUM, or MANDATED")
             String category,
 
             Integer sequenceOrder
@@ -181,7 +181,20 @@ public class CurriculumDesignerDtos {
             BigDecimal labUnits,
             BigDecimal creditUnits,
             int contactHoursLec,
-            int contactHoursLab
+            int contactHoursLab,
+            String category
     ) {
+        public AvailableCourseDto(
+                Long courseId,
+                String code,
+                String title,
+                BigDecimal lectureUnits,
+                BigDecimal labUnits,
+                BigDecimal creditUnits,
+                int contactHoursLec,
+                int contactHoursLab
+        ) {
+            this(courseId, code, title, lectureUnits, labUnits, creditUnits, contactHoursLec, contactHoursLab, "PROFESSIONAL_MAJOR");
+        }
     }
 }
