@@ -192,57 +192,57 @@ Select `BSIT` in the programs table, open the **"Program Outcomes"** manager, an
 #### 4.1 Master Course Catalog (Complete 49 Courses — 146.00 Credit Units)
 Encode each of the 49 courses. All contact hours conform strictly to the CHED 1:1 (`contactHoursLec = lectureUnits * 1`) and 1:3 (`contactHoursLab = labUnits * 3`) rules:
 
-| # | Course Code | Course Title | Lec Units | Lab Units | Credit Units | Lec Hours | Lab Hours | Category |
-| :-: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| 1 | `GE 101` | Understanding the Self | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 2 | `GE 102` | Readings in Philippine History | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 3 | `GE 103` | The Contemporary World | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 4 | `GE 104` | Mathematics in the Modern World | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 5 | `GE 105` | Purposive Communication | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 6 | `GE 106` | Art Appreciation | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 7 | `GE 107` | Science, Technology, and Society | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 8 | `GE 108` | Ethics | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 9 | `GE 109` | Life and Works of Rizal | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 10 | `GE-ELEC 1` | Environmental Science | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 11 | `GE-ELEC 2` | Gender and Society | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 12 | `GE-ELEC 3` | Philippine Popular Culture | `3.00` | `0.00` | `3.00` | `3` | `0` | `GEN_ED` |
-| 13 | `PE 1` | Movement Competency | `2.00` | `0.00` | `2.00` | `2` | `0` | `MANDATED` |
-| 14 | `PE 2` | Fitness and Exercise | `2.00` | `0.00` | `2.00` | `2` | `0` | `MANDATED` |
-| 15 | `PE 3` | Physical Activities in Dance and Sports | `2.00` | `0.00` | `2.00` | `2` | `0` | `MANDATED` |
-| 16 | `PE 4` | Recreational and Outdoor Activities | `2.00` | `0.00` | `2.00` | `2` | `0` | `MANDATED` |
-| 17 | `NSTP 1` | National Service Training Program 1 | `3.00` | `0.00` | `3.00` | `3` | `0` | `MANDATED` |
-| 18 | `NSTP 2` | National Service Training Program 2 | `3.00` | `0.00` | `3.00` | `3` | `0` | `MANDATED` |
-| 19 | `IT 111` | Introduction to Computing | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 20 | `IT 112` | Computer Programming 1 | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 21 | `IT 121` | Computer Programming 2 | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 22 | `IT 122` | Discrete Mathematics for IT | `3.00` | `0.00` | `3.00` | `3` | `0` | `PROFESSIONAL_MAJOR` |
-| 23 | `IT 211` | Data Structures and Algorithms | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 24 | `IT 212` | Object-Oriented Programming | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 25 | `IT 213` | Platform Technologies | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 26 | `IT 221` | Information Management | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 27 | `IT 222` | Networking 1 (Fundamentals of Networking) | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 28 | `IT 223` | Quantitative Methods | `3.00` | `0.00` | `3.00` | `3` | `0` | `PROFESSIONAL_MAJOR` |
-| 29 | `IT 224` | Web Systems and Technologies 1 | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 30 | `IT 311` | Networking 2 (Advanced Routing & Switching) | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 31 | `IT 312` | Systems Analysis and Design | `3.00` | `0.00` | `3.00` | `3` | `0` | `PROFESSIONAL_MAJOR` |
-| 32 | `IT 313` | Advanced Database Systems | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 33 | `IT 314` | Systems Integration and Architecture 1 | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 34 | `IT 315` | Information Assurance and Security 1 | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 35 | `IT 321` | Information Assurance and Security 2 | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 36 | `IT 322` | Integrative Programming and Technologies | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 37 | `IT 323` | Applications Development and Emerging Tech | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 38 | `IT 324` | Systems Integration and Architecture 2 | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 39 | `IT 325` | Human-Computer Interaction | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 40 | `IT-ELEC 1` | Cloud Computing Fundamentals | `2.00` | `1.00` | `3.00` | `2` | `3` | `ELECTIVE` |
-| 41 | `IT 411` | Social and Professional Issues in IT | `3.00` | `0.00` | `3.00` | `3` | `0` | `PROFESSIONAL_MAJOR` |
-| 42 | `IT 412` | Systems Administration and Maintenance | `2.00` | `1.00` | `3.00` | `2` | `3` | `PROFESSIONAL_MAJOR` |
-| 43 | `IT 413` | Capstone Project 1 | `3.00` | `0.00` | `3.00` | `3` | `0` | `PROFESSIONAL_MAJOR` |
-| 44 | `IT 414` | IT Project Management | `3.00` | `0.00` | `3.00` | `3` | `0` | `PROFESSIONAL_MAJOR` |
-| 45 | `IT-ELEC 2` | Mobile Application Development | `2.00` | `1.00` | `3.00` | `2` | `3` | `ELECTIVE` |
-| 46 | `IT-ELEC 3` | Enterprise Architecture & Cloud Deployment | `2.00` | `1.00` | `3.00` | `2` | `3` | `ELECTIVE` |
-| 47 | `IT 421` | Capstone Project 2 | `1.00` | `2.00` | `3.00` | `1` | `6` | `PROFESSIONAL_MAJOR` |
-| 48 | `IT 422` | Practicum / Industry Internship | `0.00` | `6.00` | `6.00` | `0` | `18` | `PROFESSIONAL_MAJOR` |
-| 49 | `IT-ELEC 4` | Full-Stack Web Development & Microservices | `2.00` | `1.00` | `3.00` | `2` | `3` | `ELECTIVE` |
+|  #  | Course Code | Course Title                                | Lec Units | Lab Units | Credit Units | Lec Hours | Lab Hours | Category             |
+| :-: | :---------- | :------------------------------------------ | :-------: | :-------: | :----------: | :-------: | :-------: | :------------------- |
+|  1  | `GE 101`    | Understanding the Self                      |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  2  | `GE 102`    | Readings in Philippine History              |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  3  | `GE 103`    | The Contemporary World                      |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  4  | `GE 104`    | Mathematics in the Modern World             |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  5  | `GE 105`    | Purposive Communication                     |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  6  | `GE 106`    | Art Appreciation                            |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  7  | `GE 107`    | Science, Technology, and Society            |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  8  | `GE 108`    | Ethics                                      |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+|  9  | `GE 109`    | Life and Works of Rizal                     |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+| 10  | `GE-ELEC 1` | Environmental Science                       |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+| 11  | `GE-ELEC 2` | Gender and Society                          |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+| 12  | `GE-ELEC 3` | Philippine Popular Culture                  |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `GEN_ED`             |
+| 13  | `PE 1`      | Movement Competency                         |  `2.00`   |  `0.00`   |    `2.00`    |    `2`    |    `0`    | `MANDATED`           |
+| 14  | `PE 2`      | Fitness and Exercise                        |  `2.00`   |  `0.00`   |    `2.00`    |    `2`    |    `0`    | `MANDATED`           |
+| 15  | `PE 3`      | Physical Activities in Dance and Sports     |  `2.00`   |  `0.00`   |    `2.00`    |    `2`    |    `0`    | `MANDATED`           |
+| 16  | `PE 4`      | Recreational and Outdoor Activities         |  `2.00`   |  `0.00`   |    `2.00`    |    `2`    |    `0`    | `MANDATED`           |
+| 17  | `NSTP 1`    | National Service Training Program 1         |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `MANDATED`           |
+| 18  | `NSTP 2`    | National Service Training Program 2         |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `MANDATED`           |
+| 19  | `IT 111`    | Introduction to Computing                   |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 20  | `IT 112`    | Computer Programming 1                      |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 21  | `IT 121`    | Computer Programming 2                      |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 22  | `IT 122`    | Discrete Mathematics for IT                 |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `PROFESSIONAL_MAJOR` |
+| 23  | `IT 211`    | Data Structures and Algorithms              |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 24  | `IT 212`    | Object-Oriented Programming                 |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 25  | `IT 213`    | Platform Technologies                       |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 26  | `IT 221`    | Information Management                      |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 27  | `IT 222`    | Networking 1 (Fundamentals of Networking)   |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 28  | `IT 223`    | Quantitative Methods                        |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `PROFESSIONAL_MAJOR` |
+| 29  | `IT 224`    | Web Systems and Technologies 1              |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 30  | `IT 311`    | Networking 2 (Advanced Routing & Switching) |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 31  | `IT 312`    | Systems Analysis and Design                 |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `PROFESSIONAL_MAJOR` |
+| 32  | `IT 313`    | Advanced Database Systems                   |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 33  | `IT 314`    | Systems Integration and Architecture 1      |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 34  | `IT 315`    | Information Assurance and Security 1        |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 35  | `IT 321`    | Information Assurance and Security 2        |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 36  | `IT 322`    | Integrative Programming and Technologies    |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 37  | `IT 323`    | Applications Development and Emerging Tech  |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 38  | `IT 324`    | Systems Integration and Architecture 2      |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 39  | `IT 325`    | Human-Computer Interaction                  |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 40  | `IT-ELEC 1` | Cloud Computing Fundamentals                |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `ELECTIVE`           |
+| 41  | `IT 411`    | Social and Professional Issues in IT        |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `PROFESSIONAL_MAJOR` |
+| 42  | `IT 412`    | Systems Administration and Maintenance      |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `PROFESSIONAL_MAJOR` |
+| 43  | `IT 413`    | Capstone Project 1                          |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `PROFESSIONAL_MAJOR` |
+| 44  | `IT 414`    | IT Project Management                       |  `3.00`   |  `0.00`   |    `3.00`    |    `3`    |    `0`    | `PROFESSIONAL_MAJOR` |
+| 45  | `IT-ELEC 2` | Mobile Application Development              |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `ELECTIVE`           |
+| 46  | `IT-ELEC 3` | Enterprise Architecture & Cloud Deployment  |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `ELECTIVE`           |
+| 47  | `IT 421`    | Capstone Project 2                          |  `1.00`   |  `2.00`   |    `3.00`    |    `1`    |    `6`    | `PROFESSIONAL_MAJOR` |
+| 48  | `IT 422`    | Practicum / Industry Internship             |  `0.00`   |  `6.00`   |    `6.00`    |    `0`    |   `18`    | `PROFESSIONAL_MAJOR` |
+| 49  | `IT-ELEC 4` | Full-Stack Web Development & Microservices  |  `2.00`   |  `1.00`   |    `3.00`    |    `2`    |    `3`    | `ELECTIVE`           |
 
 ---
 
