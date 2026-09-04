@@ -34,21 +34,28 @@ public class CurriculumController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
-    public ResponseEntity<com.sdt.web_app.dto.institution.CurriculumDtos.CurriculumResponse> getCurriculumById(@PathVariable Long id) {
+    public ResponseEntity<com.sdt.web_app.dto.institution.CurriculumDtos.CurriculumResponse> getCurriculumById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(curriculumService.getCurriculumById(id));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<com.sdt.web_app.dto.institution.CurriculumDtos.CurriculumResponse> updateCurriculum(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody com.sdt.web_app.dto.institution.CurriculumDtos.UpdateCurriculumRequest request) {
         return ResponseEntity.ok(curriculumService.updateCurriculum(id, request));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    public ResponseEntity<Void> deleteCurriculum(@PathVariable("id") Long id) {
+        designerService.deleteCurriculum(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}/courses")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
-    public ResponseEntity<List<com.sdt.web_app.dto.institution.CurriculumCourseDtos.CurriculumCourseResponse>> getCurriculumCourses(@PathVariable Long id) {
+    public ResponseEntity<List<com.sdt.web_app.dto.institution.CurriculumCourseDtos.CurriculumCourseResponse>> getCurriculumCourses(@PathVariable("id") Long id) {
         return ResponseEntity.ok(curriculumService.getCurriculumCourses(id));
     }
 
@@ -62,7 +69,7 @@ public class CurriculumController {
     @PostMapping("/{id}/courses")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> addCourseToCurriculum(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody AddCourseToCurriculumRequest request) {
         designerService.addCourseToCurriculum(id, request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -71,8 +78,8 @@ public class CurriculumController {
     @DeleteMapping("/{id}/courses/{curriculumCourseId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> removeCourseFromCurriculum(
-            @PathVariable Long id,
-            @PathVariable Long curriculumCourseId) {
+            @PathVariable("id") Long id,
+            @PathVariable("curriculumCourseId") Long curriculumCourseId) {
         designerService.removeCourseFromCurriculum(id, curriculumCourseId);
         return ResponseEntity.noContent().build();
     }
@@ -80,7 +87,7 @@ public class CurriculumController {
     @PostMapping("/{id}/clone")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<CurriculumSummaryResponse> cloneCurriculumAsNewRevision(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody CloneCurriculumRequest request) {
         CurriculumSummaryResponse response = designerService.cloneCurriculumAsNewRevision(id, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -88,14 +95,14 @@ public class CurriculumController {
 
     @GetMapping("/{id}/designer")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
-    public ResponseEntity<DesignerViewResponse> getDesignerView(@PathVariable Long id) {
+    public ResponseEntity<DesignerViewResponse> getDesignerView(@PathVariable("id") Long id) {
         return ResponseEntity.ok(designerService.getDesignerView(id));
     }
 
     @PutMapping("/{id}/courses/position")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> updateCoursePosition(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody RelocateCourseRequest request) {
         designerService.relocateCoursePosition(id, request);
         return ResponseEntity.noContent().build();
@@ -104,7 +111,7 @@ public class CurriculumController {
     @PostMapping("/{id}/prerequisites")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> addPrerequisite(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody AddPrerequisiteRequest request) {
         designerService.addPrerequisite(id, request);
         return ResponseEntity.ok().build();
@@ -112,14 +119,14 @@ public class CurriculumController {
 
     @PostMapping("/{id}/validate")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
-    public ResponseEntity<ValidationReportDto> validateCurriculum(@PathVariable Long id) {
+    public ResponseEntity<ValidationReportDto> validateCurriculum(@PathVariable("id") Long id) {
         return ResponseEntity.ok(validationService.validateCurriculum(id));
     }
 
     @PostMapping("/{id}/transition-state")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<Void> transitionState(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestParam Curriculum.Status status) {
         designerService.transitionCurriculumState(id, status);
         return ResponseEntity.ok().build();
@@ -129,7 +136,7 @@ public class CurriculumController {
     @GetMapping("/{id}/available-courses")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<List<AvailableCourseDto>> getAvailableCourses(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestParam(required = false) String search) {
         return ResponseEntity.ok(designerService.getAvailableCourses(id, search));
     }
@@ -138,7 +145,7 @@ public class CurriculumController {
     @PutMapping("/{id}/courses/batch-positions")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> updateBatchCoursePositions(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody List<@Valid RelocateCourseRequest> requests) {
         designerService.batchRelocatePositions(id, requests);
         return ResponseEntity.noContent().build();
@@ -147,8 +154,8 @@ public class CurriculumController {
     @DeleteMapping("/{id}/prerequisites/{prerequisiteId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> removePrerequisite(
-            @PathVariable Long id,
-            @PathVariable Long prerequisiteId) {
+            @PathVariable("id") Long id,
+            @PathVariable("prerequisiteId") Long prerequisiteId) {
         designerService.removePrerequisite(id, prerequisiteId);
         return ResponseEntity.noContent().build();
     }
@@ -156,7 +163,13 @@ public class CurriculumController {
     @GetMapping("/program/{programId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
     public ResponseEntity<List<CurriculumSummaryResponse>> getCurriculaByProgram(
-            @PathVariable Long programId) {
+            @PathVariable("programId") Long programId) {
         return ResponseEntity.ok(designerService.getCurriculaByProgram(programId));
+    }
+
+    @GetMapping({"", "/lookup"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<List<CurriculumLookupOption>> getCurriculumLookupOptions() {
+        return ResponseEntity.ok(designerService.getCurriculumLookupOptions());
     }
 }

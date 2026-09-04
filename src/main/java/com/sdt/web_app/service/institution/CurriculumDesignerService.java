@@ -3,6 +3,7 @@ package com.sdt.web_app.service.institution;
 import com.sdt.web_app.dto.institution.CurriculumDesignerDtos.*;
 import com.sdt.web_app.entities.institution.*;
 import com.sdt.web_app.repositories.institution.*;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -257,6 +258,22 @@ public class CurriculumDesignerService {
         curriculumCourseRepository.delete(curriculumCourse);
     }
 
+    public void deleteCurriculum(Long id) {
+        Curriculum curriculum = curriculumRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Curriculum not found with ID: " + id));
+
+        if (curriculum.getStatus() == Curriculum.Status.ACTIVE || curriculum.getStatus() == Curriculum.Status.APPROVED) {
+            throw new IllegalStateException("Cannot delete a curriculum that is ACTIVE or APPROVED. It must be ARCHIVED instead.");
+        }
+
+        List<CurriculumCourse> courses = curriculumCourseRepository.findByCurriculumId(id);
+        if (!courses.isEmpty()) {
+            curriculumCourseRepository.deleteAll(courses);
+        }
+
+        curriculumRepository.delete(curriculum);
+    }
+
     public CurriculumSummaryResponse cloneCurriculumAsNewRevision(Long sourceCurriculumId, CloneCurriculumRequest request) {
         Curriculum source = getCurriculum(sourceCurriculumId);
 
@@ -388,6 +405,13 @@ public class CurriculumDesignerService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<CurriculumLookupOption> getCurriculumLookupOptions() {
+        return curriculumRepository.findByIsActiveTrueOrderByCodeAsc().stream()
+                .map(this::toLookupOption)
+                .toList();
+    }
+
     private Curriculum getCurriculum(Long id) {
         return curriculumRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Curriculum not found with ID: " + id));
@@ -407,6 +431,18 @@ public class CurriculumDesignerService {
                 c.getProgram().getCode(),
                 c.getEffectiveAcademicYear(),
                 c.getStatus().name(),
+                c.getVersionNumber()
+        );
+    }
+
+    private CurriculumLookupOption toLookupOption(Curriculum c) {
+        return new CurriculumLookupOption(
+                c.getId(),
+                c.getCode(),
+                c.getName(),
+                c.getProgram() != null ? c.getProgram().getCode() : null,
+                c.getEffectiveAcademicYear(),
+                c.getStatus() != null ? c.getStatus().name() : null,
                 c.getVersionNumber()
         );
     }

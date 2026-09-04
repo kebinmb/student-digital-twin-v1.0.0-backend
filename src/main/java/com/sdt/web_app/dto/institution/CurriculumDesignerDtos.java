@@ -173,6 +173,17 @@ public class CurriculumDesignerDtos {
     ) {
     }
 
+    public record CurriculumLookupOption(
+            Long id,
+            String code,
+            String name,
+            String programCode,
+            String effectiveAcademicYear,
+            String status,
+            int versionNumber
+    ) {
+    }
+
     public record AvailableCourseDto(
             Long courseId,
             String code,

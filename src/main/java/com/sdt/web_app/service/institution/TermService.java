@@ -67,6 +67,11 @@ public class TermService {
     }
 
     @Transactional(readOnly = true)
+    public List<Term> getAllTerms() {
+        return termRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<Term> getTermsByAcademicYear(Long academicYearId) {
         if (!academicYearRepository.existsById(academicYearId)) {
             throw new IllegalArgumentException("Academic year not found with ID: " + academicYearId);

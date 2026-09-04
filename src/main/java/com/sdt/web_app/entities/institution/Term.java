@@ -3,6 +3,7 @@ package com.sdt.web_app.entities.institution;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -55,6 +56,17 @@ public class Term {
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean isActive = false;
+
+    @Column(name = "max_hours_per_class", nullable = false, precision = 3, scale = 1)
+    @Builder.Default
+    private BigDecimal maxHoursPerClass = new BigDecimal("3.0");
+
+    public void updateMaxHoursPerClass(BigDecimal maxHours) {
+        if (maxHours == null || maxHours.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Maximum hours per class session must be greater than 0");
+        }
+        this.maxHoursPerClass = maxHours;
+    }
 
     public void updateSchedule(LocalDate startDate, LocalDate endDate) {
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {

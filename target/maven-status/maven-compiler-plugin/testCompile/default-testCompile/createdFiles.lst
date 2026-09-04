@@ -1,6 +1,7 @@
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest.class
 com\sdt\web_app\AuthenticationIntegrationTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest.class
+com\sdt\web_app\service\enrollment\EnrollmentServiceTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$OrganizationalHierarchyTests.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$AcademicPeriodsTests.class
 com\sdt\web_app\ActuatorSecurityConfigTest.class
@@ -21,6 +22,7 @@ com\sdt\web_app\AsyncSecurityConfigTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$1.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$StringMarshaller.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$CurriculumStructureTests.class
+com\sdt\web_app\service\scheduling\SchedulingServiceTest.class
 com\sdt\web_app\service\institution\GradeTransmutationServiceTest.class
 com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.class
 com\sdt\web_app\SsrfProtectionTest.class
@@ -30,4 +32,5 @@ com\sdt\web_app\controller\TestSecurityControllers.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class
 com\sdt\web_app\BaseIntegrationTest.class
 com\sdt\web_app\TestWebAppApplication.class
+com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.class
 com\sdt\web_app\AuthenticationIntegrationTest$LoginTests.class

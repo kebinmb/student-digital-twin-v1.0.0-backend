@@ -21,6 +21,14 @@ public class TermController {
     private final TermService termService;
     private final TermLifecycleService termLifecycleService;
 
+    @GetMapping
+    public ResponseEntity<List<TermResponse>> getAllTerms() {
+        List<TermResponse> responses = termService.getAllTerms().stream()
+                .map(this::mapToResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
+    }
+
     @GetMapping("/academic-year/{academicYearId}")
     public ResponseEntity<List<TermResponse>> getTermsByAcademicYear(@PathVariable Long academicYearId) {
         List<TermResponse> responses = termService.getTermsByAcademicYear(academicYearId).stream()
