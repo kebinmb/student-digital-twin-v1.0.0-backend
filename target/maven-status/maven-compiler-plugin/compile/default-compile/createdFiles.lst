@@ -32,6 +32,7 @@ com\sdt\web_app\service\institution\CurriculumService.class
 com\sdt\web_app\entities\authentication\Roles.class
 com\sdt\web_app\entities\institution\Program.class
 com\sdt\web_app\repositories\institution\GradingScaleRepository.class
+com\sdt\web_app\controller\enrollment\StudentController.class
 com\sdt\web_app\dto\authentication\AuthDtos$LoginRequest.class
 com\sdt\web_app\dto\institution\CiloPiloMappingDtos$CreateCiloPiloMappingRequest.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$ValidationReportDto.class
@@ -43,6 +44,7 @@ com\sdt\web_app\controller\institution\CampusController.class
 com\sdt\web_app\entities\scheduling\ClassSection.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$ApproveOverloadRequest.class
 com\sdt\web_app\dto\institution\AcademicYearDtos$UpdateAcademicYearRequest.class
+com\sdt\web_app\dto\enrollment\EnrollmentDtos$StudentSearchResultDto.class
 com\sdt\web_app\entities\enrollment\StudentEnrollment$Status.class
 com\sdt\web_app\repositories\institution\CiloPiloMappingRepository.class
 com\sdt\web_app\entities\institution\Course$CourseBuilder.class
@@ -129,6 +131,7 @@ com\sdt\web_app\config\SsrfProtectingClientInterceptor.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$ScheduleSlotDto.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$AddCourseToCurriculumRequest.class
 com\sdt\web_app\controller\institution\TermController.class
+com\sdt\web_app\dto\enrollment\EnrollmentDtos$UpdateEnrollmentStatusRequest.class
 com\sdt\web_app\dto\institution\ProgramDtos.class
 com\sdt\web_app\entities\scheduling\FacultyWorkload.class
 com\sdt\web_app\dto\institution\FinancialDtos$FeeCatalogResponse.class

@@ -22,4 +22,11 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
     Optional<StudentProfile> findByUserIdWithProgramAndCurriculum(@Param("userId") Long userId);
 
     boolean existsByStudentNumber(String studentNumber);
+
+    @Query("SELECT sp FROM StudentProfile sp LEFT JOIN FETCH sp.program LEFT JOIN FETCH sp.user " +
+           "WHERE :query IS NULL OR :query = '' " +
+           "OR LOWER(sp.studentNumber) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(sp.user.username) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(sp.program.code) LIKE LOWER(CONCAT('%', :query, '%'))")
+    java.util.List<StudentProfile> searchStudents(@Param("query") String query);
 }

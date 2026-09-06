@@ -16,14 +16,14 @@ public class TermLifecycleService {
     private final AcademicYearRepository academicYearRepository;
 
     public Term activateTerm(Long termId) {
-        Term targetTerm = termRepository.findById(termId)
+        Term targetTerm = termRepository.findWithAcademicYearById(termId)
                 .orElseThrow(() -> new IllegalArgumentException("Term not found with ID: " + termId));
 
         termRepository.findByIsActiveTrue().ifPresent(currentActive -> {
             if (!currentActive.getId().equals(targetTerm.getId())) {
                 currentActive.deactivate();
                 currentActive.closeEnrollment();
-                currentActive.closeEnrollment();
+                currentActive.closeGrading();
                 currentActive.closeAddDrop();
             }
         });
@@ -83,7 +83,7 @@ public class TermLifecycleService {
     }
 
     private Term getTermOrThrow(Long termId) {
-        return termRepository.findById(termId)
+        return termRepository.findWithAcademicYearById(termId)
                 .orElseThrow(() -> new IllegalArgumentException("Term not found with ID: " + termId));
     }
 

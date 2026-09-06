@@ -12,6 +12,10 @@ import java.util.Optional;
 @Repository
 public interface TermRepository extends JpaRepository<Term, Long> {
 
+    @Override
+    @EntityGraph(attributePaths = {"academicYear"})
+    List<Term> findAll();
+
     Optional<Term> findByAcademicYearIdAndTermType(Long academicYearId, TermType termType);
 
     boolean existsByAcademicYearIdAndTermType(Long academicYearId, TermType termType);

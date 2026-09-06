@@ -63,4 +63,22 @@ public class EnrollmentController {
             @PathVariable("termId") Long termId) {
         return ResponseEntity.ok(enrollmentService.getEnrollment(studentId, termId));
     }
+
+    // -------------------------------------------------------------------------
+    // Registrar & Admin Audit & Oversight Endpoints
+    // -------------------------------------------------------------------------
+    @GetMapping("/term/{termId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
+    public ResponseEntity<java.util.List<StudentEnrollmentResponse>> getEnrollmentsByTerm(
+            @PathVariable("termId") Long termId) {
+        return ResponseEntity.ok(enrollmentService.getEnrollmentsByTerm(termId));
+    }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
+    public ResponseEntity<StudentEnrollmentResponse> updateEnrollmentStatus(
+            @PathVariable("id") Long enrollmentId,
+            @Valid @RequestBody UpdateEnrollmentStatusRequest request) {
+        return ResponseEntity.ok(enrollmentService.updateEnrollmentStatus(enrollmentId, request));
+    }
 }

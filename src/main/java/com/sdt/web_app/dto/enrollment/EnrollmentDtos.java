@@ -110,4 +110,21 @@ public class EnrollmentDtos {
             BigDecimal totalCreditUnits,
             String message
     ) {}
+
+    public record UpdateEnrollmentStatusRequest(
+            @NotNull(message = "Status is required")
+            String status,
+            Boolean isOverloadApproved
+    ) {}
+
+    public record StudentSearchResultDto(
+            Long id,
+            String studentIdNumber,
+            String fullName,
+            String programCode,
+            int yearLevel,
+            String academicStatus
+    ) {}
 }
+
+

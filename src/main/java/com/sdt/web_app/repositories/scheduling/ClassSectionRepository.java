@@ -15,6 +15,8 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
 
     List<ClassSection> findByTermId(Long termId);
 
+    boolean existsByTermId(Long termId);
+
     List<ClassSection> findByTermIdAndCurriculumId(Long termId, Long curriculumId);
 
     List<ClassSection> findByTermIdAndCourseId(Long termId, Long courseId);

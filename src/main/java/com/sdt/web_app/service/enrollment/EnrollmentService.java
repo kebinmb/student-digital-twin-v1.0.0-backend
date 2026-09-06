@@ -320,6 +320,37 @@ public class EnrollmentService {
     }
 
     // -------------------------------------------------------------------------
+    // Registrar / Administrative Enrollment Oversight
+    // -------------------------------------------------------------------------
+    @Transactional(readOnly = true)
+    public List<StudentEnrollmentResponse> getEnrollmentsByTerm(Long termId) {
+        List<StudentEnrollment> enrollments = studentEnrollmentRepository.findByTermIdWithDetails(termId);
+        return enrollments.stream().map(this::mapToEnrollmentResponse).toList();
+    }
+
+    @Transactional
+    public StudentEnrollmentResponse updateEnrollmentStatus(Long enrollmentId, UpdateEnrollmentStatusRequest request) {
+        StudentEnrollment enrollment = studentEnrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student enrollment record not found with id: " + enrollmentId));
+
+        if (request.status() != null && !request.status().isBlank()) {
+            try {
+                StudentEnrollment.Status newStatus = StudentEnrollment.Status.valueOf(request.status().toUpperCase());
+                enrollment.updateStatus(newStatus);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid enrollment status specified: " + request.status());
+            }
+        }
+
+        if (request.isOverloadApproved() != null) {
+            enrollment.setOverloadApproved(request.isOverloadApproved());
+        }
+
+        StudentEnrollment saved = studentEnrollmentRepository.save(enrollment);
+        return mapToEnrollmentResponse(saved);
+    }
+
+    // -------------------------------------------------------------------------
     // Mappers
     // -------------------------------------------------------------------------
     private StudentEnrollmentResponse mapToEnrollmentResponse(StudentEnrollment se) {

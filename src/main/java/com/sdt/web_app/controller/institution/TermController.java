@@ -71,6 +71,36 @@ public class TermController {
         return ResponseEntity.ok(mapToResponse(term));
     }
 
+    @PutMapping("/{id}/enrollment-window")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
+    public ResponseEntity<TermResponse> toggleEnrollmentWindow(
+            @PathVariable Long id,
+            @RequestParam boolean open
+    ) {
+        Term term = open ? termLifecycleService.openEnrollment(id) : termLifecycleService.closeEnrollment(id);
+        return ResponseEntity.ok(mapToResponse(term));
+    }
+
+    @PutMapping("/{id}/grading-window")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
+    public ResponseEntity<TermResponse> toggleGradingWindow(
+            @PathVariable Long id,
+            @RequestParam boolean open
+    ) {
+        Term term = open ? termLifecycleService.openGrading(id) : termLifecycleService.lockGrading(id);
+        return ResponseEntity.ok(mapToResponse(term));
+    }
+
+    @PutMapping("/{id}/add-drop-window")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
+    public ResponseEntity<TermResponse> toggleAddDropWindow(
+            @PathVariable Long id,
+            @RequestParam boolean open
+    ) {
+        Term term = termLifecycleService.toggleAddDrop(id, open);
+        return ResponseEntity.ok(mapToResponse(term));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deleteTerm(@PathVariable Long id) {
