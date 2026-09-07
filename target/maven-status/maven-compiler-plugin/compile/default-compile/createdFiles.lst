@@ -195,7 +195,9 @@ com\sdt\web_app\dto\authentication\AuthDtos$ResetPasswordRequest.class
 com\sdt\web_app\dto\institution\CourseDtos$CourseResponse.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CurriculumSummaryResponse.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$EnrollmentItemResponse.class
+com\sdt\web_app\service\enrollment\EnrollmentService$1.class
 com\sdt\web_app\entities\scheduling\ClassSchedule$ScheduleType.class
+com\sdt\web_app\service\enrollment\EnrollmentService$AcademicPeriod.class
 com\sdt\web_app\service\authentication\AuthService.class
 com\sdt\web_app\repositories\scheduling\FacultyWorkloadRepository.class
 com\sdt\web_app\dto\institution\CourseDtos$CreateCourseRequest.class

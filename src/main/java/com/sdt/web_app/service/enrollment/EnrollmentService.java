@@ -41,6 +41,12 @@ public class EnrollmentService {
     // -------------------------------------------------------------------------
     @Transactional(readOnly = true)
     public AdvisingEligibilityResponse getAdvisingEligibility(Long studentId, Long termId) {
+        return getAdvisingEligibility(studentId, termId, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public AdvisingEligibilityResponse getAdvisingEligibility(
+            Long studentId, Long termId, Integer targetYearLevel, String targetSemester) {
         StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId)
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + studentId));
 
@@ -65,22 +71,39 @@ public class EnrollmentService {
         // 3. Fetch prescribed curriculum courses
         List<CurriculumCourse> curriculumCourses = curriculumCourseRepository.findByCurriculumId(student.getCurriculum().getId());
 
-        // 4. Batch fetch prerequisites for all curriculum courses
+        // 4. Determine student's target academic period (next year level & semester)
+        AcademicPeriod targetPeriod = determineTargetPeriod(
+                student, term, curriculumCourses, passedCourseMap.keySet(), targetYearLevel, targetSemester);
+        boolean hasPeriodMatches = curriculumCourses.stream().anyMatch(cc -> matchesPeriod(cc, targetPeriod));
+
+        // 5. Batch fetch prerequisites for all curriculum courses
         List<Long> allCourseIds = curriculumCourses.stream().map(cc -> cc.getCourse().getId()).distinct().toList();
         List<CoursePrerequisite> allPrerequisites = prerequisiteRepository.findPrerequisitesForCourseIds(allCourseIds);
         Map<Long, List<CoursePrerequisite>> prereqMap = allPrerequisites.stream()
                 .collect(Collectors.groupingBy(cp -> cp.getCourse().getId()));
 
-        // 5. Fetch all OPEN sections for this term
+        // 6. Fetch all OPEN sections for this term
         List<ClassSection> termSections = sectionRepository.findAllWithSchedulesByTermId(term.getId());
         Map<Long, List<ClassSection>> sectionsByCourseId = termSections.stream()
                 .filter(s -> s.getStatus() == ClassSection.Status.OPEN)
                 .collect(Collectors.groupingBy(s -> s.getCourse().getId()));
 
-        // 6. Evaluate eligibility for each course
+        // 7. Evaluate eligibility and filter courses for the next academic period & passed history
         List<CourseEligibilityItemDto> courseEligibilityList = new ArrayList<>();
         for (CurriculumCourse cc : curriculumCourses) {
             Course course = cc.getCourse();
+            boolean isPassed = passedCourseMap.containsKey(course.getId());
+            boolean isEnrolled = currentlyEnrolledCourseIds.contains(course.getId());
+            boolean isInTargetPeriod = !hasPeriodMatches || matchesPeriod(cc, targetPeriod);
+
+            // Backend filtering:
+            // 1. Retain ALREADY_PASSED courses so student/advisor can view completed records
+            // 2. Retain CURRENTLY_ENROLLED courses for active term visibility
+            // 3. Limit eligible & term courses strictly to the target next year level / semester
+            if (!isPassed && !isEnrolled && !isInTargetPeriod) {
+                continue;
+            }
+
             List<CoursePrerequisite> prerequisites = prereqMap.getOrDefault(course.getId(), Collections.emptyList());
 
             List<PrerequisiteDetailDto> prereqDetails = new ArrayList<>();
@@ -113,9 +136,9 @@ public class EnrollmentService {
             }
 
             String status;
-            if (passedCourseMap.containsKey(course.getId())) {
+            if (isPassed) {
                 status = "ALREADY_PASSED";
-            } else if (currentlyEnrolledCourseIds.contains(course.getId())) {
+            } else if (isEnrolled) {
                 status = "CURRENTLY_ENROLLED";
             } else if (!allPrereqsSatisfied) {
                 status = "LOCKED_PREREQUISITE";
@@ -382,5 +405,105 @@ public class EnrollmentService {
                 se.isOverloadApproved(),
                 itemResponses
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // Advising Academic Period Progression Helpers
+    // -------------------------------------------------------------------------
+    public record AcademicPeriod(int yearLevel, String semester) {}
+
+    private AcademicPeriod determineTargetPeriod(
+            StudentProfile student,
+            Term term,
+            List<CurriculumCourse> curriculumCourses,
+            Set<Long> passedCourseIds,
+            Integer requestedYearLevel,
+            String requestedSemester) {
+
+        if (requestedYearLevel != null && requestedYearLevel > 0 && requestedSemester != null && !requestedSemester.isBlank()) {
+            return new AcademicPeriod(requestedYearLevel, normalizeSemester(requestedSemester));
+        }
+
+        // Determine highest completed semester rank from student's passed courses
+        int maxPassedRank = 0;
+        for (CurriculumCourse cc : curriculumCourses) {
+            if (passedCourseIds.contains(cc.getCourse().getId())) {
+                int rank = getTermRank(cc.getYearLevel(), cc.getSemester());
+                if (rank > maxPassedRank) {
+                    maxPassedRank = rank;
+                }
+            }
+        }
+
+        // If student has passed courses, the next progressive period is maxPassedRank + 1
+        if (maxPassedRank > 0) {
+            int nextRank = Math.min(maxPassedRank + 1, 8);
+            return getPeriodFromRank(nextRank);
+        }
+
+        // Fallback when no passed courses: infer from term type and student's current year level
+        int year = student.getYearLevel() > 0 ? student.getYearLevel() : 1;
+        String sem = "1ST_SEM";
+        if (term != null && term.getTermType() != null) {
+            sem = switch (term.getTermType()) {
+                case SECOND_SEM -> "2ND_SEM";
+                case SUMMER -> "SUMMER";
+                case FIRST_SEM -> "1ST_SEM";
+            };
+        }
+
+        return new AcademicPeriod(year, sem);
+    }
+
+    private int getTermRank(int yearLevel, String semester) {
+        int semIndex = isSecondSem(semester) ? 2 : 1;
+        return (yearLevel - 1) * 2 + semIndex;
+    }
+
+    private AcademicPeriod getPeriodFromRank(int rank) {
+        int r = Math.max(1, Math.min(rank, 8));
+        int yearLevel = ((r - 1) / 2) + 1;
+        String semester = ((r - 1) % 2 == 0) ? "1ST_SEM" : "2ND_SEM";
+        return new AcademicPeriod(yearLevel, semester);
+    }
+
+    private String normalizeSemester(String semester) {
+        if (isSecondSem(semester)) return "2ND_SEM";
+        if (isSummer(semester)) return "SUMMER";
+        return "1ST_SEM";
+    }
+
+    private boolean isFirstSem(String semester) {
+        if (semester == null) return false;
+        String s = semester.toUpperCase();
+        return s.contains("1ST") || s.contains("FIRST") || s.equals("1");
+    }
+
+    private boolean isSecondSem(String semester) {
+        if (semester == null) return false;
+        String s = semester.toUpperCase();
+        return s.contains("2ND") || s.contains("SECOND") || s.equals("2");
+    }
+
+    private boolean isSummer(String semester) {
+        if (semester == null) return false;
+        String s = semester.toUpperCase();
+        return s.contains("SUMMER") || s.contains("MIDYEAR");
+    }
+
+    private boolean matchesPeriod(CurriculumCourse cc, AcademicPeriod targetPeriod) {
+        if (cc.getYearLevel() != targetPeriod.yearLevel()) {
+            return false;
+        }
+        return isSemesterMatch(cc.getSemester(), targetPeriod.semester());
+    }
+
+    private boolean isSemesterMatch(String semA, String semB) {
+        if (semA == null || semB == null) return false;
+        if (semA.equalsIgnoreCase(semB)) return true;
+        if (isFirstSem(semA) && isFirstSem(semB)) return true;
+        if (isSecondSem(semA) && isSecondSem(semB)) return true;
+        if (isSummer(semA) && isSummer(semB)) return true;
+        return false;
     }
 }

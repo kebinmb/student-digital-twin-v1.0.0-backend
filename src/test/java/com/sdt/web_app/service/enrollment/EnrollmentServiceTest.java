@@ -178,6 +178,64 @@ class EnrollmentServiceTest {
     }
 
     @Test
+    @DisplayName("Gate 3: Advising should filter eligible courses to next semester (Year 1 - 2nd Sem) and retain passed courses")
+    void shouldFilterEligibleCoursesToNextSemesterAndRetainPassed() {
+        given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
+        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+
+        // Student has PASSED course1 (IT 101 - Year 1, 1ST_SEM)
+        StudentCourseGrade passedGrade = StudentCourseGrade.builder()
+                .student(student)
+                .course(course1)
+                .numericalGrade(new BigDecimal("1.50"))
+                .completionStatus("PASSED")
+                .isCredited(true)
+                .build();
+        given(studentCourseGradeRepository.findPassedGradesByStudentId(50L)).willReturn(List.of(passedGrade));
+        given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.empty());
+
+        // Curriculum has 3 courses:
+        // 1) course1: Year 1, 1ST_SEM (PASSED)
+        // 2) course2: Year 1, 2ND_SEM (ELIGIBLE)
+        // 3) course3: Year 2, 1ST_SEM (Future year - should be FILTERED OUT)
+        Course course3 = Course.builder()
+                .code("IT 201")
+                .title("Advanced Database Systems")
+                .lectureUnits(new BigDecimal("2.00"))
+                .labUnits(new BigDecimal("1.00"))
+                .creditUnits(new BigDecimal("3.00"))
+                .build();
+        ReflectionTestUtils.setField(course3, "id", 103L);
+
+        CurriculumCourse cc1 = CurriculumCourse.builder()
+                .curriculum(student.getCurriculum()).course(course1).yearLevel(1).semester("1ST_SEM").build();
+        CurriculumCourse cc2 = CurriculumCourse.builder()
+                .curriculum(student.getCurriculum()).course(course2).yearLevel(1).semester("2ND_SEM").build();
+        CurriculumCourse cc3 = CurriculumCourse.builder()
+                .curriculum(student.getCurriculum()).course(course3).yearLevel(2).semester("1ST_SEM").build();
+
+        given(curriculumCourseRepository.findByCurriculumId(10L)).willReturn(List.of(cc1, cc2, cc3));
+        given(prerequisiteRepository.findPrerequisitesForCourseIds(any())).willReturn(Collections.emptyList());
+        given(sectionRepository.findAllWithSchedulesByTermId(20L)).willReturn(Collections.emptyList());
+
+        AdvisingEligibilityResponse response = enrollmentService.getAdvisingEligibility(50L, 20L);
+
+        assertThat(response).isNotNull();
+        // course3 from Year 2 must be filtered out! Only course1 (ALREADY_PASSED) and course2 (ELIGIBLE) are retained.
+        assertThat(response.courses()).hasSize(2);
+
+        List<String> statuses = response.courses().stream().map(CourseEligibilityItemDto::eligibilityStatus).toList();
+        assertThat(statuses).containsExactlyInAnyOrder("ALREADY_PASSED", "ELIGIBLE");
+
+        CourseEligibilityItemDto eligibleCourse = response.courses().stream()
+                .filter(c -> c.eligibilityStatus().equals("ELIGIBLE"))
+                .findFirst().orElseThrow();
+        assertThat(eligibleCourse.yearLevel()).isEqualTo(1);
+        assertThat(eligibleCourse.semester()).isEqualTo("2ND_SEM");
+        assertThat(eligibleCourse.code()).isEqualTo("IT 102");
+    }
+
+    @Test
     @DisplayName("Gate 3: Should block enlistment in closed or full section")
     void shouldBlockEnlistmentInClosedSection() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));

@@ -24,8 +24,10 @@ public class EnrollmentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<AdvisingEligibilityResponse> getAdvisingEligibility(
             @PathVariable("studentId") Long studentId,
-            @PathVariable("termId") Long termId) {
-        return ResponseEntity.ok(enrollmentService.getAdvisingEligibility(studentId, termId));
+            @PathVariable("termId") Long termId,
+            @RequestParam(value = "targetYearLevel", required = false) Integer targetYearLevel,
+            @RequestParam(value = "targetSemester", required = false) String targetSemester) {
+        return ResponseEntity.ok(enrollmentService.getAdvisingEligibility(studentId, termId, targetYearLevel, targetSemester));
     }
 
     // -------------------------------------------------------------------------
