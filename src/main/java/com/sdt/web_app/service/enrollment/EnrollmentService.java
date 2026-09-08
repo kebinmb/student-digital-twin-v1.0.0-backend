@@ -41,12 +41,18 @@ public class EnrollmentService {
     // -------------------------------------------------------------------------
     @Transactional(readOnly = true)
     public AdvisingEligibilityResponse getAdvisingEligibility(Long studentId, Long termId) {
-        return getAdvisingEligibility(studentId, termId, null, null);
+        return getAdvisingEligibility(studentId, termId, null, null, false);
     }
 
     @Transactional(readOnly = true)
     public AdvisingEligibilityResponse getAdvisingEligibility(
             Long studentId, Long termId, Integer targetYearLevel, String targetSemester) {
+        return getAdvisingEligibility(studentId, termId, targetYearLevel, targetSemester, false);
+    }
+
+    @Transactional(readOnly = true)
+    public AdvisingEligibilityResponse getAdvisingEligibility(
+            Long studentId, Long termId, Integer targetYearLevel, String targetSemester, Boolean allCourses) {
         StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId)
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + studentId));
 
@@ -94,12 +100,13 @@ public class EnrollmentService {
             Course course = cc.getCourse();
             boolean isPassed = passedCourseMap.containsKey(course.getId());
             boolean isEnrolled = currentlyEnrolledCourseIds.contains(course.getId());
-            boolean isInTargetPeriod = !hasPeriodMatches || matchesPeriod(cc, targetPeriod);
+            boolean isInTargetPeriod = Boolean.TRUE.equals(allCourses) || !hasPeriodMatches || matchesPeriod(cc, targetPeriod);
 
             // Backend filtering:
             // 1. Retain ALREADY_PASSED courses so student/advisor can view completed records
             // 2. Retain CURRENTLY_ENROLLED courses for active term visibility
-            // 3. Limit eligible & term courses strictly to the target next year level / semester
+            // 3. If allCourses is requested, retain all curriculum courses with live prerequisite evaluation
+            // 4. Otherwise, limit eligible & term courses strictly to the target next year level / semester
             if (!isPassed && !isEnrolled && !isInTargetPeriod) {
                 continue;
             }
@@ -156,7 +163,7 @@ public class EnrollmentService {
                             sec.getStatus().name(),
                             sec.getSchedules().stream()
                                     .map(s -> s.getDayOfWeek() + " " + s.getStartTime() + "-" + s.getEndTime() + " (" + s.getRoom().getCode() + ")")
-                                    .reduce((a, b) -> a + ", " + b).orElse("No schedule")
+                                    .reduce((a, b) -> a + "; " + b).orElse("No schedule")
                     ))
                     .toList();
 
@@ -387,7 +394,7 @@ public class EnrollmentService {
                         item.getSection().getCourse().getCreditUnits(),
                         item.getSection().getSchedules().stream()
                                 .map(s -> s.getDayOfWeek() + " " + s.getStartTime() + "-" + s.getEndTime() + " (" + s.getRoom().getCode() + ")")
-                                .reduce((a, b) -> a + ", " + b).orElse(""),
+                                .reduce((a, b) -> a + "; " + b).orElse(""),
                         item.getCompletionStatus().name(),
                         item.getFinalNumericalGrade()
                 ))

@@ -25,10 +25,10 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
 
     boolean existsByTermIdAndCourseIdAndSectionCode(Long termId, Long courseId, String sectionCode);
 
-    @Query("SELECT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.term.id = :termId")
+    @Query("SELECT DISTINCT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.term.id = :termId")
     List<ClassSection> findAllWithSchedulesByTermId(@Param("termId") Long termId);
 
-    @Query("SELECT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.id = :id")
+    @Query("SELECT DISTINCT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.id = :id")
     Optional<ClassSection> findByIdWithSchedules(@Param("id") Long id);
 
     @Modifying

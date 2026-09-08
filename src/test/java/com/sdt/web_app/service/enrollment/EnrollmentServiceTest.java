@@ -236,6 +236,51 @@ class EnrollmentServiceTest {
     }
 
     @Test
+    @DisplayName("Gate 3: Advising with allCourses=true should retain all curriculum courses across all years")
+    void shouldRetainAllCurriculumCoursesWhenAllCoursesIsTrue() {
+        given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
+        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+
+        StudentCourseGrade passedGrade = StudentCourseGrade.builder()
+                .student(student)
+                .course(course1)
+                .numericalGrade(new BigDecimal("1.50"))
+                .completionStatus("PASSED")
+                .isCredited(true)
+                .build();
+        given(studentCourseGradeRepository.findPassedGradesByStudentId(50L)).willReturn(List.of(passedGrade));
+        given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.empty());
+
+        Course course3 = Course.builder()
+                .code("IT 201")
+                .title("Advanced Database Systems")
+                .lectureUnits(new BigDecimal("2.00"))
+                .labUnits(new BigDecimal("1.00"))
+                .creditUnits(new BigDecimal("3.00"))
+                .build();
+        ReflectionTestUtils.setField(course3, "id", 103L);
+
+        CurriculumCourse cc1 = CurriculumCourse.builder()
+                .curriculum(student.getCurriculum()).course(course1).yearLevel(1).semester("1ST_SEM").build();
+        CurriculumCourse cc2 = CurriculumCourse.builder()
+                .curriculum(student.getCurriculum()).course(course2).yearLevel(1).semester("2ND_SEM").build();
+        CurriculumCourse cc3 = CurriculumCourse.builder()
+                .curriculum(student.getCurriculum()).course(course3).yearLevel(2).semester("1ST_SEM").build();
+
+        given(curriculumCourseRepository.findByCurriculumId(10L)).willReturn(List.of(cc1, cc2, cc3));
+        given(prerequisiteRepository.findPrerequisitesForCourseIds(any())).willReturn(Collections.emptyList());
+        given(sectionRepository.findAllWithSchedulesByTermId(20L)).willReturn(Collections.emptyList());
+
+        AdvisingEligibilityResponse response = enrollmentService.getAdvisingEligibility(50L, 20L, null, null, true);
+
+        assertThat(response).isNotNull();
+        // With allCourses=true, all 3 courses (including Year 2 course3) are retained!
+        assertThat(response.courses()).hasSize(3);
+        List<String> codes = response.courses().stream().map(CourseEligibilityItemDto::code).toList();
+        assertThat(codes).containsExactlyInAnyOrder("IT 101", "IT 102", "IT 201");
+    }
+
+    @Test
     @DisplayName("Gate 3: Should block enlistment in closed or full section")
     void shouldBlockEnlistmentInClosedSection() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));

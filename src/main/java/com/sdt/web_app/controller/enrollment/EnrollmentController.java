@@ -26,8 +26,9 @@ public class EnrollmentController {
             @PathVariable("studentId") Long studentId,
             @PathVariable("termId") Long termId,
             @RequestParam(value = "targetYearLevel", required = false) Integer targetYearLevel,
-            @RequestParam(value = "targetSemester", required = false) String targetSemester) {
-        return ResponseEntity.ok(enrollmentService.getAdvisingEligibility(studentId, termId, targetYearLevel, targetSemester));
+            @RequestParam(value = "targetSemester", required = false) String targetSemester,
+            @RequestParam(value = "allCourses", required = false, defaultValue = "false") Boolean allCourses) {
+        return ResponseEntity.ok(enrollmentService.getAdvisingEligibility(studentId, termId, targetYearLevel, targetSemester, allCourses));
     }
 
     // -------------------------------------------------------------------------
