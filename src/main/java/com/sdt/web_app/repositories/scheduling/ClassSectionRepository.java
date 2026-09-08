@@ -31,7 +31,7 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
     @Query("SELECT DISTINCT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.id = :id")
     Optional<ClassSection> findByIdWithSchedules(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE ClassSection s 
         SET s.enrolledCount = s.enrolledCount + 1,
@@ -42,7 +42,7 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
     """)
     int incrementEnrolledCountIfOpen(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE ClassSection s
         SET s.enrolledCount = s.enrolledCount - 1,

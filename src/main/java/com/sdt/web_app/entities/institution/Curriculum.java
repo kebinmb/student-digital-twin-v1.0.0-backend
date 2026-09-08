@@ -3,7 +3,9 @@ package com.sdt.web_app.entities.institution;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "curricula")
@@ -14,8 +16,15 @@ import java.util.Objects;
 @ToString(exclude = "program")
 public class Curriculum {
 
-    public enum Status { DRAFT, UNDER_REVIEW, APPROVED, ACTIVE, ARCHIVED }
+    public enum Status {DRAFT, UNDER_REVIEW, APPROVED, ACTIVE, ARCHIVED}
 
+    private static final Map<Status, Set<Status>> VALID_TRANSITIONS = Map.of(
+            Status.DRAFT, Set.of(Status.UNDER_REVIEW),
+            Status.UNDER_REVIEW, Set.of(Status.DRAFT, Status.APPROVED),
+            Status.APPROVED, Set.of(Status.DRAFT, Status.ACTIVE),
+            Status.ACTIVE, Set.of(Status.ARCHIVED),
+            Status.ARCHIVED, Set.of()
+    );
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,8 +56,14 @@ public class Curriculum {
     private boolean isActive = true;
 
     public void transitionTo(Status newStatus) {
-        if (this.status == Status.ACTIVE && newStatus != Status.ARCHIVED) {
-            throw new IllegalStateException("Active curriculum is locked and can only transition to ARCHIVED.");
+        if (newStatus == null) {
+            throw new IllegalArgumentException("Target status cannot be null");
+        }
+        Set<Status> allowed = VALID_TRANSITIONS.getOrDefault(this.status, Set.of());
+        if (!allowed.contains(newStatus)) {
+            throw new IllegalStateException(String.format(
+                    "Invalid state transition: Cannot transition curriculum '%s' from %s to %s. Allowed targets: %s",
+                    this.code, this.status, newStatus, allowed));
         }
         this.status = newStatus;
     }

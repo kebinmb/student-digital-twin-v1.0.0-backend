@@ -97,7 +97,7 @@ public class SchedulingController {
             Authentication authentication) {
         Long approverId = securityUtils.resolveUserId(authentication);
         if (approverId == null) {
-            approverId = 1L;
+            throw new IllegalStateException("Cannot resolve authenticated administrative user ID.");
         }
         schedulingService.approveFacultyOverload(request.termId(), request.facultyUserId(), approverId);
         return ResponseEntity.ok().build();
@@ -111,7 +111,7 @@ public class SchedulingController {
             Authentication authentication) {
         Long adminUserId = securityUtils.resolveUserId(authentication);
         if (adminUserId == null) {
-            adminUserId = 1L;
+            throw new IllegalStateException("Cannot resolve authenticated administrative user ID.");
         }
         FacultyLoadSummaryResponse response = schedulingService.updateFacultyWorkloadLimit(
                 facultyUserId, request.termId(), request.customMaxUnits(), request.reason(), adminUserId);

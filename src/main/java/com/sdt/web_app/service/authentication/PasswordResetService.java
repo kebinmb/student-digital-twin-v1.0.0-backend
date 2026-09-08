@@ -1,3 +1,5 @@
+// File: com/sdt/web_app/service/authentication/PasswordResetService.java
+
 package com.sdt.web_app.service.authentication;
 
 import com.sdt.web_app.entities.authentication.PasswordResetToken;
@@ -14,6 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.UUID;
 
 @Service
@@ -31,7 +37,7 @@ public class PasswordResetService {
     @Value("${spring.mail.username:no-reply@chmsu.edu.ph}")
     private String fromEmail;
 
-    public record PasswordResetResult(Long userId, String username, String email) {}
+    public record PasswordResetResult(String username, String email) {}
 
     @Transactional
     public void initiatePasswordReset(String email, String frontendUrl) {
@@ -39,7 +45,9 @@ public class PasswordResetService {
             passwordResetTokenRepository.deleteByUser(user);
 
             String rawToken = UUID.randomUUID().toString();
-            PasswordResetToken resetToken = PasswordResetToken.createTokenForUser(rawToken, user, EXPIRATION_MINUTES);
+            String hashedToken = hashToken(rawToken);
+
+            PasswordResetToken resetToken = PasswordResetToken.createTokenForUser(hashedToken, user, EXPIRATION_MINUTES);
             passwordResetTokenRepository.save(resetToken);
 
             String resetLink = frontendUrl + "/reset-password?token=" + rawToken;
@@ -48,8 +56,9 @@ public class PasswordResetService {
     }
 
     @Transactional
-    public PasswordResetResult completePasswordReset(String token, String newRawPassword) {
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+    public PasswordResetResult completePasswordReset(String rawToken, String newRawPassword) {
+        String hashedToken = hashToken(rawToken);
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(hashedToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or non-existent token"));
 
         if (resetToken.isExpired()) {
@@ -62,16 +71,14 @@ public class PasswordResetService {
         user.updatePassword(hashedPassword);
         userRepository.save(user);
 
-        // Invalidate token upon successful reset
         passwordResetTokenRepository.delete(resetToken);
         log.info("Password successfully updated for user: {}", user.getUsername());
 
-        return new PasswordResetResult(user.getId(), user.getUsername(), user.getEmail());
+        return new PasswordResetResult(user.getUsername(), user.getEmail());
     }
 
     public void sendResetEmail(String toEmail, String resetLink) {
-        log.info("Preparing password reset email for: {}", toEmail);
-        log.info("[DEV MODE] Password Reset Link: {}", resetLink);
+        log.info("Preparing password reset email dispatch for: {}", toEmail);
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -87,13 +94,21 @@ public class PasswordResetService {
                             "— CHMSU ICT Support"
             );
 
-            log.info("Sending password reset email via SMTP host to: {}", toEmail);
             javaMailSender.send(message);
-            log.info("Password reset email successfully dispatched to {}", toEmail);
+            log.info("Password reset email successfully dispatched to: {}", toEmail);
 
         } catch (MailException e) {
             log.error("Failed to send password reset email to {}. Root cause: {}", toEmail, e.getMessage());
-            log.warn("[DEV FALLBACK] SMTP dispatch failed, but you can use this reset link for testing: {}", resetLink);
+        }
+    }
+
+    private String hashToken(String rawToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm unavailable in JVM", e);
         }
     }
 }

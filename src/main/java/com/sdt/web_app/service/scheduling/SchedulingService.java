@@ -214,6 +214,11 @@ public class SchedulingService {
             Room room = roomRepository.findById(slot.roomId())
                     .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + slot.roomId()));
 
+            if (room.getCapacity() < request.maxCapacity()) {
+                throw new IllegalStateException(String.format(
+                        "Gate 2 Violation: Room physical capacity insufficient. Room '%s' capacity is %d, but section '%s' max capacity is configured to %d.",
+                        room.getCode(), room.getCapacity(), request.sectionCode(), request.maxCapacity()));
+            }
             User instructor = null;
             if (slot.instructorUserId() != null) {
                 instructor = userRepository.findById(slot.instructorUserId())
@@ -444,7 +449,11 @@ public class SchedulingService {
 
         Room room = roomRepository.findById(request.roomId())
                 .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + request.roomId()));
-
+        if (room.getCapacity() < section.getMaxCapacity()) {
+            throw new IllegalStateException(String.format(
+                    "Gate 2 Violation: Room physical capacity insufficient. Room '%s' capacity is %d, but section '%s' requires %d seats.",
+                    room.getCode(), room.getCapacity(), section.getSectionCode(), section.getMaxCapacity()));
+        }
         User instructor = null;
         if (request.facultyUserId() != null) {
             instructor = userRepository.findById(request.facultyUserId())

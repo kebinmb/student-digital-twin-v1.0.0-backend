@@ -87,11 +87,26 @@ public class TransfereeCreditingService {
 
         // 3. Update total units earned on StudentProfile
         List<StudentCourseGrade> allPassed = studentCourseGradeRepository.findPassedGradesByStudentId(student.getId());
-        BigDecimal totalUnitsEarned = allPassed.stream()
-                .map(g -> g.getCourse().getCreditUnits())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        student.updateProgress(totalUnitsEarned, student.getCumulativeGpa());
+        BigDecimal totalUnitsEarned = BigDecimal.ZERO;
+        BigDecimal totalGradePoints = BigDecimal.ZERO;
+
+        for (StudentCourseGrade scg : allPassed) {
+            if (scg.getCourse() != null && scg.getCourse().getCreditUnits() != null) {
+                BigDecimal units = scg.getCourse().getCreditUnits();
+                totalUnitsEarned = totalUnitsEarned.add(units);
+
+                if (scg.getNumericalGrade() != null) {
+                    totalGradePoints = totalGradePoints.add(scg.getNumericalGrade().multiply(units));
+                }
+            }
+        }
+
+        BigDecimal cumulativeGpa = totalUnitsEarned.compareTo(BigDecimal.ZERO) > 0
+                ? totalGradePoints.divide(totalUnitsEarned, 2, java.math.RoundingMode.HALF_UP)
+                : null;
+
+        student.updateProgress(totalUnitsEarned, cumulativeGpa);
         studentProfileRepository.save(student);
 
         return new TransfereeCreditingSummaryResponse(

@@ -139,4 +139,14 @@ public class StudentService {
                 sp.getCumulativeGpa()
         );
     }
+
+    @Transactional(readOnly = true)
+    public StudentProfileResponse getStudentByUserId(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null.");
+        }
+        StudentProfile profile = studentProfileRepository.findByUserIdWithProgramAndCurriculum(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Student profile not found for user ID: " + userId));
+        return mapToProfileResponse(profile);
+    }
 }

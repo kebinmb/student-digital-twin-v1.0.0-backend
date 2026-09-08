@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.faculty.FacultyProfileServiceTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.228 s -- in com.sdt.web_app.service.faculty.FacultyProfileServiceTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.289 s -- in com.sdt.web_app.service.faculty.FacultyProfileServiceTest

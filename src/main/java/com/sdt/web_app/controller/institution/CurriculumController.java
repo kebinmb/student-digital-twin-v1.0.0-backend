@@ -118,13 +118,13 @@ public class CurriculumController {
     }
 
     @PostMapping("/{id}/validate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<ValidationReportDto> validateCurriculum(@PathVariable("id") Long id) {
         return ResponseEntity.ok(validationService.validateCurriculum(id));
     }
 
     @PostMapping("/{id}/transition-state")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> transitionState(
             @PathVariable("id") Long id,
             @RequestParam Curriculum.Status status) {

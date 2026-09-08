@@ -6,6 +6,7 @@ import com.sdt.web_app.entities.institution.CoursePrerequisite;
 import com.sdt.web_app.entities.institution.CurriculumCourse;
 import com.sdt.web_app.entities.institution.Term;
 import com.sdt.web_app.entities.enrollment.*;
+import com.sdt.web_app.entities.scheduling.ClassSchedule;
 import com.sdt.web_app.entities.scheduling.ClassSection;
 import com.sdt.web_app.repositories.institution.CoursePrerequisiteRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
@@ -234,12 +235,27 @@ public class EnrollmentService {
 
         // 1. Verify student has passed all prerequisites
         List<CoursePrerequisite> prerequisites = prerequisiteRepository.findByCourseId(course.getId());
+        List<StudentCourseGrade> studentGrades = studentCourseGradeRepository.findPassedGradesByStudentId(student.getId());
+        Map<Long, StudentCourseGrade> gradeMap = studentGrades.stream()
+                .collect(Collectors.toMap(g -> g.getCourse().getId(), g -> g, (a, b) -> a));
         for (CoursePrerequisite cp : prerequisites) {
-            boolean isPassed = studentCourseGradeRepository.isCoursePassedByStudent(student.getId(), cp.getPrerequisiteCourse().getId());
-            if (!isPassed) {
+            StudentCourseGrade grade = gradeMap.get(cp.getPrerequisiteCourse().getId());
+            if (grade == null || !grade.isPassed()) {
                 throw new IllegalStateException(String.format(
                         "Gate 3 Violation: Missing prerequisite '%s' (%s) required for course '%s'.",
                         cp.getPrerequisiteCourse().getCode(), cp.getPrerequisiteCourse().getTitle(), course.getCode()));
+            }
+
+            BigDecimal minThreshold = cp.getMinGradeRequired() != null
+                    ? new BigDecimal(cp.getMinGradeRequired())
+                    : new BigDecimal("3.00");
+
+            // Philippine Grading Scale: 1.00 is best, 3.00 is passing, 5.00 is failure.
+            // Higher numerical values signify worse performance.
+            if (grade.getNumericalGrade() != null && grade.getNumericalGrade().compareTo(minThreshold) > 0) {
+                throw new IllegalStateException(String.format(
+                        "Gate 3 Violation: Prerequisite '%s' requires a minimum grade of %.2f, but student achieved %.2f.",
+                        cp.getPrerequisiteCourse().getCode(), minThreshold, grade.getNumericalGrade()));
             }
         }
 
@@ -263,7 +279,22 @@ public class EnrollmentService {
             throw new IllegalStateException(String.format(
                     "Student is already enrolled in a section for course '%s'.", course.getCode()));
         }
-
+        for (ClassSchedule newSlot : section.getSchedules()) {
+            for (EnrollmentCourseItem existingItem : enrollment.getItems()) {
+                for (ClassSchedule existingSlot : existingItem.getSection().getSchedules()) {
+                    if (existingSlot.getDayOfWeek().equalsIgnoreCase(newSlot.getDayOfWeek())) {
+                        boolean overlaps = newSlot.getStartTime().isBefore(existingSlot.getEndTime())
+                                && existingSlot.getStartTime().isBefore(newSlot.getEndTime());
+                        if (overlaps) {
+                            throw new IllegalStateException(String.format(
+                                    "Gate 3 Violation: Schedule collision detected. Course '%s' (%s %s-%s) conflicts with already enlisted course '%s' (%s %s-%s).",
+                                    course.getCode(), newSlot.getDayOfWeek(), newSlot.getStartTime(), newSlot.getEndTime(),
+                                    existingItem.getSection().getCourse().getCode(), existingSlot.getDayOfWeek(), existingSlot.getStartTime(), existingSlot.getEndTime()));
+                        }
+                    }
+                }
+            }
+        }
         // 3. Unit Cap Verification
         boolean isSummer = "SUMMER".equalsIgnoreCase(term.getTermType().name()) || "MIDYEAR".equalsIgnoreCase(term.getTermType().name());
         BigDecimal maxUnits = isSummer ? new BigDecimal("9.00") : new BigDecimal("24.00");
@@ -417,7 +448,8 @@ public class EnrollmentService {
     // -------------------------------------------------------------------------
     // Advising Academic Period Progression Helpers
     // -------------------------------------------------------------------------
-    public record AcademicPeriod(int yearLevel, String semester) {}
+    public record AcademicPeriod(int yearLevel, String semester) {
+    }
 
     private AcademicPeriod determineTargetPeriod(
             StudentProfile student,

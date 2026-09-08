@@ -19,7 +19,7 @@ public class TokenService {
     @Value("${spring.application.name:sdt-web-app}")
     private String issuer;
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://web-app}")
+    @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://sdt-webapp}")
     private List<String> audiences;
 
     public TokenService(JwtEncoder jwtEncoder) {

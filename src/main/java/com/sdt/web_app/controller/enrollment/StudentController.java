@@ -58,4 +58,14 @@ public class StudentController {
     public ResponseEntity<List<CourseEquivalencyDto>> getCreditedCourses(@PathVariable("id") Long id) {
         return ResponseEntity.ok(creditingService.getStudentCourseEquivalencies(id));
     }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<StudentProfileResponse> getCurrentStudentProfile(Authentication authentication) {
+        Long userId = securityUtils.resolveUserId(authentication);
+        if (userId == null) {
+            throw new IllegalStateException("Cannot resolve authenticated student user identity.");
+        }
+        return ResponseEntity.ok(studentService.getStudentByUserId(userId));
+    }
 }
