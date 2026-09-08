@@ -47,6 +47,7 @@ public class Curriculum {
     @Builder.Default
     private Status status = Status.DRAFT;
 
+    @Version
     @Column(name = "version_number", nullable = false)
     @Builder.Default
     private int versionNumber = 1;

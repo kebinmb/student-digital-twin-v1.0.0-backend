@@ -308,8 +308,7 @@ class EnrollmentServiceTest {
                 .build();
         given(prerequisiteRepository.findByCourseId(102L)).willReturn(List.of(prereq));
 
-        // Student has NOT passed course1
-        given(studentCourseGradeRepository.isCoursePassedByStudent(50L, 101L)).willReturn(false);
+        // Student has NOT passed course1 (findPassedGradesByStudentId returns empty list by default)
 
         EnlistSectionRequest request = new EnlistSectionRequest(20L, 200L);
 
