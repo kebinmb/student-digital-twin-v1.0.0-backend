@@ -20,6 +20,7 @@ public class GradingScaleController {
     private final GradingScaleService gradingScaleService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<GradingScaleResponse>> getAllGradingScales() {
         List<GradingScaleResponse> list = gradingScaleService.getAllGradingScales().stream()
                 .map(this::mapToResponse)
@@ -28,6 +29,7 @@ public class GradingScaleController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<GradingScaleResponse> getGradingScaleById(@PathVariable Long id) {
         return ResponseEntity.ok(mapToResponse(gradingScaleService.getGradingScaleById(id)));
     }

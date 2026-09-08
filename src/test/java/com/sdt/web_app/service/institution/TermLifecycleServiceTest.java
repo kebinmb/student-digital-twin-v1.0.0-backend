@@ -60,7 +60,7 @@ class TermLifecycleServiceTest {
     @Test
     @DisplayName("Should successfully activate a term and set parent academic year as current")
     void activateTerm_Success() {
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
+        given(termRepository.findWithAcademicYearById(10L)).willReturn(Optional.of(term));
         given(termRepository.findByIsActiveTrue()).willReturn(Optional.empty());
         given(academicYearRepository.findByIsCurrentTrue()).willReturn(Optional.empty());
 
@@ -74,7 +74,7 @@ class TermLifecycleServiceTest {
     @DisplayName("Should open enrollment when term is active")
     void openEnrollment_Success() {
         term.activate();
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
+        given(termRepository.findWithAcademicYearById(10L)).willReturn(Optional.of(term));
 
         Term result = termLifecycleService.openEnrollment(10L);
 
@@ -84,7 +84,7 @@ class TermLifecycleServiceTest {
     @Test
     @DisplayName("Should throw exception when attempting to open enrollment on inactive term")
     void openEnrollment_InactiveTerm_ThrowsException() {
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
+        given(termRepository.findWithAcademicYearById(10L)).willReturn(Optional.of(term));
 
         assertThatThrownBy(() -> termLifecycleService.openEnrollment(10L))
                 .isInstanceOf(IllegalStateException.class)
@@ -95,7 +95,7 @@ class TermLifecycleServiceTest {
     @DisplayName("Should open and lock grading windows on active term")
     void gradingLifecycle_Success() {
         term.activate();
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
+        given(termRepository.findWithAcademicYearById(10L)).willReturn(Optional.of(term));
 
         termLifecycleService.openGrading(10L);
         assertThat(term.isGradingOpen()).isTrue();

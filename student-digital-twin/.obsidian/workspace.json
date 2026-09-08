@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 AI Audit/00 Audit and Testing using AI.md",
+                "file": "02 Resources/07 Student Digital Twin/03 Student Risk Assessment.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 Audit and Testing using AI"
+              "title": "03 Student Risk Assessment"
             }
           }
         ]
@@ -55,7 +55,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "ADMIN",
+                "query": "Equity",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -79,12 +79,11 @@
               "title": "Bookmarks"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 499.5
   },
   "right": {
     "id": "cd5569e06477ea45",
@@ -192,33 +191,33 @@
   },
   "active": "289ee6244a829c5e",
   "lastOpenFiles": [
+    "02 Resources/07 Student Digital Twin/02 Curriculum & Enrollment Management.md",
+    "02 Resources/07 Student Digital Twin/02 Academic Performance Dashboard.md",
+    "02 Resources/07 Student Digital Twin/01 Attendance Monitoring Module.md",
+    "02 Resources/07 Student Digital Twin/00 Equity Target Profiling Module.md",
+    "02 Resources/07 Student Digital Twin/03 Student Risk Assessment.md",
+    "02 Resources/02 Curriculum & Enrollment Management/02 Enrollment & Registration.md",
+    "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
+    "03 Archives/09 Phase 2 Completion & Phase 3 Transition Readiness Report.md",
+    "00 AI Index.md",
+    "03 Archives/01 Login and Authentication Backend and Frontend Implementation.md",
+    "03 Archives/00 Login and Authentication Backend + Frontend.md",
+    "00 AI Audit/Comprehensive System Gap Analysis & Gate Audit Report.md",
+    "00 AI Audit/Backend File Relationships & Architecture Topology.md",
     "02 Resources/ 02 Curriculum & Enrollment Management.md",
+    "00 AI Audit/00 Audit and Testing using AI.md",
+    "00 AI Audit/Frontend Component Hierarchy & State Matrix.md",
+    "00 AI Audit/test.md",
+    "03 Archives/Backend and Frontend Repository Alignment.md",
+    "03 Archives/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",
+    "03 Archives/00 Audit and Testing using AI.md",
     "00 Project/01 Layer 1 System Master Data & RBAC.md",
     "02 Resources/00 Login and Authentication Springboot 4.1.0/03 gRPC 1.1 Security Interceptors.md",
     "02 Resources/00 Login and Authentication Springboot 4.1.0/07 Cors Configuration.md",
     "02 Resources/00 Login and Authentication Springboot 4.1.0/06 Modern Security Headers & CHIPS Cookies.md",
     "02 Resources/00 Login and Authentication Springboot 4.1.0/00 Spring  Security - Virtual Threads Context Propagation.md",
     "02 Resources/06 Stakeholder Portals & LMS Integration/00 Student & Faculty Self-Service.md",
-    "02 Resources/06 Stakeholder Portals & LMS Integration/01 LMS Integration.md",
-    "02 Resources/06 Stakeholder Portals & LMS Integration/02 Data Privacy & Security.md",
-    "00 AI Audit/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",
-    "00 Project/00 Module Implementation.md",
-    "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
-    "00 AI Audit/01 Login and Authentication Backend and Frontend Implementation.md",
-    "02 Resources/02 Curriculum & Enrollment Management.md",
-    "00 AI Audit/Backend and Frontend Repository Alignment.md",
-    "04 Manual Testing/01 Institutional Setup & Curriculum Designer Manual Testing Guide (CHED CMO 25 s. 2015).md",
-    "00 Project/00 AI Audit/09 Phase 2 Completion & Phase 3 Transition Readiness Report.md",
-    "00 AI Audit/09 Phase 2 Completion & Phase 3 Transition Readiness Report.md",
-    "00 AI Audit/08 Curriculum Designer Implementation Audit & Verification Report.md",
     "04 Manual Testing",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/01 Outbound SSRF Mitigation in RestClient.md",
-    "03 Archives/00 Login and Authentication Backend + Frontend.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/05 Actuator Port Segregation & Filter Chains.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/04 Jackson 3 Polymorphic Deserialization Hardening.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/02 OAuth 2.1 Strict Compliance & JWT Validation.md",
-    "00 AI Audit/05 Phase 2 Frontend Curriculum Designer Readiness & Architecture.md",
-    "00 Project/00 AI Audit/08 Curriculum Designer Implementation Audit & Verification Report.md",
     "00 Project/00 AI Audit",
     "Pasted image 20260901220019.png",
     "02 Resources/07 Student Digital Twin",

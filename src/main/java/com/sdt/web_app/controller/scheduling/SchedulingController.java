@@ -1,14 +1,14 @@
 package com.sdt.web_app.controller.scheduling;
 
 import com.sdt.web_app.dto.scheduling.SchedulingDtos.*;
-import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.service.scheduling.SchedulingService;
+import com.sdt.web_app.service.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +21,7 @@ import java.util.List;
 public class SchedulingController {
 
     private final SchedulingService schedulingService;
+    private final SecurityUtils securityUtils;
 
     // -------------------------------------------------------------------------
     // Room Endpoints
@@ -93,8 +94,11 @@ public class SchedulingController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<Void> approveOverload(
             @Valid @RequestBody ApproveOverloadRequest request,
-            @AuthenticationPrincipal User currentUser) {
-        Long approverId = currentUser != null ? currentUser.getId() : 1L;
+            Authentication authentication) {
+        Long approverId = securityUtils.resolveUserId(authentication);
+        if (approverId == null) {
+            approverId = 1L;
+        }
         schedulingService.approveFacultyOverload(request.termId(), request.facultyUserId(), approverId);
         return ResponseEntity.ok().build();
     }
@@ -104,8 +108,11 @@ public class SchedulingController {
     public ResponseEntity<FacultyLoadSummaryResponse> updateFacultyWorkloadLimit(
             @PathVariable("id") Long facultyUserId,
             @Valid @RequestBody UpdateFacultyLoadLimitRequest request,
-            @AuthenticationPrincipal User currentUser) {
-        Long adminUserId = currentUser != null ? currentUser.getId() : 1L;
+            Authentication authentication) {
+        Long adminUserId = securityUtils.resolveUserId(authentication);
+        if (adminUserId == null) {
+            adminUserId = 1L;
+        }
         FacultyLoadSummaryResponse response = schedulingService.updateFacultyWorkloadLimit(
                 facultyUserId, request.termId(), request.customMaxUnits(), request.reason(), adminUserId);
         return ResponseEntity.ok(response);

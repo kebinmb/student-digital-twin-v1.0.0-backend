@@ -49,6 +49,13 @@ public class StudentCourseGrade {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
+    public void updateGrade(BigDecimal numericalGrade, String completionStatus) {
+        this.numericalGrade = numericalGrade;
+        if (completionStatus != null) {
+            this.completionStatus = completionStatus;
+        }
+    }
+
     public boolean isPassed() {
         return "PASSED".equalsIgnoreCase(this.completionStatus)
                 && this.numericalGrade != null

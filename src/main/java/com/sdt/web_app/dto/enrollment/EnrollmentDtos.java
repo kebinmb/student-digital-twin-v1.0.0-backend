@@ -125,6 +125,102 @@ public class EnrollmentDtos {
             int yearLevel,
             String academicStatus
     ) {}
+
+    public record CreateStudentRequest(
+            @jakarta.validation.constraints.NotBlank(message = "Student number is required")
+            String studentNumber,
+
+            @jakarta.validation.constraints.NotBlank(message = "Username is required")
+            String username,
+
+            @jakarta.validation.constraints.NotBlank(message = "Email is required")
+            @jakarta.validation.constraints.Email(message = "Invalid email format")
+            String email,
+
+            String password,
+
+            @NotNull(message = "Program ID is required")
+            Long programId,
+
+            @NotNull(message = "Curriculum ID is required")
+            Long curriculumId,
+
+            @NotNull(message = "Student classification is required")
+            String classification,
+
+            Integer yearLevel
+    ) {}
+
+    public record StudentProfileResponse(
+            Long id,
+            String studentNumber,
+            Long userId,
+            String username,
+            String email,
+            Long programId,
+            String programCode,
+            String programName,
+            Long curriculumId,
+            String curriculumCode,
+            String classification,
+            int yearLevel,
+            String enrollmentStatus,
+            boolean isGraduating,
+            BigDecimal totalUnitsEarned,
+            BigDecimal cumulativeGpa
+    ) {}
+
+    public record CreditCourseItemRequest(
+            @jakarta.validation.constraints.NotBlank(message = "External institution is required")
+            String externalInstitution,
+
+            @jakarta.validation.constraints.NotBlank(message = "External course code is required")
+            String externalCourseCode,
+
+            @jakarta.validation.constraints.NotBlank(message = "External course title is required")
+            String externalCourseTitle,
+
+            @NotNull(message = "Internal course ID is required")
+            Long internalCourseId,
+
+            @NotNull(message = "External numerical grade is required")
+            BigDecimal externalNumericalGrade,
+
+            @NotNull(message = "Credits granted is required")
+            BigDecimal creditsGranted,
+
+            String remarks
+    ) {}
+
+    public record CreditTransfereeCoursesRequest(
+            @NotNull(message = "Course crediting items are required")
+            @jakarta.validation.constraints.NotEmpty(message = "At least one course item must be specified for crediting")
+            List<CreditCourseItemRequest> items
+    ) {}
+
+    public record CourseEquivalencyDto(
+            Long id,
+            Long studentId,
+            String externalInstitution,
+            String externalCourseCode,
+            String externalCourseTitle,
+            Long internalCourseId,
+            String internalCourseCode,
+            String internalCourseTitle,
+            BigDecimal externalNumericalGrade,
+            BigDecimal creditsGranted,
+            String status,
+            String approvedByUsername,
+            String remarks
+    ) {}
+
+    public record TransfereeCreditingSummaryResponse(
+            Long studentId,
+            String studentNumber,
+            int creditedCoursesCount,
+            BigDecimal totalUnitsCredited,
+            List<CourseEquivalencyDto> creditedCourses
+    ) {}
 }
 
 

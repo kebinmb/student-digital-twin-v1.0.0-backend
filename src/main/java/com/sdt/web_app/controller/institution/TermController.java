@@ -22,6 +22,7 @@ public class TermController {
     private final TermLifecycleService termLifecycleService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<TermResponse>> getAllTerms() {
         List<TermResponse> responses = termService.getAllTerms().stream()
                 .map(this::mapToResponse)
@@ -30,6 +31,7 @@ public class TermController {
     }
 
     @GetMapping("/academic-year/{academicYearId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<TermResponse>> getTermsByAcademicYear(@PathVariable Long academicYearId) {
         List<TermResponse> responses = termService.getTermsByAcademicYear(academicYearId).stream()
                 .map(this::mapToResponse)
@@ -38,6 +40,7 @@ public class TermController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<TermResponse> getTermById(@PathVariable Long id) {
         return ResponseEntity.ok(mapToResponse(termService.getTermById(id)));
     }

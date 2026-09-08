@@ -456,6 +456,13 @@ public class SchedulingService {
             throw new IllegalArgumentException("At least one day is required.");
         }
 
+        boolean alreadyAssignedToSection = false;
+        if (instructor != null) {
+            final Long instructorId = instructor.getId();
+            alreadyAssignedToSection = section.getSchedules().stream()
+                    .anyMatch(s -> s.getInstructor() != null && instructorId.equals(s.getInstructor().getId()));
+        }
+
         for (String day : days) {
             String dayUpper = day.toUpperCase();
             boolean roomOverlap = scheduleRepository.existsOverlappingRoomSchedule(
@@ -489,7 +496,7 @@ public class SchedulingService {
         }
 
         ClassSection saved = sectionRepository.save(section);
-        if (instructor != null) {
+        if (instructor != null && !alreadyAssignedToSection) {
             updateFacultyWorkload(term, instructor, section.getCourse());
         }
 

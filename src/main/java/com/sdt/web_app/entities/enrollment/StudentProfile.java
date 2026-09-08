@@ -23,6 +23,10 @@ public class StudentProfile {
         REGULAR, IRREGULAR, PROBATION, LOA, GRADUATED
     }
 
+    public enum StudentClassification {
+        INCOMING_FIRST_YEAR, TRANSFEREE, RETURNEE, CONTINUING
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -51,6 +55,11 @@ public class StudentProfile {
     @Builder.Default
     private EnrollmentStatus enrollmentStatus = EnrollmentStatus.REGULAR;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "student_classification", nullable = false, length = 30)
+    @Builder.Default
+    private StudentClassification classification = StudentClassification.CONTINUING;
+
     @Column(name = "is_graduating", nullable = false)
     @Builder.Default
     private boolean isGraduating = false;
@@ -70,6 +79,21 @@ public class StudentProfile {
         this.yearLevel = yearLevel;
         this.enrollmentStatus = status;
         this.isGraduating = isGraduating;
+    }
+
+    public void updateAcademicStanding(int yearLevel, EnrollmentStatus status, boolean isGraduating, StudentClassification classification) {
+        this.yearLevel = yearLevel;
+        this.enrollmentStatus = status;
+        this.isGraduating = isGraduating;
+        if (classification != null) {
+            this.classification = classification;
+        }
+    }
+
+    public void updateClassification(StudentClassification classification) {
+        if (classification != null) {
+            this.classification = classification;
+        }
     }
 
     public void updateProgress(BigDecimal totalUnitsEarned, BigDecimal cumulativeGpa) {

@@ -21,7 +21,7 @@ public class EnrollmentController {
     // Gate 3: Student Advising & Eligibility
     // -------------------------------------------------------------------------
     @GetMapping("/advising/student/{studentId}/term/{termId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("@enrollmentSecurity.canAccessStudentAdvising(authentication, #studentId)")
     public ResponseEntity<AdvisingEligibilityResponse> getAdvisingEligibility(
             @PathVariable("studentId") Long studentId,
             @PathVariable("termId") Long termId,
@@ -34,7 +34,7 @@ public class EnrollmentController {
     // Section Enlistment (Atomic Capacity Check & Unit Ceiling Guard)
     // -------------------------------------------------------------------------
     @PostMapping("/enlist/student/{studentId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'STUDENT')")
+    @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<StudentEnrollmentResponse> enlistSection(
             @PathVariable("studentId") Long studentId,
             @Valid @RequestBody EnlistSectionRequest request) {
@@ -42,7 +42,7 @@ public class EnrollmentController {
     }
 
     @DeleteMapping("/enlist/student/{studentId}/term/{termId}/section/{sectionId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'STUDENT')")
+    @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<StudentEnrollmentResponse> removeEnlistedSection(
             @PathVariable("studentId") Long studentId,
             @PathVariable("termId") Long termId,
@@ -51,7 +51,7 @@ public class EnrollmentController {
     }
 
     @PostMapping("/confirm/student/{studentId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'STUDENT')")
+    @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<EnrollmentConfirmationDto> confirmEnrollment(
             @PathVariable("studentId") Long studentId,
             @Valid @RequestBody ConfirmEnrollmentRequest request) {
@@ -59,7 +59,7 @@ public class EnrollmentController {
     }
 
     @GetMapping("/student/{studentId}/term/{termId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'STUDENT')")
+    @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<StudentEnrollmentResponse> getEnrollment(
             @PathVariable("studentId") Long studentId,
             @PathVariable("termId") Long termId) {

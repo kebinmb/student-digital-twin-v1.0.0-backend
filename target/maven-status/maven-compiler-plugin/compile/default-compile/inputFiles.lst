@@ -12,6 +12,8 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\PasswordResetController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\enrollment\EnrollmentController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\enrollment\StudentController.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\faculty\FacultyProfileController.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\grade\GradeController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\AcademicYearController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\CampusController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\CiloPiloMappingController.java
@@ -27,6 +29,8 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\scheduling\SchedulingController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\authentication\AuthDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\enrollment\EnrollmentDtos.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\faculty\FacultyDtos.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\grade\GradeDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\AcademicYearDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\CampusDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\CiloPiloMappingDtos.java
@@ -48,10 +52,12 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\authentication\RefreshToken.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\authentication\Roles.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\authentication\User.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\CourseEquivalency.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\EnrollmentCourseItem.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\StudentCourseGrade.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\StudentEnrollment.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\StudentProfile.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\faculty\FacultyProfile.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\AcademicYear.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\Campus.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\CiloPiloMapping.java
@@ -87,10 +93,12 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\authentication\PasswordResetTokenRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\authentication\RefreshTokenRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\authentication\UserRepository.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\CourseEquivalencyRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\EnrollmentCourseItemRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\StudentCourseGradeRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\StudentEnrollmentRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\StudentProfileRepository.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\faculty\FacultyProfileRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\AcademicYearRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\CampusRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\CiloPiloMappingRepository.java
@@ -116,7 +124,13 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\AuthService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\PasswordResetService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\TokenService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\enrollment\EnrollmentSecurity.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\enrollment\EnrollmentService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\enrollment\StudentService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\enrollment\TransfereeCreditingService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\faculty\FacultyProfileService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\faculty\FacultySecurity.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\grade\GradeService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\AcademicYearService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\CampusService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\CiloPiloMappingService.java
@@ -135,4 +149,6 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\TermLifecycleService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\TermService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\scheduling\SchedulingService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\scheduling\SectionSecurity.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\SecurityUtils.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\WebAppApplication.java

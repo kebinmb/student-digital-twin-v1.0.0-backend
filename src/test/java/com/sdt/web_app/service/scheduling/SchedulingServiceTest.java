@@ -8,6 +8,7 @@ import com.sdt.web_app.entities.institution.Course;
 import com.sdt.web_app.entities.institution.Curriculum;
 import com.sdt.web_app.entities.institution.Term;
 import com.sdt.web_app.entities.institution.TermType;
+import com.sdt.web_app.entities.scheduling.ClassSchedule;
 import com.sdt.web_app.entities.scheduling.ClassSection;
 import com.sdt.web_app.entities.scheduling.FacultyWorkload;
 import com.sdt.web_app.entities.scheduling.Room;
@@ -449,5 +450,44 @@ class SchedulingServiceTest {
         assertThat(response.effectiveMaxUnits()).isEqualTo(new BigDecimal("25.00"));
         assertThat(response.overrideReason()).isEqualTo("Research coordinator override");
         assertThat(response.overriddenByName()).isEqualTo("admin_john");
+    }
+
+    @Test
+    @DisplayName("Gate 2: Should not duplicate faculty contact hours when adding slots to an already assigned section")
+    void shouldNotDuplicateWorkloadWhenAddingSlotToAlreadyAssignedSection() {
+        ClassSection section = ClassSection.builder()
+                .term(term)
+                .curriculum(activeCurriculum)
+                .course(course)
+                .sectionCode("BSIT-1A")
+                .maxCapacity(40)
+                .build();
+        ReflectionTestUtils.setField(section, "id", 500L);
+
+        ClassSchedule existingSchedule = ClassSchedule.builder()
+                .room(room)
+                .instructor(instructor)
+                .dayOfWeek("MONDAY")
+                .startTime(LocalTime.of(8, 0))
+                .endTime(LocalTime.of(10, 0))
+                .scheduleType("LECTURE")
+                .build();
+        section.addSchedule(existingSchedule);
+
+        given(sectionRepository.findByIdWithSchedules(500L)).willReturn(Optional.of(section));
+        given(roomRepository.findById(20L)).willReturn(Optional.of(room));
+        given(userRepository.findById(30L)).willReturn(Optional.of(instructor));
+        given(scheduleRepository.existsOverlappingRoomSchedule(any(), any(), any(), any(), any())).willReturn(false);
+        given(scheduleRepository.existsOverlappingFacultySchedule(any(), any(), any(), any(), any())).willReturn(false);
+        given(sectionRepository.save(any(ClassSection.class))).willReturn(section);
+
+        CreateScheduleSlotRequest request = new CreateScheduleSlotRequest(
+                500L, 100L, 30L, 20L, List.of("WEDNESDAY"), LocalTime.of(8, 0), LocalTime.of(11, 0), true
+        );
+
+        SectionDetailResponse response = schedulingService.addScheduleSlots(request);
+
+        assertThat(response).isNotNull();
+        org.mockito.Mockito.verify(workloadRepository, org.mockito.Mockito.never()).save(any());
     }
 }

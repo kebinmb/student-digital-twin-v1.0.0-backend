@@ -26,6 +26,7 @@ public class FinancialController {
     // Fee Categories (/api/v1/fee-categories)
     // -------------------------------------------------------------------------
     @GetMapping("/fee-categories")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<FeeCategoryResponse>> getAllFeeCategories() {
         List<FeeCategoryResponse> list = financialService.getAllFeeCategories().stream()
                 .map(this::mapToCategoryResponse)
@@ -61,6 +62,7 @@ public class FinancialController {
     // Fee Catalog (/api/v1/fee-catalog)
     // -------------------------------------------------------------------------
     @GetMapping("/fee-catalog")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<FeeCatalogResponse>> getAllFeeCatalog() {
         List<FeeCatalogResponse> list = financialService.getAllFeeCategories().stream()
                 .flatMap(cat -> financialService.getFeeCatalogByCategory(cat.getId()).stream())
@@ -70,6 +72,7 @@ public class FinancialController {
     }
 
     @GetMapping("/fee-catalog/category/{categoryId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<FeeCatalogResponse>> getFeeCatalogByCategory(@PathVariable Long categoryId) {
         List<FeeCatalogResponse> list = financialService.getFeeCatalogByCategory(categoryId).stream()
                 .map(this::mapToCatalogResponse)
@@ -113,6 +116,7 @@ public class FinancialController {
     // Payment Term Templates (/api/v1/payment-term-templates)
     // -------------------------------------------------------------------------
     @GetMapping("/payment-term-templates")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<PaymentTermTemplateResponse>> getAllPaymentTermTemplates() {
         List<PaymentTermTemplateResponse> list = financialService.getAllPaymentTermTemplates().stream()
                 .map(this::mapToTemplateResponse)
@@ -147,6 +151,7 @@ public class FinancialController {
     // Scholarship Discounts (/api/v1/scholarship-discounts)
     // -------------------------------------------------------------------------
     @GetMapping("/scholarship-discounts")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<ScholarshipDiscountResponse>> getAllScholarshipDiscounts() {
         List<ScholarshipDiscountResponse> list = financialService.getAllScholarshipDiscounts().stream()
                 .map(this::mapToScholarshipResponse)
