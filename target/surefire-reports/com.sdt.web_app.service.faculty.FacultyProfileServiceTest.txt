@@ -1,4 +1,14 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.faculty.FacultyProfileServiceTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.358 s -- in com.sdt.web_app.service.faculty.FacultyProfileServiceTest
+Tests run: 3, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.652 s <<< FAILURE! -- in com.sdt.web_app.service.faculty.FacultyProfileServiceTest
+com.sdt.web_app.service.faculty.FacultyProfileServiceTest.generateChedE5Report_Success -- Time elapsed: 0.020 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/sdt/web_app/dto/faculty/FacultyDtos$ChedE5WorkloadSummaryDto
+	at com.sdt.web_app.service.faculty.FacultyProfileService.generateChedE5Report(FacultyProfileService.java:131)
+	at com.sdt.web_app.service.faculty.FacultyProfileServiceTest.generateChedE5Report_Success(FacultyProfileServiceTest.java:134)
+Caused by: java.lang.ClassNotFoundException: com.sdt.web_app.dto.faculty.FacultyDtos$ChedE5WorkloadSummaryDto
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	... 2 more
+

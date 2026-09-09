@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02 Resources/02 Curriculum & Enrollment Management/02 Enrollment & Registration.md",
+                "file": "05 Remediation/00 Remediation Plan.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "02 Enrollment & Registration"
+              "title": "00 Remediation Plan"
             }
           }
         ]
@@ -189,22 +189,23 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "445cf9d7661b60cb",
+  "active": "9052412d351b6d4f",
   "lastOpenFiles": [
-    "05 Remediation/00 Remediation Plan.md",
+    "05 Remediation/CLASS_RECORD_SPEC.md",
+    "00 AI Index.md",
     "00 AI Audit/Frontend Component Hierarchy & State Matrix.md",
+    "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
+    "02 Resources/02 Curriculum & Enrollment Management/02 Enrollment & Registration.md",
+    "05 Remediation/00 Remediation Plan.md",
     "05 Remediation",
     "00 AI Audit/Comprehensive System Gap Analysis & Gate Audit Report.md",
     "00 AI Audit/Backend File Relationships & Architecture Topology.md",
-    "00 Project/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
-    "02 Resources/02 Curriculum & Enrollment Management/02 Enrollment & Registration.md",
     "02 Resources/07 Student Digital Twin/03 Student Risk Assessment.md",
     "02 Resources/07 Student Digital Twin/02 Curriculum & Enrollment Management.md",
     "02 Resources/07 Student Digital Twin/02 Academic Performance Dashboard.md",
     "02 Resources/07 Student Digital Twin/01 Attendance Monitoring Module.md",
     "02 Resources/07 Student Digital Twin/00 Equity Target Profiling Module.md",
     "03 Archives/09 Phase 2 Completion & Phase 3 Transition Readiness Report.md",
-    "00 AI Index.md",
     "03 Archives/01 Login and Authentication Backend and Frontend Implementation.md",
     "03 Archives/00 Login and Authentication Backend + Frontend.md",
     "02 Resources/ 02 Curriculum & Enrollment Management.md",
@@ -217,7 +218,6 @@
     "02 Resources/00 Login and Authentication Springboot 4.1.0/03 gRPC 1.1 Security Interceptors.md",
     "02 Resources/00 Login and Authentication Springboot 4.1.0/07 Cors Configuration.md",
     "02 Resources/00 Login and Authentication Springboot 4.1.0/06 Modern Security Headers & CHIPS Cookies.md",
-    "02 Resources/00 Login and Authentication Springboot 4.1.0/00 Spring  Security - Virtual Threads Context Propagation.md",
     "04 Manual Testing",
     "00 Project/00 AI Audit",
     "Pasted image 20260901220019.png",

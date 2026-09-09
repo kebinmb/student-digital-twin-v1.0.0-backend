@@ -1,4 +1,16 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.enrollment.EnrollmentServiceTest
 -------------------------------------------------------------------------------
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.544 s -- in com.sdt.web_app.service.enrollment.EnrollmentServiceTest
+Tests run: 9, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.107 s <<< FAILURE! -- in com.sdt.web_app.service.enrollment.EnrollmentServiceTest
+com.sdt.web_app.service.enrollment.EnrollmentServiceTest.shouldLockCourseWithUnfulfilledPrerequisite -- Time elapsed: 0.026 s <<< ERROR!
+java.lang.NoClassDefFoundError: com/sdt/web_app/service/enrollment/EnrollmentService$1
+	at com.sdt.web_app.service.enrollment.EnrollmentService.determineTargetPeriod(EnrollmentService.java:487)
+	at com.sdt.web_app.service.enrollment.EnrollmentService.getAdvisingEligibility(EnrollmentService.java:82)
+	at com.sdt.web_app.service.enrollment.EnrollmentService.getAdvisingEligibility(EnrollmentService.java:45)
+	at com.sdt.web_app.service.enrollment.EnrollmentServiceTest.shouldLockCourseWithUnfulfilledPrerequisite(EnrollmentServiceTest.java:171)
+Caused by: java.lang.ClassNotFoundException: com.sdt.web_app.service.enrollment.EnrollmentService$1
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	... 4 more
+

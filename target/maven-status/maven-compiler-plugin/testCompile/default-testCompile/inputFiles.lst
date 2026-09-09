@@ -10,6 +10,8 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\enrollment\StudentServiceTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\enrollment\TransfereeCreditingServiceTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\faculty\FacultyProfileServiceTest.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\grade\ClassRecordMatrixIntegrationTest.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\grade\ClassRecordServiceTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\grade\GradeServiceTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.java

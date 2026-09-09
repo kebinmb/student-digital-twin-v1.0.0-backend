@@ -11,11 +11,11 @@ public interface EnrollmentCourseItemRepository extends JpaRepository<Enrollment
     List<EnrollmentCourseItem> findByEnrollmentId(Long enrollmentId);
     List<EnrollmentCourseItem> findBySectionId(Long sectionId);
 
-    @org.springframework.data.jpa.repository.Query("SELECT eci FROM EnrollmentCourseItem eci " +
-           "JOIN FETCH eci.enrollment e " +
-           "JOIN FETCH e.student sp " +
-           "JOIN FETCH sp.user u " +
-           "JOIN FETCH sp.program p " +
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT eci FROM EnrollmentCourseItem eci " +
+           "LEFT JOIN FETCH eci.enrollment e " +
+           "LEFT JOIN FETCH e.student sp " +
+           "LEFT JOIN FETCH sp.user u " +
+           "LEFT JOIN FETCH sp.program p " +
            "WHERE eci.section.id = :sectionId")
     List<EnrollmentCourseItem> findBySectionIdWithStudentDetails(@org.springframework.data.repository.query.Param("sectionId") Long sectionId);
 

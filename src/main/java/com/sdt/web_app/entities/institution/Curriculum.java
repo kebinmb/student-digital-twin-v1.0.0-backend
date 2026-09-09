@@ -18,13 +18,17 @@ public class Curriculum {
 
     public enum Status {DRAFT, UNDER_REVIEW, APPROVED, ACTIVE, ARCHIVED}
 
-    private static final Map<Status, Set<Status>> VALID_TRANSITIONS = Map.of(
-            Status.DRAFT, Set.of(Status.UNDER_REVIEW),
-            Status.UNDER_REVIEW, Set.of(Status.DRAFT, Status.APPROVED),
-            Status.APPROVED, Set.of(Status.DRAFT, Status.ACTIVE),
-            Status.ACTIVE, Set.of(Status.ARCHIVED),
-            Status.ARCHIVED, Set.of()
-    );
+    public static Set<Status> getAllowedTransitions(Status currentStatus) {
+        if (currentStatus == null) return Set.of();
+        return switch (currentStatus) {
+            case DRAFT -> Set.of(Status.UNDER_REVIEW);
+            case UNDER_REVIEW -> Set.of(Status.DRAFT, Status.APPROVED);
+            case APPROVED -> Set.of(Status.DRAFT, Status.ACTIVE);
+            case ACTIVE -> Set.of(Status.ARCHIVED);
+            case ARCHIVED -> Set.of();
+        };
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -60,7 +64,7 @@ public class Curriculum {
         if (newStatus == null) {
             throw new IllegalArgumentException("Target status cannot be null");
         }
-        Set<Status> allowed = VALID_TRANSITIONS.getOrDefault(this.status, Set.of());
+        Set<Status> allowed = getAllowedTransitions(this.status);
         if (!allowed.contains(newStatus)) {
             throw new IllegalStateException(String.format(
                     "Invalid state transition: Cannot transition curriculum '%s' from %s to %s. Allowed targets: %s",
