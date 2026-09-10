@@ -424,6 +424,7 @@ class EnrollmentServiceTest {
                 .build();
         enrollment.addItem(item);
 
+        given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
         given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L))
                 .willReturn(Optional.of(enrollment));
 
@@ -434,5 +435,33 @@ class EnrollmentServiceTest {
         assertThat(confirmation.status()).isEqualTo("ENROLLED");
         assertThat(confirmation.totalCreditUnits()).isEqualTo(new BigDecimal("18.00"));
         assertThat(enrollment.getStatus()).isEqualTo(StudentEnrollment.Status.ENROLLED);
+    }
+
+    @Test
+    @DisplayName("Gate 3: Should reject enlistment when student financial clearance is pending")
+    void shouldRejectEnlistmentWhenFinancialClearanceNotCleared() {
+        student.updateClearance(StudentProfile.ClearanceStatus.PENDING, StudentProfile.ClearanceStatus.CLEARED);
+        given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
+        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(sectionRepository.findByIdWithSchedules(301L)).willReturn(Optional.of(openSection));
+
+        EnlistSectionRequest request = new EnlistSectionRequest(20L, 301L);
+
+        assertThatThrownBy(() -> enrollmentService.enlistSection(50L, request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Clearance Violation");
+    }
+
+    @Test
+    @DisplayName("Gate 3: Should reject confirm enrollment when student departmental clearance is blocked")
+    void shouldRejectConfirmEnrollmentWhenDepartmentalClearanceBlocked() {
+        student.updateClearance(StudentProfile.ClearanceStatus.CLEARED, StudentProfile.ClearanceStatus.BLOCKED);
+        given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
+
+        ConfirmEnrollmentRequest request = new ConfirmEnrollmentRequest(20L);
+
+        assertThatThrownBy(() -> enrollmentService.confirmEnrollment(50L, request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Clearance Violation");
     }
 }

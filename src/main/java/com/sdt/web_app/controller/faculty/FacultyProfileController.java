@@ -8,12 +8,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class FacultyProfileController {
 
     private final FacultyProfileService facultyProfileService;
+
+    @PostMapping("/faculty")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
+    public ResponseEntity<FacultyProfileResponse> createFacultyAccount(@Valid @RequestBody CreateFacultyAccountRequest request) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(facultyProfileService.createFacultyAccount(request));
+    }
+
+    @GetMapping("/faculty")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
+    public ResponseEntity<List<FacultyProfileResponse>> getAllFaculty() {
+        return ResponseEntity.ok(facultyProfileService.getAllFacultyProfiles());
+    }
 
     @GetMapping("/faculty/{userId}/profile")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR') or @facultySecurity.isFacultySelf(#userId, authentication)")

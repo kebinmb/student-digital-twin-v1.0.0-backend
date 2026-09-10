@@ -12,7 +12,7 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString(exclude = "department")
+@ToString(exclude = {"department", "college"})
 public class Program {
 
     @Id
@@ -22,6 +22,10 @@ public class Program {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "college_id")
+    private Department college;
 
     @Column(unique = true, nullable = false, length = 20, updatable = false)
     private String code;
@@ -49,6 +53,9 @@ public class Program {
     @Builder.Default
     private boolean isActive = true;
 
+    @Column(name = "chairperson_user_id")
+    private Long chairpersonUserId;
+
     public void updateProgramInfo(String name, String major, String cmoRef, String permit, int totalUnits) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Program name cannot be blank");
@@ -58,6 +65,14 @@ public class Program {
         this.chedCmoReference = cmoRef;
         this.governmentPermit = permit;
         this.totalUnitsRequired = totalUnits;
+    }
+
+    public void assignChairperson(Long chairpersonUserId) {
+        this.chairpersonUserId = chairpersonUserId;
+    }
+
+    public void assignCollege(Department college) {
+        this.college = college;
     }
 
     @Override

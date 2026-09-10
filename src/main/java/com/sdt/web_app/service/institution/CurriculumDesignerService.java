@@ -12,6 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +30,25 @@ public class CurriculumDesignerService {
     private final CoursePrerequisiteRepository prerequisiteRepository;
     private final ProgramRepository programRepository;
     private final CurriculumValidationService validationService;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
+
+    @Autowired
+    public CurriculumDesignerService(
+            CurriculumRepository curriculumRepository,
+            CurriculumCourseRepository curriculumCourseRepository,
+            CourseRepository courseRepository,
+            CoursePrerequisiteRepository prerequisiteRepository,
+            ProgramRepository programRepository,
+            CurriculumValidationService validationService,
+            AcademicScopeAssertionService academicScopeAssertionService) {
+        this.curriculumRepository = curriculumRepository;
+        this.curriculumCourseRepository = curriculumCourseRepository;
+        this.courseRepository = courseRepository;
+        this.prerequisiteRepository = prerequisiteRepository;
+        this.programRepository = programRepository;
+        this.validationService = validationService;
+        this.academicScopeAssertionService = academicScopeAssertionService;
+    }
 
     public CurriculumDesignerService(
             CurriculumRepository curriculumRepository,
@@ -32,12 +57,7 @@ public class CurriculumDesignerService {
             CoursePrerequisiteRepository prerequisiteRepository,
             ProgramRepository programRepository,
             CurriculumValidationService validationService) {
-        this.curriculumRepository = curriculumRepository;
-        this.curriculumCourseRepository = curriculumCourseRepository;
-        this.courseRepository = courseRepository;
-        this.prerequisiteRepository = prerequisiteRepository;
-        this.programRepository = programRepository;
-        this.validationService = validationService;
+        this(curriculumRepository, curriculumCourseRepository, courseRepository, prerequisiteRepository, programRepository, validationService, null);
     }
 
     @Transactional(readOnly = true)
@@ -164,6 +184,13 @@ public class CurriculumDesignerService {
 
     public void transitionCurriculumState(Long curriculumId, Curriculum.Status targetStatus) {
         Curriculum curriculum = getCurriculum(curriculumId);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (curriculum.getProgram() != null) {
+                academicScopeAssertionService.validateProgramMutation(scope, curriculum.getProgram().getId());
+            }
+        }
         if (targetStatus == Curriculum.Status.APPROVED || targetStatus == Curriculum.Status.ACTIVE) {
             ValidationReportDto report = validationService.validateCurriculum(curriculumId);
             if (!report.valid()) {
@@ -180,6 +207,12 @@ public class CurriculumDesignerService {
 
         Program program = programRepository.findById(request.programId())
                 .orElseThrow(() -> new IllegalArgumentException("Program not found with ID: " + request.programId()));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateProgramMutation(scope, program.getId());
+        }
 
         Curriculum curriculum = Curriculum.builder()
                 .program(program)
@@ -400,6 +433,11 @@ public class CurriculumDesignerService {
 
     @Transactional(readOnly = true)
     public List<CurriculumSummaryResponse> getCurriculaByProgram(Long programId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateProgramMutation(scope, programId);
+        }
         return curriculumRepository.findByProgramId(programId).stream()
                 .map(this::toSummaryResponse)
                 .toList();
@@ -407,6 +445,19 @@ public class CurriculumDesignerService {
 
     @Transactional(readOnly = true)
     public List<CurriculumLookupOption> getCurriculumLookupOptions() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean()) {
+                return curriculumRepository.findByProgramIdInAndIsActiveTrueOrderByCodeAsc(scope.allowedProgramIds()).stream()
+                        .map(this::toLookupOption)
+                        .toList();
+            } else if (scope.isChairperson()) {
+                return curriculumRepository.findByProgramIdAndIsActiveTrueOrderByCodeAsc(scope.programId()).stream()
+                        .map(this::toLookupOption)
+                        .toList();
+            }
+        }
         return curriculumRepository.findByIsActiveTrueOrderByCodeAsc().stream()
                 .map(this::toLookupOption)
                 .toList();
@@ -418,6 +469,13 @@ public class CurriculumDesignerService {
     }
 
     private void assertEditable(Curriculum curriculum) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (curriculum.getProgram() != null) {
+                academicScopeAssertionService.validateProgramMutation(scope, curriculum.getProgram().getId());
+            }
+        }
         if (!curriculum.isEditable()) {
             throw new IllegalStateException("Curriculum is locked under status: " + curriculum.getStatus());
         }

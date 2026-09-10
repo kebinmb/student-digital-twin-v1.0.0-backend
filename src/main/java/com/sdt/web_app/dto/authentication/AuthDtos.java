@@ -1,5 +1,6 @@
 package com.sdt.web_app.dto.authentication;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -18,6 +19,7 @@ public class AuthDtos {
     }
 
     public record LoginRequest(
+            @JsonAlias({"username", "email"})
             @NotBlank(message = "Username or email is required.")
             String usernameOrEmail,
             @NotBlank(message = "Password is required")

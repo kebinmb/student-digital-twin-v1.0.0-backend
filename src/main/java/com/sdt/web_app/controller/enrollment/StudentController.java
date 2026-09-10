@@ -22,6 +22,7 @@ public class StudentController {
     private final StudentService studentService;
     private final TransfereeCreditingService creditingService;
     private final SecurityUtils securityUtils;
+    private final com.sdt.web_app.service.security.DataScopingService dataScopingService;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
@@ -39,8 +40,10 @@ public class StudentController {
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
     public ResponseEntity<List<StudentSearchResultDto>> searchStudents(
-            @RequestParam(value = "query", required = false, defaultValue = "") String query) {
-        return ResponseEntity.ok(studentService.searchStudents(query));
+            @RequestParam(value = "query", required = false, defaultValue = "") String query,
+            Authentication authentication) {
+        java.util.Optional<List<Long>> scopedPrograms = dataScopingService.getScopedProgramIds(authentication);
+        return ResponseEntity.ok(studentService.searchStudents(query, scopedPrograms));
     }
 
     @PostMapping("/{id}/credit-courses")
@@ -67,5 +70,13 @@ public class StudentController {
             throw new IllegalStateException("Cannot resolve authenticated student user identity.");
         }
         return ResponseEntity.ok(studentService.getStudentByUserId(userId));
+    }
+
+    @PatchMapping("/{id}/clearance")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'CASHIER')")
+    public ResponseEntity<StudentProfileResponse> updateClearance(
+            @PathVariable("id") Long id,
+            @RequestBody UpdateClearanceRequest request) {
+        return ResponseEntity.ok(studentService.updateClearance(id, request));
     }
 }

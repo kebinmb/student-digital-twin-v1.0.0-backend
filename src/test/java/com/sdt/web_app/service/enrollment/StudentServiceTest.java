@@ -42,6 +42,8 @@ class StudentServiceTest {
     private CurriculumRepository curriculumRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
     @InjectMocks
     private StudentService studentService;

@@ -7,6 +7,33 @@ import java.util.List;
 
 public class FacultyDtos {
 
+    public record CreateFacultyAccountRequest(
+            @jakarta.validation.constraints.NotBlank(message = "Username is required")
+            String username,
+
+            @jakarta.validation.constraints.NotBlank(message = "Email is required")
+            @jakarta.validation.constraints.Email(message = "Invalid email format")
+            String email,
+
+            String password,
+
+            @jakarta.validation.constraints.NotBlank(message = "Faculty ID number is required")
+            String facultyIdNumber,
+
+            @NotNull(message = "Highest degree is required")
+            String highestDegree,
+
+            @NotNull(message = "Academic rank is required")
+            String academicRank,
+
+            String prcLicenseNo,
+
+            @NotNull(message = "Employment status is required")
+            String employmentStatus,
+
+            boolean isTenured
+    ) {}
+
     public record FacultyProfileResponse(
             Long id,
             Long userId,

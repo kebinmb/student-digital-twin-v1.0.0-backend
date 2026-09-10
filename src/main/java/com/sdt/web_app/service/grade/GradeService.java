@@ -9,9 +9,13 @@ import com.sdt.web_app.repositories.enrollment.EnrollmentCourseItemRepository;
 import com.sdt.web_app.repositories.enrollment.StudentCourseGradeRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,11 +34,18 @@ public class GradeService {
     private final EnrollmentCourseItemRepository itemRepository;
     private final StudentCourseGradeRepository gradeRepository;
     private final StudentProfileRepository profileRepository;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
 
     @Transactional(readOnly = true)
     public SectionRosterResponse getSectionRoster(Long sectionId) {
         ClassSection section = sectionRepository.findByIdWithSchedules(sectionId)
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with ID: " + sectionId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
 
         List<EnrollmentCourseItem> items = itemRepository.findBySectionIdWithStudentDetails(sectionId);
 
@@ -84,6 +95,12 @@ public class GradeService {
     public GradeActionResponse saveGrades(Long sectionId, SaveSectionGradesRequest request, Long actorUserId) {
         ClassSection section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with ID: " + sectionId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
 
         if (section.getGradeStatus() == ClassSection.GradeStatus.SEALED) {
             throw new IllegalStateException("Cannot update grades: section " + section.getSectionCode() + " is already SEALED.");
@@ -140,6 +157,12 @@ public class GradeService {
     public GradeActionResponse verifyGrades(Long sectionId, Long approverUserId) {
         ClassSection section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with ID: " + sectionId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
 
         if (section.getGradeStatus() != ClassSection.GradeStatus.SUBMITTED) {
             throw new IllegalStateException("Cannot verify grades: section must be in SUBMITTED status. Current status: " + section.getGradeStatus());

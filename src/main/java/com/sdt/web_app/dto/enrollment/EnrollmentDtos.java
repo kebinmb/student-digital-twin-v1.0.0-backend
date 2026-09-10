@@ -22,6 +22,9 @@ public class EnrollmentDtos {
             BigDecimal cumulativeGpa,
             BigDecimal maxAllowedUnits,
             BigDecimal currentEnrolledUnits,
+            String financialClearance,
+            String departmentalClearance,
+            boolean isClearedForEnrollment,
             List<CourseEligibilityItemDto> courses
     ) {}
 
@@ -167,7 +170,14 @@ public class EnrollmentDtos {
             String enrollmentStatus,
             boolean isGraduating,
             BigDecimal totalUnitsEarned,
-            BigDecimal cumulativeGpa
+            BigDecimal cumulativeGpa,
+            String financialClearance,
+            String departmentalClearance
+    ) {}
+
+    public record UpdateClearanceRequest(
+            String financialClearance,
+            String departmentalClearance
     ) {}
 
     public record CreditCourseItemRequest(

@@ -20,18 +20,19 @@ public class EnrollmentSecurity {
 
     private final StudentProfileRepository studentProfileRepository;
     private final SecurityUtils securityUtils;
+    private final com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
     private static final Set<String> ADVISING_STAFF_ROLES = Set.of(
             "ROLE_ADMIN", "ROLE_REGISTRAR", "ROLE_DEAN", "ROLE_CHAIRPERSON", "ROLE_FACULTY"
     );
 
     private static final Set<String> ENLISTMENT_STAFF_ROLES = Set.of(
-            "ROLE_ADMIN", "ROLE_REGISTRAR"
+            "ROLE_ADMIN", "ROLE_REGISTRAR", "ROLE_DEAN", "ROLE_CHAIRPERSON"
     );
 
     /**
      * Verifies if the authenticated caller can view advising for the given student.
-     * Institutional staff can view any student; students can only view their own profile.
+     * Admin/Registrar can view any student; Dean/Chairperson/Faculty strictly scoped; students only view self.
      */
     public boolean canAccessStudentAdvising(Authentication authentication, Long studentId) {
         if (authentication == null || studentId == null) {
@@ -42,14 +43,25 @@ public class EnrollmentSecurity {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        for (String staffRole : ADVISING_STAFF_ROLES) {
-            if (authorities.contains(staffRole)) {
-                return true;
-            }
+        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_REGISTRAR")) {
+            return true;
         }
 
         if (authorities.contains("ROLE_STUDENT")) {
             return isStudentOwner(authentication, studentId);
+        }
+
+        if (academicScopeAssertionService != null && (authorities.contains("ROLE_DEAN") || authorities.contains("ROLE_CHAIRPERSON") || authorities.contains("ROLE_FACULTY"))) {
+            try {
+                com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
+                Optional<StudentProfile> studentOpt = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId);
+                if (studentOpt.isEmpty()) return false;
+                academicScopeAssertionService.validateStudentAccess(scope, studentOpt.get());
+                return true;
+            } catch (Exception e) {
+                log.warn("Access denied for student advising {}: {}", studentId, e.getMessage());
+                return false;
+            }
         }
 
         return false;
@@ -57,7 +69,7 @@ public class EnrollmentSecurity {
 
     /**
      * Verifies if the authenticated caller can perform enlistment, drop, confirmation, or view enrollment.
-     * Admin/Registrar can manage any student; students can only manage their own enrollment.
+     * Admin/Registrar can manage any student; Dean/Chairperson strictly scoped; students only manage self.
      */
     public boolean canAccessStudentEnrollment(Authentication authentication, Long studentId) {
         if (authentication == null || studentId == null) {
@@ -68,14 +80,25 @@ public class EnrollmentSecurity {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        for (String staffRole : ENLISTMENT_STAFF_ROLES) {
-            if (authorities.contains(staffRole)) {
-                return true;
-            }
+        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_REGISTRAR")) {
+            return true;
         }
 
         if (authorities.contains("ROLE_STUDENT")) {
             return isStudentOwner(authentication, studentId);
+        }
+
+        if (academicScopeAssertionService != null && (authorities.contains("ROLE_DEAN") || authorities.contains("ROLE_CHAIRPERSON"))) {
+            try {
+                com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
+                Optional<StudentProfile> studentOpt = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId);
+                if (studentOpt.isEmpty()) return false;
+                academicScopeAssertionService.validateStudentAccess(scope, studentOpt.get());
+                return true;
+            } catch (Exception e) {
+                log.warn("Access denied for student enrollment {}: {}", studentId, e.getMessage());
+                return false;
+            }
         }
 
         return false;

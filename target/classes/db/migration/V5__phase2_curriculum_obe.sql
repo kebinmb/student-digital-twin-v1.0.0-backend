@@ -31,6 +31,7 @@ CREATE TABLE courses
     credit_units      DECIMAL(4, 2) NOT NULL DEFAULT 0.00,
     contact_hours_lec INT           NOT NULL DEFAULT 0,
     contact_hours_lab INT           NOT NULL DEFAULT 0,
+    category          VARCHAR(30)   NOT NULL DEFAULT 'PROFESSIONAL_MAJOR',
     description       TEXT NULL,
     is_active         BOOLEAN       NOT NULL DEFAULT TRUE
 );

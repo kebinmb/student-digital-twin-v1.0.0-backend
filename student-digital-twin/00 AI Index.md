@@ -10,8 +10,10 @@ Before writing or modifying any code, verify whether the task touches Backend, F
 * **Modern Java Idioms**: Leverage Java 21 features (Virtual Threads / Project Loom, Record classes, Pattern Matching, Sealed classes, Sequenced Collections).
 * **Architecture**: Clean layered architecture (Controller -> Service -> Repository/Store). Use modern Spring `@HttpExchange` or `RestClient` over legacy templates.
 * **Security Reference**:
-  - Always consult: `/02 Resources/00 Login and Authentication Springboot 4.1.0`
-  - Historic context/implementation: `/03 Archives/01 Login and Authentication Backend and Frontend IMplementation`
+  - Always consult: `/03 Resources/00 Login and Authentication Springboot 4.1.0` (mapped from `/02 Resources`)
+  - Historic context/implementation: `/04 Archives/01 Login and Authentication Backend and Frontend Implementation` (mapped from `/03 Archives`)
+  - Active Specifications & Roadmaps: `/01 Projects/`
+  - System Topology & QA Standards: `/02 Areas/`
 
 ---
 
@@ -37,4 +39,4 @@ Before writing or modifying any code, verify whether the task touches Backend, F
 1. [ ] Did you check `custom-theme.ts` for established color variables and border radiuses?
 2. [ ] Are all newly added HTML classes defined in the component's CSS or the global stylesheet?
 3. [ ] Are signal-based reactivity principles respected (no manual `cdr.detectChanges()` where `computed` or signals apply)?
-4. [ ] Did security changes cross-reference the 02/03 authentication guides?
+4. [ ] Did security changes cross-reference the 03/04 authentication guides?

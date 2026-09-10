@@ -49,7 +49,7 @@ public class WebSecurityConfig {
 
     @Bean
     public CookieSameSiteSupplier applicationCookieSameSiteSupplier() {
-        return CookieSameSiteSupplier.ofNone().whenHasName("SEC_AUTH_SESSION");
+        return CookieSameSiteSupplier.ofNone().whenHasName("REFRESH_TOKEN");
     }
 
     @Bean

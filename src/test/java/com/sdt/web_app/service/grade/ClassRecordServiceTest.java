@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -210,5 +211,47 @@ class ClassRecordServiceTest {
         assertThatThrownBy(() -> classRecordService.updateGradingConfig(201L, request, 5L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Class record modifications blocked");
+    }
+
+    @Test
+    @DisplayName("BUG-01: Should batch save raw scores using bulk loading and saveAll")
+    void batchSaveScores_BulkSuccess() {
+        given(sectionRepository.findById(201L)).willReturn(Optional.of(section));
+        given(itemRepository.findAllById(any())).willReturn(List.of(item));
+        given(studentProfileRepository.findAllById(any())).willReturn(List.of(studentProfile));
+        given(scoreRepository.findBySectionId(201L)).willReturn(List.of());
+
+        // For subsequent recalculateAndSyncSectionGrades and getScoreMatrix:
+        given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(section));
+        given(configRepository.findBySectionIdWithDetails(201L)).willReturn(Optional.of(config));
+        given(enrollmentItemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(enrollmentItem));
+        given(itemRepository.findBySectionId(201L)).willReturn(List.of(item));
+
+        BatchSaveScoresRequest request = new BatchSaveScoresRequest(List.of(
+                new StudentScoreEntryDto(501L, 601L, new BigDecimal("48.00"), false)
+        ));
+
+        ClassRecordMatrixResponse response = classRecordService.batchSaveScores(201L, request, 5L);
+
+        assertThat(response).isNotNull();
+        verify(scoreRepository).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("BUG-03: Should delete assessment item and immediately trigger recalculateAndSyncSectionGrades")
+    void deleteAssessmentItem_TriggersRecalculate() {
+        given(itemRepository.findById(501L)).willReturn(Optional.of(item));
+        given(sectionRepository.findById(201L)).willReturn(Optional.of(section));
+        given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(section));
+        given(configRepository.findBySectionIdWithDetails(201L)).willReturn(Optional.of(config));
+        given(enrollmentItemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(enrollmentItem));
+        given(itemRepository.findBySectionId(201L)).willReturn(List.of());
+        given(scoreRepository.findBySectionId(201L)).willReturn(List.of());
+
+        classRecordService.deleteAssessmentItem(501L, 5L);
+
+        verify(scoreRepository).deleteByItemId(501L);
+        verify(itemRepository).delete(item);
+        verify(enrollmentItemRepository, atLeastOnce()).findBySectionIdWithStudentDetails(201L);
     }
 }

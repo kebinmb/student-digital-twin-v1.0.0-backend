@@ -31,7 +31,7 @@ public class TokenService {
         List<String> roleNames = user.getRoles().stream()
                 .map(Enum::name) // Converts Roles.ADMIN -> "ADMIN"
                 .toList();
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .issuedAt(now)
                 .expiresAt(now.plus(15, ChronoUnit.MINUTES))
@@ -39,8 +39,15 @@ public class TokenService {
                 .audience(audiences)
                 .claim("preferred_username", user.getUsername())
                 .claim("email", user.getEmail())
-                .claim("roles", roleNames)
-                .build();
-        return this.jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+                .claim("roles", roleNames);
+
+        if (user.getCollege() != null) {
+            claimsBuilder.claim("college_id", user.getCollege().getId());
+        }
+        if (user.getProgram() != null) {
+            claimsBuilder.claim("program_id", user.getProgram().getId());
+        }
+
+        return this.jwtEncoder.encode(JwtEncoderParameters.from(claimsBuilder.build())).getTokenValue();
     }
 }

@@ -44,6 +44,14 @@ class FacultyProfileServiceTest {
     private FacultyWorkloadRepository workloadRepository;
     @Mock
     private ClassScheduleRepository scheduleRepository;
+    @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    @Mock
+    private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
+    @Mock
+    private com.sdt.web_app.repositories.institution.DepartmentRepository departmentRepository;
+    @Mock
+    private com.sdt.web_app.repositories.institution.ProgramRepository programRepository;
 
     @InjectMocks
     private FacultyProfileService facultyService;
@@ -140,5 +148,55 @@ class FacultyProfileServiceTest {
         assertThat(report.facultyWorkloads()).hasSize(1);
         assertThat(report.facultyWorkloads().get(0).facultyName()).isEqualTo("prof_einstein");
         assertThat(report.facultyWorkloads().get(0).highestDegree()).isEqualTo("DOCTORATE");
+    }
+
+    @Test
+    @DisplayName("Should provision new faculty account and profile")
+    void createFacultyAccount_Success() {
+        CreateFacultyAccountRequest request = new CreateFacultyAccountRequest(
+                "prof_new",
+                "prof.new@example.com",
+                "Secret123!",
+                "FAC-2026-9999",
+                "MASTERS",
+                "ASSISTANT_PROFESSOR_I",
+                "PRC-8888888",
+                "FULL_TIME",
+                false
+        );
+
+        given(userRepository.existsByUsername("prof_new")).willReturn(false);
+        given(userRepository.existsByEmail("prof.new@example.com")).willReturn(false);
+        given(profileRepository.existsByFacultyIdNumber("FAC-2026-9999")).willReturn(false);
+        given(passwordEncoder.encode("Secret123!")).willReturn("encodedPassword");
+        given(userRepository.save(any(User.class))).willAnswer(inv -> {
+            User u = inv.getArgument(0);
+            ReflectionTestUtils.setField(u, "id", 999L);
+            return u;
+        });
+        given(profileRepository.save(any(FacultyProfile.class))).willAnswer(inv -> {
+            FacultyProfile fp = inv.getArgument(0);
+            ReflectionTestUtils.setField(fp, "id", 2001L);
+            return fp;
+        });
+
+        FacultyProfileResponse response = facultyService.createFacultyAccount(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.username()).isEqualTo("prof_new");
+        assertThat(response.facultyIdNumber()).isEqualTo("FAC-2026-9999");
+        assertThat(response.highestDegree()).isEqualTo("MASTERS");
+        assertThat(response.academicRank()).isEqualTo("ASSISTANT_PROFESSOR_I");
+    }
+
+    @Test
+    @DisplayName("Should retrieve all faculty profiles")
+    void getAllFacultyProfiles_Success() {
+        given(profileRepository.findAllWithUser()).willReturn(List.of(profile));
+
+        List<FacultyProfileResponse> profiles = facultyService.getAllFacultyProfiles();
+
+        assertThat(profiles).hasSize(1);
+        assertThat(profiles.get(0).facultyIdNumber()).isEqualTo("FAC-2026-0042");
     }
 }

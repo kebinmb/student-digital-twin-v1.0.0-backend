@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -173,9 +174,12 @@ public class ClassRecordService {
 
         assertSectionEditable(item.getCategory().getConfig().getSection());
 
+        Long sectionId = item.getCategory().getConfig().getSection().getId();
         scoreRepository.deleteByItemId(itemId);
         itemRepository.delete(item);
         log.info("Deleted assessment item ID: {} by user ID: {}", itemId, actorUserId);
+
+        recalculateAndSyncSectionGrades(sectionId, actorUserId);
     }
 
     @Transactional
@@ -291,13 +295,39 @@ public class ClassRecordService {
 
         assertSectionEditable(section);
 
-        for (StudentScoreEntryDto entry : request.scores()) {
-            if (entry == null || entry.itemId() == null || entry.studentId() == null) {
-                continue;
-            }
+        List<StudentScoreEntryDto> validEntries = request.scores().stream()
+                .filter(e -> e != null && e.itemId() != null && e.studentId() != null)
+                .toList();
 
-            ClassRecordItem item = itemRepository.findById(entry.itemId())
-                    .orElseThrow(() -> new EntityNotFoundException("Assessment item not found with ID: " + entry.itemId()));
+        if (validEntries.isEmpty()) {
+            recalculateAndSyncSectionGrades(sectionId, actorUserId);
+            return getScoreMatrix(sectionId);
+        }
+
+        Set<Long> itemIds = validEntries.stream().map(StudentScoreEntryDto::itemId).collect(Collectors.toSet());
+        Set<Long> studentIds = validEntries.stream().map(StudentScoreEntryDto::studentId).collect(Collectors.toSet());
+
+        Map<Long, ClassRecordItem> itemMap = itemRepository.findAllById(itemIds).stream()
+                .collect(Collectors.toMap(ClassRecordItem::getId, Function.identity()));
+
+        Map<Long, StudentProfile> studentMap = studentProfileRepository.findAllById(studentIds).stream()
+                .collect(Collectors.toMap(StudentProfile::getId, Function.identity()));
+
+        Map<String, StudentAssessmentScore> existingScores = scoreRepository.findBySectionId(sectionId).stream()
+                .filter(s -> s != null && s.getItem() != null && s.getStudent() != null)
+                .collect(Collectors.toMap(
+                        s -> s.getItem().getId() + "_" + s.getStudent().getId(),
+                        Function.identity(),
+                        (s1, s2) -> s1
+                ));
+
+        Map<String, StudentAssessmentScore> toSaveMap = new LinkedHashMap<>();
+
+        for (StudentScoreEntryDto entry : validEntries) {
+            ClassRecordItem item = itemMap.get(entry.itemId());
+            if (item == null) {
+                throw new EntityNotFoundException("Assessment item not found with ID: " + entry.itemId());
+            }
 
             if (entry.scoreEarned() != null && !entry.isExcused()) {
                 if (entry.scoreEarned().compareTo(BigDecimal.ZERO) < 0) {
@@ -308,19 +338,28 @@ public class ClassRecordService {
                 }
             }
 
-            StudentProfile student = studentProfileRepository.findById(entry.studentId())
-                    .orElseThrow(() -> new EntityNotFoundException("Student not found with ID: " + entry.studentId()));
+            StudentProfile student = studentMap.get(entry.studentId());
+            if (student == null) {
+                throw new EntityNotFoundException("Student not found with ID: " + entry.studentId());
+            }
 
-            StudentAssessmentScore score = scoreRepository.findByItemIdAndStudentId(entry.itemId(), entry.studentId())
-                    .orElseGet(() -> StudentAssessmentScore.builder()
-                            .item(item)
-                            .student(student)
-                            .build());
+            String key = entry.itemId() + "_" + entry.studentId();
+            StudentAssessmentScore score = toSaveMap.get(key);
+            if (score == null) {
+                score = existingScores.get(key);
+            }
+            if (score == null) {
+                score = StudentAssessmentScore.builder()
+                        .item(item)
+                        .student(student)
+                        .build();
+            }
 
             score.updateScore(entry.scoreEarned(), entry.isExcused());
-            scoreRepository.save(score);
+            toSaveMap.put(key, score);
         }
 
+        scoreRepository.saveAll(toSaveMap.values());
         log.info("Saved batch raw scores for section {} by user {}", sectionId, actorUserId);
 
         // Recalculate raw averages and push to EnrollmentCourseItem
@@ -342,6 +381,7 @@ public class ClassRecordService {
         Map<Long, EnrollmentCourseItem> itemMap = enrollmentItems.stream()
                 .collect(Collectors.toMap(i -> i.getEnrollment().getStudent().getId(), i -> i));
 
+        List<EnrollmentCourseItem> itemsToUpdate = new ArrayList<>();
         for (StudentScoreMatrixRowDto row : matrix.rows()) {
             EnrollmentCourseItem item = itemMap.get(row.studentId());
             if (item != null && row.transmutedGrade() != null) {
@@ -350,8 +390,11 @@ public class ClassRecordService {
                         : EnrollmentCourseItem.CompletionStatus.FAILED;
 
                 item.updateGrade(row.transmutedGrade(), status);
-                enrollmentItemRepository.save(item);
+                itemsToUpdate.add(item);
             }
+        }
+        if (!itemsToUpdate.isEmpty()) {
+            enrollmentItemRepository.saveAll(itemsToUpdate);
         }
 
         log.info("Synced transmuted grades to EnrollmentCourseItems for section {} by user {}", sectionId, actorUserId);

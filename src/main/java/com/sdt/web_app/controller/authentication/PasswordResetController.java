@@ -29,7 +29,7 @@ public class PasswordResetController {
         return ResponseEntity.ok("If the email is registered, a password reset link has been dispatched.");
     }
 
-    @Auditable(action = "RESET_PASSWORD", entityName = "User", entityId = "#result?.userId")
+    @Auditable(action = "RESET_PASSWORD", entityName = "User", entityId = "#result?.username")
     @PostMapping("/reset-password")
     public ResponseEntity<PasswordResetService.PasswordResetResult> resetPassword(@Valid @RequestBody AuthDtos.ResetPasswordRequest request) {
         PasswordResetService.PasswordResetResult result = passwordResetService.completePasswordReset(request.token(), request.newPassword());

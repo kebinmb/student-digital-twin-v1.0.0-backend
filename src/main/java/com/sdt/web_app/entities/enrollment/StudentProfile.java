@@ -27,6 +27,10 @@ public class StudentProfile {
         INCOMING_FIRST_YEAR, TRANSFEREE, RETURNEE, CONTINUING
     }
 
+    public enum ClearanceStatus {
+        CLEARED, PENDING, BLOCKED
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -71,6 +75,16 @@ public class StudentProfile {
     @Column(name = "cumulative_gpa", precision = 3, scale = 2)
     private BigDecimal cumulativeGpa;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "financial_clearance", nullable = false, length = 20)
+    @Builder.Default
+    private ClearanceStatus financialClearance = ClearanceStatus.CLEARED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "departmental_clearance", nullable = false, length = 20)
+    @Builder.Default
+    private ClearanceStatus departmentalClearance = ClearanceStatus.CLEARED;
+
     @Column(name = "created_at", updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
@@ -99,6 +113,19 @@ public class StudentProfile {
     public void updateProgress(BigDecimal totalUnitsEarned, BigDecimal cumulativeGpa) {
         this.totalUnitsEarned = totalUnitsEarned;
         this.cumulativeGpa = cumulativeGpa;
+    }
+
+    public boolean isClearedForEnrollment() {
+        return financialClearance == ClearanceStatus.CLEARED && departmentalClearance == ClearanceStatus.CLEARED;
+    }
+
+    public void updateClearance(ClearanceStatus financialClearance, ClearanceStatus departmentalClearance) {
+        if (financialClearance != null) {
+            this.financialClearance = financialClearance;
+        }
+        if (departmentalClearance != null) {
+            this.departmentalClearance = departmentalClearance;
+        }
     }
 
     @Override

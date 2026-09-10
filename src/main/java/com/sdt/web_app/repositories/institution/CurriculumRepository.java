@@ -25,4 +25,10 @@ public interface CurriculumRepository extends JpaRepository<Curriculum, Long> {
 
     @EntityGraph(attributePaths = {"program"})
     List<Curriculum> findByIsActiveTrueOrderByCodeAsc();
+
+    @EntityGraph(attributePaths = {"program"})
+    List<Curriculum> findByProgramIdInAndIsActiveTrueOrderByCodeAsc(List<Long> programIds);
+
+    @EntityGraph(attributePaths = {"program"})
+    List<Curriculum> findByProgramIdAndIsActiveTrueOrderByCodeAsc(Long programId);
 }

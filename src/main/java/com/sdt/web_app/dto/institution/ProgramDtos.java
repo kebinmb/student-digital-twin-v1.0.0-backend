@@ -9,6 +9,8 @@ public class ProgramDtos {
             Long id,
             Long departmentId,
             String departmentCode,
+            Long collegeId,
+            String collegeCode,
             String code,
             String name,
             String major,
@@ -16,6 +18,19 @@ public class ProgramDtos {
             int totalUnitsRequired,
             boolean isActive
     ) {
+        public ProgramResponse(
+                Long id,
+                Long departmentId,
+                String departmentCode,
+                String code,
+                String name,
+                String major,
+                String degreeLevel,
+                int totalUnitsRequired,
+                boolean isActive
+        ) {
+            this(id, departmentId, departmentCode, null, null, code, name, major, degreeLevel, totalUnitsRequired, isActive);
+        }
     }
 
     public record CreateProgramRequest(

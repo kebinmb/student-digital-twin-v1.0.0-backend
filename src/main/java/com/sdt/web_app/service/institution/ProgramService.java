@@ -2,6 +2,7 @@ package com.sdt.web_app.service.institution;
 
 import com.sdt.web_app.dto.institution.ProgramDtos.*;
 import com.sdt.web_app.entities.institution.Department;
+import com.sdt.web_app.entities.institution.DepartmentType;
 import com.sdt.web_app.entities.institution.Program;
 import com.sdt.web_app.entities.institution.ProgramOutcome;
 import com.sdt.web_app.repositories.institution.CiloPiloMappingRepository;
@@ -9,8 +10,13 @@ import com.sdt.web_app.repositories.institution.CurriculumRepository;
 import com.sdt.web_app.repositories.institution.DepartmentRepository;
 import com.sdt.web_app.repositories.institution.ProgramOutcomeRepository;
 import com.sdt.web_app.repositories.institution.ProgramRepository;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
+import com.sdt.web_app.specifications.ProgramSpecifications;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +32,7 @@ public class ProgramService {
     private final DepartmentRepository departmentRepository;
     private final CurriculumRepository curriculumRepository;
     private final CiloPiloMappingRepository ciloPiloMappingRepository;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
 
     public ProgramResponse createProgram(
             Long departmentId,
@@ -38,12 +45,23 @@ public class ProgramService {
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Department not found with ID: " + departmentId));
 
+        Department college = (department.getType() == DepartmentType.COLLEGE)
+                ? department
+                : (department.getParentDepartment() != null ? department.getParentDepartment() : department);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateCollegeMutation(scope, college.getId());
+        }
+
         if (programRepository.existsByCode(code)) {
             throw new IllegalArgumentException("Program with code already exists: " + code);
         }
 
         Program program = Program.builder()
                 .department(department)
+                .college(college)
                 .code(code.trim().toUpperCase())
                 .name(name.trim())
                 .major(major)
@@ -67,6 +85,12 @@ public class ProgramService {
         Program program = programRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + id));
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateProgramMutation(scope, id);
+        }
+
         program.updateProgramInfo(name, major, cmoRef, permit, totalUnits);
         return mapToProgramResponse(program);
     }
@@ -74,6 +98,12 @@ public class ProgramService {
     public void deleteProgram(Long id) {
         Program program = programRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + id));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateProgramMutation(scope, id);
+        }
 
         if (curriculumRepository.existsByProgramId(id)) {
             throw new IllegalStateException("Cannot delete program referenced by existing curricula");
@@ -113,6 +143,17 @@ public class ProgramService {
 
     @Transactional(readOnly = true)
     public List<ProgramResponse> getAllPrograms() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean()) {
+                return programRepository.findAll(ProgramSpecifications.hasCollegeId(scope.collegeId()).and(ProgramSpecifications.isActive(true)))
+                        .stream().map(this::mapToProgramResponse).toList();
+            } else if (scope.isChairperson()) {
+                return programRepository.findAll(ProgramSpecifications.hasProgramId(scope.programId()).and(ProgramSpecifications.isActive(true)))
+                        .stream().map(this::mapToProgramResponse).toList();
+            }
+        }
         return programRepository.findByIsActiveTrue().stream()
                 .map(this::mapToProgramResponse)
                 .toList();
@@ -120,13 +161,31 @@ public class ProgramService {
 
     @Transactional(readOnly = true)
     public ProgramResponse getProgramById(Long id) {
-        return programRepository.findById(id)
-                .map(this::mapToProgramResponse)
+        Program program = programRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + id));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateProgramMutation(scope, id);
+        }
+
+        return mapToProgramResponse(program);
     }
 
     @Transactional(readOnly = true)
     public List<ProgramResponse> getProgramsByDepartment(Long departmentId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean()) {
+                return programRepository.findAll(ProgramSpecifications.hasDepartmentId(departmentId).and(ProgramSpecifications.hasCollegeId(scope.collegeId())))
+                        .stream().map(this::mapToProgramResponse).toList();
+            } else if (scope.isChairperson()) {
+                return programRepository.findAll(ProgramSpecifications.hasDepartmentId(departmentId).and(ProgramSpecifications.hasProgramId(scope.programId())))
+                        .stream().map(this::mapToProgramResponse).toList();
+            }
+        }
         return programRepository.findByDepartmentId(departmentId).stream()
                 .map(this::mapToProgramResponse)
                 .toList();
@@ -143,10 +202,22 @@ public class ProgramService {
     }
 
     private ProgramResponse mapToProgramResponse(Program p) {
+        Long collegeId = p.getCollege() != null ? p.getCollege().getId()
+                : (p.getDepartment() != null && p.getDepartment().getParentDepartment() != null
+                    ? p.getDepartment().getParentDepartment().getId()
+                    : (p.getDepartment() != null ? p.getDepartment().getId() : null));
+
+        String collegeCode = p.getCollege() != null ? p.getCollege().getCode()
+                : (p.getDepartment() != null && p.getDepartment().getParentDepartment() != null
+                    ? p.getDepartment().getParentDepartment().getCode()
+                    : (p.getDepartment() != null ? p.getDepartment().getCode() : null));
+
         return new ProgramResponse(
                 p.getId(),
-                p.getDepartment().getId(),
-                p.getDepartment().getCode(),
+                p.getDepartment() != null ? p.getDepartment().getId() : null,
+                p.getDepartment() != null ? p.getDepartment().getCode() : null,
+                collegeId,
+                collegeCode,
                 p.getCode(),
                 p.getName(),
                 p.getMajor(),

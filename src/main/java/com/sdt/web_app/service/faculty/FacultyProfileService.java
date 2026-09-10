@@ -12,9 +12,21 @@ import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
 import com.sdt.web_app.repositories.scheduling.ClassScheduleRepository;
 import com.sdt.web_app.repositories.scheduling.FacultyWorkloadRepository;
+import com.sdt.web_app.exceptions.UserAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.sdt.web_app.entities.institution.Department;
+import com.sdt.web_app.entities.institution.Program;
+import com.sdt.web_app.repositories.institution.DepartmentRepository;
+import com.sdt.web_app.repositories.institution.ProgramRepository;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
+import com.sdt.web_app.specifications.FacultyProfileSpecifications;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +46,99 @@ public class FacultyProfileService {
     private final TermRepository termRepository;
     private final FacultyWorkloadRepository workloadRepository;
     private final ClassScheduleRepository scheduleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
+    private final DepartmentRepository departmentRepository;
+    private final ProgramRepository programRepository;
+
+    @Transactional
+    public FacultyProfileResponse createFacultyAccount(CreateFacultyAccountRequest request) {
+        String trimmedUsername = request.username().trim();
+        String trimmedEmail = request.email().trim().toLowerCase();
+        String trimmedFacultyId = request.facultyIdNumber().trim();
+
+        if (userRepository.existsByUsername(trimmedUsername)) {
+            throw new UserAlreadyExistsException("Username '" + trimmedUsername + "' is already in use.");
+        }
+        if (userRepository.existsByEmail(trimmedEmail)) {
+            throw new UserAlreadyExistsException("Email '" + trimmedEmail + "' is already in use.");
+        }
+        if (profileRepository.existsByFacultyIdNumber(trimmedFacultyId)) {
+            throw new IllegalStateException("Faculty ID number '" + trimmedFacultyId + "' is already assigned.");
+        }
+
+        String rawPassword = (request.password() != null && !request.password().isBlank())
+                ? request.password().trim()
+                : "Faculty123!";
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Department assignedCollege = null;
+        Program assignedProgram = null;
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean() && departmentRepository != null) {
+                assignedCollege = departmentRepository.findById(scope.collegeId()).orElse(null);
+            } else if (scope.isChairperson()) {
+                if (departmentRepository != null) {
+                    assignedCollege = departmentRepository.findById(scope.collegeId()).orElse(null);
+                }
+                if (programRepository != null) {
+                    assignedProgram = programRepository.findById(scope.programId()).orElse(null);
+                }
+            }
+        }
+
+        User user = User.builder()
+                .username(trimmedUsername)
+                .email(trimmedEmail)
+                .password(passwordEncoder.encode(rawPassword))
+                .college(assignedCollege)
+                .program(assignedProgram)
+                .enabled(true)
+                .build();
+        user.addRole(Roles.FACULTY);
+        User savedUser = userRepository.save(user);
+
+        FacultyProfile.HighestDegree degree = FacultyProfile.HighestDegree.valueOf(request.highestDegree().trim().toUpperCase());
+        FacultyProfile.AcademicRank rank = FacultyProfile.AcademicRank.valueOf(request.academicRank().trim().toUpperCase());
+        FacultyProfile.EmploymentStatus status = FacultyProfile.EmploymentStatus.valueOf(request.employmentStatus().trim().toUpperCase());
+
+        FacultyProfile profile = FacultyProfile.builder()
+                .user(savedUser)
+                .college(assignedCollege)
+                .program(assignedProgram)
+                .facultyIdNumber(trimmedFacultyId)
+                .highestDegree(degree)
+                .academicRank(rank)
+                .prcLicenseNo(request.prcLicenseNo() != null ? request.prcLicenseNo().trim() : null)
+                .employmentStatus(status)
+                .isTenured(request.isTenured())
+                .build();
+
+        FacultyProfile savedProfile = profileRepository.save(profile);
+        log.info("Provisioned new faculty account: {} ({}) for user ID {}",
+                savedProfile.getFacultyIdNumber(), savedUser.getUsername(), savedUser.getId());
+
+        return mapToProfileResponse(savedProfile);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FacultyProfileResponse> getAllFacultyProfiles() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean()) {
+                return profileRepository.findAll(FacultyProfileSpecifications.inCollege(scope.collegeId())).stream()
+                        .map(this::mapToProfileResponse).toList();
+            } else if (scope.isChairperson()) {
+                return profileRepository.findAll(FacultyProfileSpecifications.inProgram(scope.programId())).stream()
+                        .map(this::mapToProfileResponse).toList();
+            }
+        }
+        return profileRepository.findAllWithUser().stream()
+                .map(this::mapToProfileResponse)
+                .toList();
+    }
 
     @Transactional
     public FacultyProfileResponse getProfileByUserId(Long userId) {
@@ -53,6 +158,20 @@ public class FacultyProfileService {
                     return profileRepository.save(defaultProfile);
                 });
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean()) {
+                Long targetCollegeId = profile.getCollege() != null ? profile.getCollege().getId() : (user.getCollege() != null ? user.getCollege().getId() : null);
+                academicScopeAssertionService.validateCollegeMutation(scope, targetCollegeId);
+            } else if (scope.isChairperson()) {
+                Long targetProgramId = profile.getProgram() != null ? profile.getProgram().getId() : (user.getProgram() != null ? user.getProgram().getId() : null);
+                academicScopeAssertionService.validateProgramMutation(scope, targetProgramId);
+            } else if (scope.isFaculty() && !scope.userId().equals(userId)) {
+                throw new AccessDeniedException("Access Denied: Faculty can only view their own profile.");
+            }
+        }
+
         return mapToProfileResponse(profile);
     }
 
@@ -68,6 +187,18 @@ public class FacultyProfileService {
                             .build();
                     return profileRepository.save(defaultProfile);
                 });
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean()) {
+                Long targetCollegeId = profile.getCollege() != null ? profile.getCollege().getId() : (profile.getUser().getCollege() != null ? profile.getUser().getCollege().getId() : null);
+                academicScopeAssertionService.validateCollegeMutation(scope, targetCollegeId);
+            } else if (scope.isChairperson()) {
+                Long targetProgramId = profile.getProgram() != null ? profile.getProgram().getId() : (profile.getUser().getProgram() != null ? profile.getUser().getProgram().getId() : null);
+                academicScopeAssertionService.validateProgramMutation(scope, targetProgramId);
+            }
+        }
 
         FacultyProfile.HighestDegree degree = FacultyProfile.HighestDegree.valueOf(request.highestDegree().trim().toUpperCase());
         FacultyProfile.AcademicRank rank = FacultyProfile.AcademicRank.valueOf(request.academicRank().trim().toUpperCase());

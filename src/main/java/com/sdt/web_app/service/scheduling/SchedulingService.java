@@ -21,9 +21,15 @@ import com.sdt.web_app.repositories.scheduling.ClassScheduleRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
 import com.sdt.web_app.repositories.scheduling.FacultyWorkloadRepository;
 import com.sdt.web_app.repositories.scheduling.RoomRepository;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
+import com.sdt.web_app.specifications.ClassSectionSpecifications;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +57,7 @@ public class SchedulingService {
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
 
     // -------------------------------------------------------------------------
     // Room Management
@@ -106,6 +113,14 @@ public class SchedulingService {
             throw new IllegalStateException(String.format(
                     "Gate 1 Violation: Cannot schedule section. Curriculum '%s' is in %s status. Only ACTIVE curricula can be scheduled.",
                     curriculum.getCode(), curriculum.getStatus()));
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (curriculum.getProgram() != null) {
+                academicScopeAssertionService.validateProgramMutation(scope, curriculum.getProgram().getId());
+            }
         }
 
         Term term = termRepository.findById(request.termId())
@@ -309,7 +324,25 @@ public class SchedulingService {
 
     @Transactional(readOnly = true)
     public List<SectionDetailResponse> getSectionsByTerm(Long termId) {
-        return sectionRepository.findAllWithSchedulesByTermId(termId).stream()
+        return getSectionsByTerm(termId, Optional.empty(), null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SectionDetailResponse> getSectionsByTerm(
+            Long termId, Optional<List<Long>> scopedProgramIds, Long facultyInstructorId) {
+        Specification<ClassSection> spec = ClassSectionSpecifications.inTerm(termId);
+
+        if (scopedProgramIds != null && scopedProgramIds.isPresent()) {
+            spec = spec.and(ClassSectionSpecifications.inPrograms(scopedProgramIds.get()));
+        }
+
+        if (facultyInstructorId != null) {
+            spec = spec.and(ClassSectionSpecifications.assignedToInstructor(facultyInstructorId));
+        }
+
+        List<ClassSection> sections = sectionRepository.findAll(spec);
+
+        return sections.stream()
                 .map(this::mapToSectionDetail)
                 .toList();
     }
@@ -318,6 +351,13 @@ public class SchedulingService {
     public SectionDetailResponse getSectionById(Long id) {
         ClassSection section = sectionRepository.findByIdWithSchedules(id)
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + id));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
+
         return mapToSectionDetail(section);
     }
 
@@ -432,6 +472,12 @@ public class SchedulingService {
     public SectionDetailResponse addScheduleSlots(CreateScheduleSlotRequest request) {
         ClassSection section = sectionRepository.findByIdWithSchedules(request.sectionId())
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + request.sectionId()));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
 
         Term term = section.getTerm();
         BigDecimal maxHours = term.getMaxHoursPerClass() != null ? term.getMaxHoursPerClass() : new BigDecimal("3.0");

@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.489 s -- in com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest

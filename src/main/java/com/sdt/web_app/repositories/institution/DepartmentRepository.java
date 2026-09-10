@@ -31,4 +31,8 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     List<Department> findByType(DepartmentType type);
 
     List<Department> findByIsActiveTrue();
+
+    List<Department> findByDeanUserId(Long userId);
+
+    Optional<Department> findFirstByDeanUserId(Long userId);
 }

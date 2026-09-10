@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS terms (
     grading_open BOOLEAN NOT NULL DEFAULT FALSE,
     add_drop_open BOOLEAN NOT NULL DEFAULT FALSE,
     is_active BOOLEAN NOT NULL DEFAULT FALSE,
+    max_hours_per_class DECIMAL(3, 1) NOT NULL DEFAULT 3.0,
     CONSTRAINT uq_ay_term UNIQUE (academic_year_id, term_type),
     CONSTRAINT fk_terms_ay FOREIGN KEY (academic_year_id) REFERENCES academic_years (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;

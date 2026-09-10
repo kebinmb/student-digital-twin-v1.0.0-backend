@@ -1,7 +1,9 @@
 package com.sdt.web_app.repositories.scheduling;
 
 import com.sdt.web_app.entities.scheduling.ClassSection;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +13,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ClassSectionRepository extends JpaRepository<ClassSection, Long> {
+public interface ClassSectionRepository extends JpaRepository<ClassSection, Long>, JpaSpecificationExecutor<ClassSection> {
+
+    @EntityGraph(attributePaths = {"curriculum.program", "course", "primaryInstructor", "schedules", "schedules.room", "schedules.instructor"})
+    @Override
+    List<ClassSection> findAll(org.springframework.data.jpa.domain.Specification<ClassSection> spec);
 
     List<ClassSection> findByTermId(Long termId);
 
@@ -25,7 +31,7 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
 
     boolean existsByTermIdAndCourseIdAndSectionCode(Long termId, Long courseId, String sectionCode);
 
-    @Query("SELECT DISTINCT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.term.id = :termId")
+    @Query("SELECT DISTINCT s FROM ClassSection s JOIN FETCH s.curriculum cur JOIN FETCH cur.program p LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.term.id = :termId")
     List<ClassSection> findAllWithSchedulesByTermId(@Param("termId") Long termId);
 
     @Query("SELECT DISTINCT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.id = :id")
@@ -50,4 +56,21 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
         WHERE s.id = :id AND s.enrolledCount > 0
     """)
     int decrementEnrolledCount(@Param("id") Long id);
+
+    @Query("""
+        SELECT DISTINCT s.id FROM ClassSection s
+        LEFT JOIN s.schedules sched
+        WHERE s.primaryInstructor.id = :instructorId OR sched.instructor.id = :instructorId
+    """)
+    List<Long> findAssignedSectionIdsByInstructor(@Param("instructorId") Long instructorId);
+
+    @Query("""
+        SELECT DISTINCT s.id FROM ClassSection s
+        LEFT JOIN s.schedules sched
+        WHERE s.term.id = :termId
+          AND (s.primaryInstructor.id = :instructorId OR sched.instructor.id = :instructorId)
+    """)
+    List<Long> findAssignedSectionIdsByTermAndInstructor(
+            @Param("termId") Long termId,
+            @Param("instructorId") Long instructorId);
 }

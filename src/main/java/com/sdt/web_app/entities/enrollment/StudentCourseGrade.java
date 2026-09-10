@@ -49,6 +49,14 @@ public class StudentCourseGrade {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = Instant.now();
+    }
+
     public void updateGrade(BigDecimal numericalGrade, String completionStatus) {
         this.numericalGrade = numericalGrade;
         if (completionStatus != null) {

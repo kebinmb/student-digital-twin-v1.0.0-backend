@@ -19,13 +19,13 @@ public class GradeController {
     private final SecurityUtils securityUtils;
 
     @GetMapping("/{id}/roster")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR') or @sectionSecurity.isInstructor(#id, authentication)")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<SectionRosterResponse> getSectionRoster(@PathVariable("id") Long id) {
         return ResponseEntity.ok(gradeService.getSectionRoster(id));
     }
 
     @PutMapping("/{id}/grades")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON') or @sectionSecurity.isInstructor(#id, authentication)")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<GradeActionResponse> saveGrades(
             @PathVariable("id") Long id,
             @Valid @RequestBody SaveSectionGradesRequest request,
@@ -35,7 +35,7 @@ public class GradeController {
     }
 
     @PostMapping("/{id}/grades/verify")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON') and @sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<GradeActionResponse> verifyGrades(
             @PathVariable("id") Long id,
             Authentication authentication) {

@@ -23,6 +23,8 @@ public class SchedulingController {
 
     private final SchedulingService schedulingService;
     private final SecurityUtils securityUtils;
+    private final com.sdt.web_app.service.security.DataScopingService dataScopingService;
+    private final com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
     // -------------------------------------------------------------------------
     // Room Endpoints
@@ -58,8 +60,20 @@ public class SchedulingController {
 
     @GetMapping("/sections/term/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
-    public ResponseEntity<List<SectionDetailResponse>> getSectionsByTerm(@PathVariable("termId") Long termId) {
-        return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId));
+    public ResponseEntity<List<SectionDetailResponse>> getSectionsByTerm(
+            @PathVariable("termId") Long termId,
+            Authentication authentication) {
+        if (authentication != null && academicScopeAssertionService != null) {
+            com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
+            if (scope.isDean()) {
+                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(scope.allowedProgramIds()), null));
+            } else if (scope.isChairperson()) {
+                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(List.of(scope.programId())), null));
+            } else if (scope.isFaculty()) {
+                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.empty(), scope.userId()));
+            }
+        }
+        return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.empty(), null));
     }
 
     @GetMapping("/sections/{id}")

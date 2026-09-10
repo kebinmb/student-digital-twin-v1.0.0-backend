@@ -156,11 +156,18 @@ class ClassRecordMatrixIntegrationTest extends BaseIntegrationTest {
                 .isActive(true)
                 .build());
 
+        User facultyUser = userRepository.save(User.builder()
+                .username("faculty")
+                .password("encoded_pass")
+                .email("faculty@test.com")
+                .build());
+
         testSection = sectionRepository.save(ClassSection.builder()
                 .sectionCode("BSIT-1A")
                 .curriculum(curriculum)
                 .course(course)
                 .term(term)
+                .primaryInstructor(facultyUser)
                 .gradeStatus(ClassSection.GradeStatus.DRAFT)
                 .build());
 

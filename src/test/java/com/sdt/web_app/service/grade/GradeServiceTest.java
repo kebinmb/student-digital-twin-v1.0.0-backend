@@ -45,6 +45,8 @@ class GradeServiceTest {
     private StudentCourseGradeRepository gradeRepository;
     @Mock
     private StudentProfileRepository profileRepository;
+    @Mock
+    private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
     @InjectMocks
     private GradeService gradeService;

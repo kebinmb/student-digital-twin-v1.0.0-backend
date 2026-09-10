@@ -1,6 +1,8 @@
 package com.sdt.web_app.entities.faculty;
 
 import com.sdt.web_app.entities.authentication.User;
+import com.sdt.web_app.entities.institution.Department;
+import com.sdt.web_app.entities.institution.Program;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +15,7 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString(exclude = "user")
+@ToString(exclude = {"user", "college", "program"})
 public class FacultyProfile {
 
     public enum HighestDegree {
@@ -39,6 +41,14 @@ public class FacultyProfile {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "college_id")
+    private Department college;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "program_id")
+    private Program program;
 
     @Column(name = "faculty_id_number", nullable = false, unique = true, length = 30)
     private String facultyIdNumber;
@@ -88,6 +98,14 @@ public class FacultyProfile {
         this.prcLicenseNo = prcLicenseNo;
         if (employmentStatus != null) this.employmentStatus = employmentStatus;
         this.isTenured = isTenured;
+    }
+
+    public void assignCollege(Department college) {
+        this.college = college;
+    }
+
+    public void assignProgram(Program program) {
+        this.program = program;
     }
 
     @Override

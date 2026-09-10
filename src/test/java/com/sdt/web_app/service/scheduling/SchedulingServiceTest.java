@@ -64,6 +64,8 @@ class SchedulingServiceTest {
     private CourseRepository courseRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
     @InjectMocks
     private SchedulingService schedulingService;

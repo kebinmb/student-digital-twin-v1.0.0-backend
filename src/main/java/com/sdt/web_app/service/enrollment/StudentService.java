@@ -11,9 +11,15 @@ import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
 import com.sdt.web_app.repositories.institution.CurriculumRepository;
 import com.sdt.web_app.repositories.institution.ProgramRepository;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
+import com.sdt.web_app.specifications.StudentProfileSpecifications;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +37,7 @@ public class StudentService {
     private final ProgramRepository programRepository;
     private final CurriculumRepository curriculumRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
 
     @Transactional
     public StudentProfileResponse createStudent(CreateStudentRequest request) {
@@ -57,6 +64,12 @@ public class StudentService {
 
         if (!curriculum.getProgram().getId().equals(program.getId())) {
             throw new IllegalArgumentException("Curriculum " + curriculum.getCode() + " does not belong to Program " + program.getCode());
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateProgramMutation(scope, program.getId());
         }
 
         StudentClassification classification;
@@ -103,12 +116,51 @@ public class StudentService {
     public StudentProfileResponse getStudentById(Long id) {
         StudentProfile profile = studentProfileRepository.findByIdWithProgramAndCurriculum(id)
                 .orElseThrow(() -> new EntityNotFoundException("Student not found with ID: " + id));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateStudentAccess(scope, profile);
+        }
+
         return mapToProfileResponse(profile);
     }
 
     @Transactional(readOnly = true)
     public List<StudentSearchResultDto> searchStudents(String query) {
-        List<StudentProfile> profiles = studentProfileRepository.searchStudents(query != null ? query.trim() : "");
+        return searchStudents(query, java.util.Optional.empty());
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentSearchResultDto> searchStudents(String query, java.util.Optional<List<Long>> scopedProgramIds) {
+        String cleanQuery = query != null ? query.trim() : "";
+        Specification<StudentProfile> spec = StudentProfileSpecifications.searchKeyword(cleanQuery);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope.isDean()) {
+                spec = spec.and(StudentProfileSpecifications.inCollege(scope.collegeId()));
+            } else if (scope.isChairperson()) {
+                spec = spec.and(StudentProfileSpecifications.inProgram(scope.programId()));
+            } else if (scope.isFaculty()) {
+                if (scope.assignedSectionIds().isEmpty()) {
+                    return List.of();
+                }
+                spec = spec.and(StudentProfileSpecifications.enrolledInSections(scope.assignedSectionIds()));
+            }
+        }
+
+        if (scopedProgramIds != null && scopedProgramIds.isPresent()) {
+            List<Long> programIds = scopedProgramIds.get();
+            if (programIds.isEmpty()) {
+                return List.of();
+            }
+            spec = spec.and(StudentProfileSpecifications.inPrograms(programIds));
+        }
+
+        List<StudentProfile> profiles = studentProfileRepository.findAll(spec);
+
         return profiles.stream().map(sp -> new StudentSearchResultDto(
                 sp.getId(),
                 sp.getStudentNumber(),
@@ -136,8 +188,32 @@ public class StudentService {
                 sp.getEnrollmentStatus().name(),
                 sp.isGraduating(),
                 sp.getTotalUnitsEarned(),
-                sp.getCumulativeGpa()
+                sp.getCumulativeGpa(),
+                sp.getFinancialClearance() != null ? sp.getFinancialClearance().name() : "CLEARED",
+                sp.getDepartmentalClearance() != null ? sp.getDepartmentalClearance().name() : "CLEARED"
         );
+    }
+
+    @Transactional
+    public StudentProfileResponse updateClearance(Long studentId, UpdateClearanceRequest request) {
+        StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student not found with ID: " + studentId));
+
+        StudentProfile.ClearanceStatus finStatus = null;
+        if (request.financialClearance() != null && !request.financialClearance().isBlank()) {
+            finStatus = StudentProfile.ClearanceStatus.valueOf(request.financialClearance().trim().toUpperCase());
+        }
+
+        StudentProfile.ClearanceStatus deptStatus = null;
+        if (request.departmentalClearance() != null && !request.departmentalClearance().isBlank()) {
+            deptStatus = StudentProfile.ClearanceStatus.valueOf(request.departmentalClearance().trim().toUpperCase());
+        }
+
+        student.updateClearance(finStatus, deptStatus);
+        StudentProfile saved = studentProfileRepository.save(student);
+        log.info("Updated clearance for student {}: financial={}, departmental={}",
+                saved.getStudentNumber(), saved.getFinancialClearance(), saved.getDepartmentalClearance());
+        return mapToProfileResponse(saved);
     }
 
     @Transactional(readOnly = true)

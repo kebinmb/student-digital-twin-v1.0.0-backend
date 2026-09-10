@@ -22,13 +22,13 @@ public class ClassRecordController {
     private final SecurityUtils securityUtils;
 
     @GetMapping("/sections/{sectionId}/config")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#sectionId, authentication)")
     public ResponseEntity<SectionGradingConfigResponse> getGradingConfig(@PathVariable("sectionId") Long sectionId) {
         return ResponseEntity.ok(classRecordService.getGradingConfig(sectionId));
     }
 
     @PutMapping("/sections/{sectionId}/config")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#sectionId, authentication) and !hasRole('REGISTRAR')")
     public ResponseEntity<SectionGradingConfigResponse> updateGradingConfig(
             @PathVariable("sectionId") Long sectionId,
             @Valid @RequestBody UpdateSectionGradingConfigRequest request,
@@ -38,7 +38,7 @@ public class ClassRecordController {
     }
 
     @PostMapping("/sections/{sectionId}/items")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#sectionId, authentication) and !hasRole('REGISTRAR')")
     public ResponseEntity<ClassRecordItemDto> addAssessmentItem(
             @PathVariable("sectionId") Long sectionId,
             @Valid @RequestBody CreateClassRecordItemRequest request,
@@ -49,7 +49,7 @@ public class ClassRecordController {
     }
 
     @DeleteMapping("/items/{itemId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
+    @PreAuthorize("@sectionSecurity.canAccessItem(#itemId, authentication) and !hasRole('REGISTRAR')")
     public ResponseEntity<Void> deleteAssessmentItem(
             @PathVariable("itemId") Long itemId,
             Authentication authentication) {
@@ -59,13 +59,13 @@ public class ClassRecordController {
     }
 
     @GetMapping("/sections/{sectionId}/matrix")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#sectionId, authentication)")
     public ResponseEntity<ClassRecordMatrixResponse> getScoreMatrix(@PathVariable("sectionId") Long sectionId) {
         return ResponseEntity.ok(classRecordService.getScoreMatrix(sectionId));
     }
 
     @PostMapping("/sections/{sectionId}/scores/batch")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#sectionId, authentication) and !hasRole('REGISTRAR')")
     public ResponseEntity<ClassRecordMatrixResponse> batchSaveScores(
             @PathVariable("sectionId") Long sectionId,
             @Valid @RequestBody BatchSaveScoresRequest request,
@@ -75,7 +75,7 @@ public class ClassRecordController {
     }
 
     @PostMapping("/sections/{sectionId}/recalculate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
+    @PreAuthorize("@sectionSecurity.canAccessSection(#sectionId, authentication) and !hasRole('REGISTRAR')")
     public ResponseEntity<ClassRecordMatrixResponse> recalculateAndSyncSectionGrades(
             @PathVariable("sectionId") Long sectionId,
             Authentication authentication) {

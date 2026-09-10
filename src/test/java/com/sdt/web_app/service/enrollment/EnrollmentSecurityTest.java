@@ -30,6 +30,9 @@ class EnrollmentSecurityTest {
     @Mock
     private SecurityUtils securityUtils;
 
+    @Mock
+    private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
+
     @InjectMocks
     private EnrollmentSecurity enrollmentSecurity;
 

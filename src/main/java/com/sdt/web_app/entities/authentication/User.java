@@ -1,5 +1,7 @@
 package com.sdt.web_app.entities.authentication;
 
+import com.sdt.web_app.entities.institution.Department;
+import com.sdt.web_app.entities.institution.Program;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,7 +16,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString(exclude = "password")
+@ToString(exclude = {"password", "college", "program"})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +24,14 @@ public class User {
 
     @Column(unique = true, nullable = false, length = 50, updatable = false)
     private String username;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "college_id")
+    private Department college;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "program_id")
+    private Program program;
 
     @Column(unique = true, nullable = false, length = 100)
     private String email;
@@ -89,8 +99,27 @@ public class User {
         this.roles.remove(role);
     }
 
+    public void setRoles(Set<Roles> newRoles) {
+        this.roles.clear();
+        if (newRoles != null) {
+            this.roles.addAll(newRoles);
+        }
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public boolean hasRole(Roles role) {
         return this.roles.contains(role);
+    }
+
+    public void assignCollege(Department college) {
+        this.college = college;
+    }
+
+    public void assignProgram(Program program) {
+        this.program = program;
     }
 
     @Override

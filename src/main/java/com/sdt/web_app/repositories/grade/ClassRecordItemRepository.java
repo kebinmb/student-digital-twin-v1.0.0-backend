@@ -13,6 +13,9 @@ public interface ClassRecordItemRepository extends JpaRepository<ClassRecordItem
 
     List<ClassRecordItem> findByCategoryId(Long categoryId);
 
-    @Query("SELECT cri FROM ClassRecordItem cri WHERE cri.category.config.section.id = :sectionId")
+    @Query("SELECT cri FROM ClassRecordItem cri JOIN FETCH cri.category cat WHERE cat.config.section.id = :sectionId")
     List<ClassRecordItem> findBySectionId(@Param("sectionId") Long sectionId);
+
+    @Query("SELECT cri.category.config.section.id FROM ClassRecordItem cri WHERE cri.id = :itemId")
+    java.util.Optional<Long> findSectionIdByItemId(@Param("itemId") Long itemId);
 }

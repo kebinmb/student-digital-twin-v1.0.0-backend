@@ -207,6 +207,9 @@ public class EnrollmentService {
                 student.getCumulativeGpa(),
                 maxAllowedUnits,
                 currentEnrolledUnits,
+                student.getFinancialClearance() != null ? student.getFinancialClearance().name() : "CLEARED",
+                student.getDepartmentalClearance() != null ? student.getDepartmentalClearance().name() : "CLEARED",
+                student.isClearedForEnrollment(),
                 courseEligibilityList
         );
     }
@@ -224,6 +227,12 @@ public class EnrollmentService {
 
         ClassSection section = sectionRepository.findByIdWithSchedules(request.sectionId())
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + request.sectionId()));
+
+        if (!student.isClearedForEnrollment()) {
+            throw new IllegalStateException(String.format(
+                    "Clearance Violation: Student cannot enlist. Financial Clearance: %s, Departmental Clearance: %s.",
+                    student.getFinancialClearance(), student.getDepartmentalClearance()));
+        }
 
         if (section.getStatus() != ClassSection.Status.OPEN) {
             throw new IllegalStateException(String.format(
@@ -355,6 +364,15 @@ public class EnrollmentService {
 
     @Transactional
     public EnrollmentConfirmationDto confirmEnrollment(Long studentId, ConfirmEnrollmentRequest request) {
+        StudentProfile student = studentProfileRepository.findById(studentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + studentId));
+
+        if (!student.isClearedForEnrollment()) {
+            throw new IllegalStateException(String.format(
+                    "Clearance Violation: Student cannot confirm enrollment. Financial Clearance: %s, Departmental Clearance: %s.",
+                    student.getFinancialClearance(), student.getDepartmentalClearance()));
+        }
+
         StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(studentId, request.termId())
                 .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + studentId + " in term " + request.termId()));
 

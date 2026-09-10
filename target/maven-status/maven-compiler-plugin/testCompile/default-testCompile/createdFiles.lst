@@ -4,6 +4,7 @@ com\sdt\web_app\AuthenticationIntegrationTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest.class
 com\sdt\web_app\service\enrollment\EnrollmentServiceTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$OrganizationalHierarchyTests.class
+com\sdt\web_app\service\authentication\UserServiceTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$AcademicPeriodsTests.class
 com\sdt\web_app\ActuatorSecurityConfigTest.class
 com\sdt\web_app\service\institution\CurriculumValidationTest.class
@@ -13,6 +14,7 @@ com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$DummySecureService.class
 com\sdt\web_app\service\institution\InstitutionalCrudPrerequisiteValidationTest.class
 com\sdt\web_app\service\grade\ClassRecordServiceTest.class
 com\sdt\web_app\TestSecurityConfig.class
+com\sdt\web_app\service\security\DataScopingServiceTest.class
 com\sdt\web_app\TestcontainersConfiguration.class
 com\sdt\web_app\AuthenticationIntegrationTest$RegistrationTests.class
 com\sdt\web_app\service\faculty\FacultyProfileServiceTest.class
@@ -20,7 +22,9 @@ com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTe
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$1$1.class
 com\sdt\web_app\WebAppApplicationTests.class
 com\sdt\web_app\AuthenticationIntegrationTest$ProtectedEndpointTests.class
+com\sdt\web_app\service\security\AcademicHierarchyScopingIntegrationTest.class
 com\sdt\web_app\service\enrollment\TransfereeCreditingServiceTest.class
+com\sdt\web_app\service\institution\CleanSlateSchemaAndEmptyDataIntegrationTest.class
 com\sdt\web_app\service\grade\GradeServiceTest.class
 com\sdt\web_app\AuthenticationIntegrationTest$RefreshTokenTests.class
 com\sdt\web_app\AsyncSecurityConfigTest.class

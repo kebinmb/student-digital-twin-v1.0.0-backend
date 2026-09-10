@@ -16,7 +16,7 @@ public interface StudentAssessmentScoreRepository extends JpaRepository<StudentA
 
     List<StudentAssessmentScore> findByStudentId(Long studentId);
 
-    @Query("SELECT sas FROM StudentAssessmentScore sas WHERE sas.item.category.config.section.id = :sectionId")
+    @Query("SELECT sas FROM StudentAssessmentScore sas JOIN FETCH sas.item cri JOIN FETCH cri.category cat JOIN FETCH sas.student sp WHERE cat.config.section.id = :sectionId")
     List<StudentAssessmentScore> findBySectionId(@Param("sectionId") Long sectionId);
 
     void deleteByItemId(Long itemId);
