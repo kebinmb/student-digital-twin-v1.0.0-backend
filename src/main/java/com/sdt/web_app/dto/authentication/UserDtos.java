@@ -23,8 +23,16 @@ public class UserDtos {
             @NotEmpty(message = "At least one role must be assigned")
             Set<String> roles,
 
-            Boolean enabled
-    ) {}
+            Boolean enabled,
+
+            Long collegeId,
+
+            Long programId
+    ) {
+        public CreateUserRequest(String username, String email, String password, Set<String> roles, Boolean enabled) {
+            this(username, email, password, roles, enabled, null, null);
+        }
+    }
 
     public record UpdateUserRequest(
             @Email(message = "Invalid email format")
@@ -34,8 +42,24 @@ public class UserDtos {
 
             Set<String> roles,
 
-            Boolean enabled
-    ) {}
+            Boolean enabled,
+
+            Long collegeId,
+
+            Long programId,
+
+            Boolean clearCollege,
+
+            Boolean clearProgram
+    ) {
+        public UpdateUserRequest(String email, String password, Set<String> roles, Boolean enabled) {
+            this(email, password, roles, enabled, null, null, false, false);
+        }
+
+        public UpdateUserRequest(String email, String password, Set<String> roles, Boolean enabled, Long collegeId, Long programId) {
+            this(email, password, roles, enabled, collegeId, programId, false, false);
+        }
+    }
 
     public record UserDetailResponse(
             Long id,
@@ -43,6 +67,16 @@ public class UserDtos {
             String email,
             Set<String> roles,
             boolean enabled,
-            Instant createdAt
-    ) {}
+            Instant createdAt,
+            Long collegeId,
+            String collegeCode,
+            String collegeName,
+            Long programId,
+            String programCode,
+            String programName
+    ) {
+        public UserDetailResponse(Long id, String username, String email, Set<String> roles, boolean enabled, Instant createdAt) {
+            this(id, username, email, roles, enabled, createdAt, null, null, null, null, null, null);
+        }
+    }
 }

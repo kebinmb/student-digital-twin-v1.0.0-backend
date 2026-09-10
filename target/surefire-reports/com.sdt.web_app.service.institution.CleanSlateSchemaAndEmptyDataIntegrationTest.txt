@@ -1,4 +1,29 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.489 s -- in com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest
+Tests run: 5, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 5.473 s <<< FAILURE! -- in com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest
+com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest.verifyDomainTablesEmpty -- Time elapsed: 0.048 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+expected: 0L
+ but was: 1L
+	at com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest.verifyDomainTablesEmpty(CleanSlateSchemaAndEmptyDataIntegrationTest.java:114)
+
+com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest.verifyEmptyEndpointsReturnEmptyLists -- Time elapsed: 0.166 s <<< FAILURE!
+java.lang.AssertionError: Expected an empty value at JSON path "$" but found: [{"id":1,"campusId":1,"campusCode":"TALISAY","campusName":"Carlos Hilado Memorial State University - Talisay Main","code":"CCS","name":"College of Computer Studies","type":"COLLEGE","parentDepartmentId":null,"parentDepartmentCode":null,"deanUserId":null,"isActive":true}]
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:40)
+	at org.springframework.test.util.AssertionErrors.assertTrue(AssertionErrors.java:74)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValueIsEmpty(JsonPathExpectationsHelper.java:276)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$isEmpty$0(JsonPathResultMatchers.java:148)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
+	at com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest.verifyEmptyEndpointsReturnEmptyLists(CleanSlateSchemaAndEmptyDataIntegrationTest.java:151)
+
+com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest.verifySoleRootAdminUser -- Time elapsed: 0.038 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expected size: 1 but was: 3 in:
+[User(id=1, username=admin, email=admin@example.com, enabled=true, roles=[ADMIN], createdAt=2026-09-10T15:54:18Z),
+    User(id=2, username=registrar_test, email=registrar@chmsu.edu.ph, enabled=true, roles=[REGISTRAR, STUDENT], createdAt=2026-09-10T08:15:49Z),
+    User(id=3, username=test_prof, email=test_prof@chmsu.edu.ph, enabled=true, roles=[FACULTY], createdAt=2026-09-10T08:16:18Z)]
+	at com.sdt.web_app.service.institution.CleanSlateSchemaAndEmptyDataIntegrationTest.verifySoleRootAdminUser(CleanSlateSchemaAndEmptyDataIntegrationTest.java:99)
+

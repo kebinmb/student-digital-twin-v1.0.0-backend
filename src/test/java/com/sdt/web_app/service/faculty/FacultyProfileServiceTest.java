@@ -61,6 +61,7 @@ class FacultyProfileServiceTest {
 
     @BeforeEach
     void setUp() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
         facultyUser = User.builder()
                 .username("prof_einstein")
                 .email("einstein@example.com")
@@ -78,6 +79,11 @@ class FacultyProfileServiceTest {
                 .isTenured(true)
                 .build();
         ReflectionTestUtils.setField(profile, "id", 1001L);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -198,5 +204,73 @@ class FacultyProfileServiceTest {
 
         assertThat(profiles).hasSize(1);
         assertThat(profiles.get(0).facultyIdNumber()).isEqualTo("FAC-2026-0042");
+    }
+
+    @Test
+    @DisplayName("Should provision new faculty account with attached College and Program")
+    void createFacultyAccount_WithCollegeAndProgram_Success() {
+        com.sdt.web_app.entities.institution.Department ccs = com.sdt.web_app.entities.institution.Department.builder()
+                .code("CCS")
+                .name("College of Computer Studies")
+                .build();
+        ReflectionTestUtils.setField(ccs, "id", 100L);
+
+        com.sdt.web_app.entities.institution.Program bscs = com.sdt.web_app.entities.institution.Program.builder()
+                .code("BSCS")
+                .name("BS Computer Science")
+                .department(ccs)
+                .college(ccs)
+                .build();
+        ReflectionTestUtils.setField(bscs, "id", 200L);
+
+        CreateFacultyAccountRequest request = new CreateFacultyAccountRequest(
+                "prof_it",
+                "prof.it@example.com",
+                "Secret123!",
+                "FAC-2026-8888",
+                "MASTERS",
+                "ASSISTANT_PROFESSOR_I",
+                "PRC-8888888",
+                "FULL_TIME",
+                false,
+                100L,
+                200L
+        );
+
+        given(userRepository.existsByUsername("prof_it")).willReturn(false);
+        given(userRepository.existsByEmail("prof.it@example.com")).willReturn(false);
+        given(profileRepository.existsByFacultyIdNumber("FAC-2026-8888")).willReturn(false);
+        given(passwordEncoder.encode("Secret123!")).willReturn("encodedPassword");
+        given(departmentRepository.findById(100L)).willReturn(Optional.of(ccs));
+        given(programRepository.findById(200L)).willReturn(Optional.of(bscs));
+        given(academicScopeAssertionService.resolveProgramCollegeId(bscs)).willReturn(100L);
+        given(userRepository.save(any(User.class))).willAnswer(inv -> {
+            User u = inv.getArgument(0);
+            ReflectionTestUtils.setField(u, "id", 888L);
+            return u;
+        });
+        given(profileRepository.save(any(FacultyProfile.class))).willAnswer(inv -> {
+            FacultyProfile fp = inv.getArgument(0);
+            ReflectionTestUtils.setField(fp, "id", 2002L);
+            return fp;
+        });
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "admin", "n/a", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"))
+                )
+        );
+        given(academicScopeAssertionService.assertAndResolveScope(any())).willReturn(
+                com.sdt.web_app.service.security.AcademicScopeContext.unrestricted(1L)
+        );
+
+        FacultyProfileResponse response = facultyService.createFacultyAccount(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.username()).isEqualTo("prof_it");
+        assertThat(response.collegeId()).isEqualTo(100L);
+        assertThat(response.collegeCode()).isEqualTo("CCS");
+        assertThat(response.programId()).isEqualTo(200L);
+        assertThat(response.programCode()).isEqualTo("BSCS");
     }
 }

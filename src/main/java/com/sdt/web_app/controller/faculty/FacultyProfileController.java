@@ -37,7 +37,7 @@ public class FacultyProfileController {
     }
 
     @PutMapping("/faculty/{userId}/profile")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<FacultyProfileResponse> updateFacultyProfile(
             @PathVariable("userId") Long userId,
             @Valid @RequestBody UpdateFacultyProfileRequest request) {

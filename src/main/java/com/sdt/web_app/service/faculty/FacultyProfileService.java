@@ -78,6 +78,17 @@ public class FacultyProfileService {
             AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
             if (scope.isDean() && departmentRepository != null) {
                 assignedCollege = departmentRepository.findById(scope.collegeId()).orElse(null);
+                if (request.programId() != null && programRepository != null) {
+                    Program prog = programRepository.findById(request.programId()).orElse(null);
+                    if (prog != null) {
+                        Long progCollegeId = academicScopeAssertionService.resolveProgramCollegeId(prog);
+                        if (progCollegeId != null && progCollegeId.equals(scope.collegeId())) {
+                            assignedProgram = prog;
+                        } else {
+                            throw new AccessDeniedException("Access Denied: Program is outside your assigned College.");
+                        }
+                    }
+                }
             } else if (scope.isChairperson()) {
                 if (departmentRepository != null) {
                     assignedCollege = departmentRepository.findById(scope.collegeId()).orElse(null);
@@ -85,6 +96,35 @@ public class FacultyProfileService {
                 if (programRepository != null) {
                     assignedProgram = programRepository.findById(scope.programId()).orElse(null);
                 }
+            } else {
+                // ADMIN or REGISTRAR: System-wide unrestricted scope
+                if (request.collegeId() != null && departmentRepository != null) {
+                    assignedCollege = departmentRepository.findById(request.collegeId())
+                            .orElseThrow(() -> new EntityNotFoundException("College not found with ID: " + request.collegeId()));
+                }
+                if (request.programId() != null && programRepository != null) {
+                    assignedProgram = programRepository.findById(request.programId())
+                            .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + request.programId()));
+                }
+                if (assignedProgram != null && assignedCollege == null && academicScopeAssertionService != null && departmentRepository != null) {
+                    Long progCollegeId = academicScopeAssertionService.resolveProgramCollegeId(assignedProgram);
+                    if (progCollegeId != null) {
+                        assignedCollege = departmentRepository.findById(progCollegeId).orElse(null);
+                    }
+                }
+                if (assignedCollege != null && assignedProgram != null && academicScopeAssertionService != null) {
+                    Long progCollegeId = academicScopeAssertionService.resolveProgramCollegeId(assignedProgram);
+                    if (progCollegeId != null && !progCollegeId.equals(assignedCollege.getId())) {
+                        throw new IllegalArgumentException("Selected program does not belong to the selected college.");
+                    }
+                }
+            }
+        } else {
+            if (request.collegeId() != null && departmentRepository != null) {
+                assignedCollege = departmentRepository.findById(request.collegeId()).orElse(null);
+            }
+            if (request.programId() != null && programRepository != null) {
+                assignedProgram = programRepository.findById(request.programId()).orElse(null);
             }
         }
 
@@ -127,10 +167,10 @@ public class FacultyProfileService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
             AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
-            if (scope.isDean()) {
+            if (scope != null && scope.isDean()) {
                 return profileRepository.findAll(FacultyProfileSpecifications.inCollege(scope.collegeId())).stream()
                         .map(this::mapToProfileResponse).toList();
-            } else if (scope.isChairperson()) {
+            } else if (scope != null && scope.isChairperson()) {
                 return profileRepository.findAll(FacultyProfileSpecifications.inProgram(scope.programId())).stream()
                         .map(this::mapToProfileResponse).toList();
             }
@@ -161,13 +201,13 @@ public class FacultyProfileService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
             AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
-            if (scope.isDean()) {
+            if (scope != null && scope.isDean()) {
                 Long targetCollegeId = profile.getCollege() != null ? profile.getCollege().getId() : (user.getCollege() != null ? user.getCollege().getId() : null);
                 academicScopeAssertionService.validateCollegeMutation(scope, targetCollegeId);
-            } else if (scope.isChairperson()) {
+            } else if (scope != null && scope.isChairperson()) {
                 Long targetProgramId = profile.getProgram() != null ? profile.getProgram().getId() : (user.getProgram() != null ? user.getProgram().getId() : null);
                 academicScopeAssertionService.validateProgramMutation(scope, targetProgramId);
-            } else if (scope.isFaculty() && !scope.userId().equals(userId)) {
+            } else if (scope != null && scope.isFaculty() && !scope.userId().equals(userId)) {
                 throw new AccessDeniedException("Access Denied: Faculty can only view their own profile.");
             }
         }
@@ -191,10 +231,10 @@ public class FacultyProfileService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
             AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
-            if (scope.isDean()) {
+            if (scope != null && scope.isDean()) {
                 Long targetCollegeId = profile.getCollege() != null ? profile.getCollege().getId() : (profile.getUser().getCollege() != null ? profile.getUser().getCollege().getId() : null);
                 academicScopeAssertionService.validateCollegeMutation(scope, targetCollegeId);
-            } else if (scope.isChairperson()) {
+            } else if (scope != null && scope.isChairperson()) {
                 Long targetProgramId = profile.getProgram() != null ? profile.getProgram().getId() : (profile.getUser().getProgram() != null ? profile.getUser().getProgram().getId() : null);
                 academicScopeAssertionService.validateProgramMutation(scope, targetProgramId);
             }
@@ -205,6 +245,25 @@ public class FacultyProfileService {
         FacultyProfile.EmploymentStatus status = FacultyProfile.EmploymentStatus.valueOf(request.employmentStatus().trim().toUpperCase());
 
         profile.updateCredentials(degree, rank, request.prcLicenseNo(), status, request.isTenured());
+
+        if (request.collegeId() != null && departmentRepository != null) {
+            Department college = departmentRepository.findById(request.collegeId())
+                    .orElseThrow(() -> new EntityNotFoundException("College not found with ID: " + request.collegeId()));
+            profile.assignCollege(college);
+            if (profile.getUser() != null) {
+                profile.getUser().assignCollege(college);
+            }
+        }
+
+        if (request.programId() != null && programRepository != null) {
+            Program program = programRepository.findById(request.programId())
+                    .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + request.programId()));
+            profile.assignProgram(program);
+            if (profile.getUser() != null) {
+                profile.getUser().assignProgram(program);
+            }
+        }
+
         FacultyProfile saved = profileRepository.save(profile);
         log.info("Updated faculty credentials for user ID {}", userId);
 
@@ -289,6 +348,14 @@ public class FacultyProfileService {
     }
 
     private FacultyProfileResponse mapToProfileResponse(FacultyProfile fp) {
+        Long collegeId = fp.getCollege() != null ? fp.getCollege().getId() : (fp.getUser() != null && fp.getUser().getCollege() != null ? fp.getUser().getCollege().getId() : null);
+        String collegeCode = fp.getCollege() != null ? fp.getCollege().getCode() : (fp.getUser() != null && fp.getUser().getCollege() != null ? fp.getUser().getCollege().getCode() : null);
+        String collegeName = fp.getCollege() != null ? fp.getCollege().getName() : (fp.getUser() != null && fp.getUser().getCollege() != null ? fp.getUser().getCollege().getName() : null);
+
+        Long programId = fp.getProgram() != null ? fp.getProgram().getId() : (fp.getUser() != null && fp.getUser().getProgram() != null ? fp.getUser().getProgram().getId() : null);
+        String programCode = fp.getProgram() != null ? fp.getProgram().getCode() : (fp.getUser() != null && fp.getUser().getProgram() != null ? fp.getUser().getProgram().getCode() : null);
+        String programName = fp.getProgram() != null ? fp.getProgram().getName() : (fp.getUser() != null && fp.getUser().getProgram() != null ? fp.getUser().getProgram().getName() : null);
+
         return new FacultyProfileResponse(
                 fp.getId(),
                 fp.getUser().getId(),
@@ -299,7 +366,13 @@ public class FacultyProfileService {
                 fp.getAcademicRank().name(),
                 fp.getPrcLicenseNo(),
                 fp.getEmploymentStatus().name(),
-                fp.isTenured()
+                fp.isTenured(),
+                collegeId,
+                collegeCode,
+                collegeName,
+                programId,
+                programCode,
+                programName
         );
     }
 }

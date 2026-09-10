@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "06 Summary/01 Frontend RBAC Verification and Roadmap.md",
+                "file": "01 Projects/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "01 Frontend RBAC Verification and Roadmap"
+              "title": "02 Layer 2 Curriculum & Outcome-Based Education (OBE)"
             }
           }
         ]
@@ -83,7 +83,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 499.5
+    "width": 499.5,
+    "collapsed": true
   },
   "right": {
     "id": "cd5569e06477ea45",
@@ -189,11 +190,11 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "9052412d351b6d4f",
+  "active": "445cf9d7661b60cb",
   "lastOpenFiles": [
+    "06 Summary/01 Frontend RBAC Verification and Roadmap.md",
     "06 Summary/02 Entity-Database Alignment Summary.md",
     "06 Summary/AUDIT_AND_REFACTOR_SUMMARY.md",
-    "06 Summary/01 Frontend RBAC Verification and Roadmap.md",
     "06 Summary/00 Role Base Access.md",
     "00 AI Index.md",
     "04 Archives/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",

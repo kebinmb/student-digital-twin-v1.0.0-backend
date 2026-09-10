@@ -5,6 +5,12 @@ import com.sdt.web_app.entities.authentication.Roles;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.exceptions.UserAlreadyExistsException;
 import com.sdt.web_app.repositories.authentication.UserRepository;
+import com.sdt.web_app.entities.institution.Department;
+import com.sdt.web_app.entities.institution.Program;
+import com.sdt.web_app.repositories.institution.DepartmentRepository;
+import com.sdt.web_app.repositories.institution.ProgramRepository;
+import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +30,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DepartmentRepository departmentRepository;
+    private final ProgramRepository programRepository;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
+    private final FacultyProfileRepository facultyProfileRepository;
 
     @Transactional
     public UserDetailResponse createUser(CreateUserRequest request) {
@@ -42,11 +52,41 @@ public class UserService {
             throw new IllegalArgumentException("At least one valid role must be provided.");
         }
 
+        Department college = null;
+        if (request.collegeId() != null && departmentRepository != null) {
+            college = departmentRepository.findById(request.collegeId())
+                    .orElseThrow(() -> new EntityNotFoundException("College not found with ID: " + request.collegeId()));
+        }
+
+        Program program = null;
+        if (request.programId() != null && programRepository != null) {
+            program = programRepository.findById(request.programId())
+                    .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + request.programId()));
+        }
+
+        if (program != null && college == null && academicScopeAssertionService != null && departmentRepository != null) {
+            Long progCollegeId = academicScopeAssertionService.resolveProgramCollegeId(program);
+            if (progCollegeId != null) {
+                college = departmentRepository.findById(progCollegeId).orElse(null);
+            }
+        }
+
+        if (college != null && program != null && academicScopeAssertionService != null) {
+            Long progCollegeId = academicScopeAssertionService.resolveProgramCollegeId(program);
+            if (progCollegeId != null && !progCollegeId.equals(college.getId())) {
+                throw new IllegalArgumentException("Selected program does not belong to the selected college.");
+            }
+        }
+
+        validateRoleScoping(mappedRoles, college, program);
+
         User user = User.builder()
                 .username(trimmedUsername)
                 .email(trimmedEmail)
                 .password(passwordEncoder.encode(request.password().trim()))
                 .enabled(request.enabled() == null || request.enabled())
+                .college(college)
+                .program(program)
                 .build();
 
         for (Roles role : mappedRoles) {
@@ -54,8 +94,9 @@ public class UserService {
         }
 
         User savedUser = userRepository.save(user);
-        log.info("Admin created new user account: id={}, username={}, roles={}",
-                savedUser.getId(), savedUser.getUsername(), savedUser.getRoles());
+        log.info("Provisioned new user account: id={}, username={}, roles={}, collegeId={}, programId={}",
+                savedUser.getId(), savedUser.getUsername(), savedUser.getRoles(),
+                college != null ? college.getId() : null, program != null ? program.getId() : null);
 
         return mapToUserDetailResponse(savedUser);
     }
@@ -100,8 +141,51 @@ public class UserService {
             user.setRoles(mappedRoles);
         }
 
+        if (Boolean.TRUE.equals(request.clearCollege())) {
+            user.assignCollege(null);
+        } else if (request.collegeId() != null && departmentRepository != null) {
+            Department college = departmentRepository.findById(request.collegeId())
+                    .orElseThrow(() -> new EntityNotFoundException("College not found with ID: " + request.collegeId()));
+            user.assignCollege(college);
+        }
+
+        if (Boolean.TRUE.equals(request.clearProgram())) {
+            user.assignProgram(null);
+        } else if (request.programId() != null && programRepository != null) {
+            Program program = programRepository.findById(request.programId())
+                    .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + request.programId()));
+            user.assignProgram(program);
+        }
+
+        if (user.getProgram() != null && user.getCollege() == null && academicScopeAssertionService != null && departmentRepository != null) {
+            Long progCollegeId = academicScopeAssertionService.resolveProgramCollegeId(user.getProgram());
+            if (progCollegeId != null) {
+                user.assignCollege(departmentRepository.findById(progCollegeId).orElse(null));
+            }
+        }
+
+        if (user.getCollege() != null && user.getProgram() != null && academicScopeAssertionService != null) {
+            Long progCollegeId = academicScopeAssertionService.resolveProgramCollegeId(user.getProgram());
+            if (progCollegeId != null && !progCollegeId.equals(user.getCollege().getId())) {
+                throw new IllegalArgumentException("Selected program does not belong to the selected college.");
+            }
+        }
+
+        validateRoleScoping(user.getRoles(), user.getCollege(), user.getProgram());
+
+        if (facultyProfileRepository != null) {
+            facultyProfileRepository.findByUserId(user.getId()).ifPresent(fp -> {
+                fp.assignCollege(user.getCollege());
+                fp.assignProgram(user.getProgram());
+                facultyProfileRepository.save(fp);
+            });
+        }
+
         User updatedUser = userRepository.save(user);
-        log.info("Admin updated user account: id={}, username={}", updatedUser.getId(), updatedUser.getUsername());
+        log.info("Updated user account: id={}, username={}, collegeId={}, programId={}",
+                updatedUser.getId(), updatedUser.getUsername(),
+                updatedUser.getCollege() != null ? updatedUser.getCollege().getId() : null,
+                updatedUser.getProgram() != null ? updatedUser.getProgram().getId() : null);
         return mapToUserDetailResponse(updatedUser);
     }
 
@@ -111,6 +195,23 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
         userRepository.delete(user);
         log.info("Admin deleted user account: id={}, username={}", id, user.getUsername());
+    }
+
+    private void validateRoleScoping(Set<Roles> roles, Department college, Program program) {
+        if (roles == null) return;
+        if (roles.contains(Roles.DEAN)) {
+            if (college == null) {
+                throw new IllegalArgumentException("College assignment is required for users with the DEAN role.");
+            }
+            if (program != null) {
+                throw new IllegalArgumentException("DEAN cannot be assigned to a specific program. Only a college can be assigned.");
+            }
+        }
+        if (roles.contains(Roles.CHAIRPERSON)) {
+            if (college == null || program == null) {
+                throw new IllegalArgumentException("Both College and Program assignments are required for users with the CHAIRPERSON role.");
+            }
+        }
     }
 
     private Set<Roles> parseRoles(Set<String> roleNames) {
@@ -135,13 +236,27 @@ public class UserService {
                 .map(Roles::name)
                 .collect(Collectors.toSet());
 
+        Long collegeId = user.getCollege() != null ? user.getCollege().getId() : null;
+        String collegeCode = user.getCollege() != null ? user.getCollege().getCode() : null;
+        String collegeName = user.getCollege() != null ? user.getCollege().getName() : null;
+
+        Long programId = user.getProgram() != null ? user.getProgram().getId() : null;
+        String programCode = user.getProgram() != null ? user.getProgram().getCode() : null;
+        String programName = user.getProgram() != null ? user.getProgram().getName() : null;
+
         return new UserDetailResponse(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 roleStrings,
                 user.isEnabled(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                collegeId,
+                collegeCode,
+                collegeName,
+                programId,
+                programCode,
+                programName
         );
     }
 }

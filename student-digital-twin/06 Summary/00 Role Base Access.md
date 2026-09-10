@@ -100,10 +100,10 @@ The application defines 9 institutional roles in [`Roles.java`](file:///C:/Users
 | Role Name | Authority String | Institutional Scope & Responsibilities | Intake Module |
 | :--- | :--- | :--- | :--- |
 | **`SUPER_ADMIN`** | `ROLE_SUPER_ADMIN` | Reserved for root-level infrastructure maintenance and cross-tenant configuration. Super-set privileges. | Root CLI / DB |
-| **`ADMIN`** | `ROLE_ADMIN` | Institutional system administrators. Full read/write access to institutional registry, curricula, schedules, financial settings, and user provisioning. System-wide scope. | User Accounts (`/api/v1/users`) |
+| **`ADMIN`** | `ROLE_ADMIN` | Institutional system administrators. Full read/write access to institutional registry, curricula, schedules, financial settings, and user provisioning. System-wide scope. | User Accounts (`/api/v1/users`), Faculty Accounts (`/api/v1/faculty`) |
 | **`DEAN`** | `ROLE_DEAN` | College executive officer. Manages college departments, degree programs, curriculum design, faculty workload limits, overload approvals, and grade verifications. Scoped to assigned College and child departments. | Faculty Roster Review |
 | **`CHAIRPERSON`** | `ROLE_CHAIRPERSON` | Academic department head. Designs curricula, manages CILO-PILO mappings, builds class sections, assigns instructors, and verifies submitted grades. Scoped to assigned Program. | Program Curriculum / Sections |
-| **`REGISTRAR`** | `ROLE_REGISTRAR` | Office of the University Registrar. Enforces academic calendar, manages academic years/terms, opens/locks enrollment & grading windows, executes student enlistment/crediting, provisions faculty accounts, and seals official final grades. Institutional academic scope. | Faculty Accounts (`/api/v1/faculty`) |
+| **`REGISTRAR`** | `ROLE_REGISTRAR` | Office of the University Registrar. Enforces academic calendar, manages academic years/terms, opens/locks enrollment & grading windows, executes student enlistment/crediting, provisions faculty accounts, and seals official final grades. Institutional academic scope. | Faculty Accounts (`/api/v1/faculty`), User Accounts (`/api/v1/users`) |
 | **`FACULTY`** | `ROLE_FACULTY` | Teaching staff. Manages assigned class records, assessment items, raw score matrices, submits grade sheets, and reviews curriculum matrices and personal workload. Scoped to assigned teaching load. | Gradebook / Assigned Load |
 | **`STUDENT`** | `ROLE_STUDENT` | Enrolled or applicant student. Self-service access to own curriculum matrix, class schedules, own enrollment eligibility, section enlistment, and personal grades. Self-enrollment gated by clearance and prerequisite validation. | Self-Service Admissions / Portal |
 | **`CASHIER`** | `ROLE_CASHIER` | Student accounts and financial cashiering. Authorized to evaluate tuition and update student financial clearance status (`PATCH /api/v1/students/{id}/clearance`). | Billing & Clearance |
@@ -155,12 +155,12 @@ Below is the complete static mapping of all **21 `@RestController` classes** and
 
 | Controller / Feature Module | HTTP Method | Endpoint Path | Required Role(s) / Authority | Source Constraint | Frontend UI Impact |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `UserController` | `POST` | `/api/v1/users` | `ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` | "New User" dialog in User Management view (`/dashboard/users`). |
-| `UserController` | `GET` | `/api/v1/users` | `ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` | Master user directory table with role and status badges. |
-| `UserController` | `GET` | `/api/v1/users/{id}` | `ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` | User detail inspector dialog. |
-| `UserController` | `PUT` | `/api/v1/users/{id}` | `ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` | "Edit User" dialog (role assignment, status toggle, email). |
-| `UserController` | `DELETE`| `/api/v1/users/{id}` | `ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` | Deactivate/delete user danger action button. |
-| `UserController` | `GET` | `/api/v1/users/roles` | `ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` | Role selection dropdown options for user creation/editing. |
+| `UserController` | `POST` | `/api/v1/users` | `ADMIN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")` | "New User" dialog in User Management view (`/dashboard/users`). Supports attaching College and Program. |
+| `UserController` | `GET` | `/api/v1/users` | `ADMIN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")` | Master user directory table with role, status, and academic scope (College/Program). |
+| `UserController` | `GET` | `/api/v1/users/{id}` | `ADMIN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")` | User detail inspector dialog including academic scope metadata. |
+| `UserController` | `PUT` | `/api/v1/users/{id}` | `ADMIN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")` | "Edit User" dialog (role assignment, status toggle, email, College/Program affiliation). |
+| `UserController` | `DELETE`| `/api/v1/users/{id}` | `ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` | Deactivate/delete user danger action button (strictly restricted to root `ADMIN`). |
+| `UserController` | `GET` | `/api/v1/users/roles` | `ADMIN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")` | Role selection dropdown options for user creation/editing. |
 
 ---
 
@@ -315,10 +315,10 @@ Below is the complete static mapping of all **21 `@RestController` classes** and
 
 | Controller / Feature Module | HTTP Method | Endpoint Path | Required Role(s) / Authority | Source Constraint | Frontend UI Impact |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `FacultyProfileController` | `POST` | `/api/v1/faculty` | `ADMIN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")` | "Create Faculty Account" modal in Faculty Management (`/dashboard/faculty-accounts`). Provisions `User` and links `FacultyProfile`. |
-| `FacultyProfileController` | `GET` | `/api/v1/faculty` | `ADMIN`, `DEAN`, `CHAIRPERSON`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")` | Institutional Faculty Accounts directory table. |
-| `FacultyProfileController` | `GET` | `/api/v1/faculty/{userId}/profile` | `ADMIN`, `DEAN`, `CHAIRPERSON`, `REGISTRAR` OR Authenticated Faculty Self | `@PreAuthorize("hasAnyRole(...) or @facultySecurity.isFacultySelf(#userId, authentication)")` | Faculty profile overview card, academic rank, tenure status. |
-| `FacultyProfileController` | `PUT` | `/api/v1/faculty/{userId}/profile` | `ADMIN`, `DEAN` | `@PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")` | "Edit Faculty Profile" dialog (Rank, employment status, max units). |
+| `FacultyProfileController` | `POST` | `/api/v1/faculty` | `ADMIN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")` | "Create Faculty Account" modal in Faculty Management (`/dashboard/faculty-accounts`). Provisions `User`, links `FacultyProfile`, and supports College/Program attachment. |
+| `FacultyProfileController` | `GET` | `/api/v1/faculty` | `ADMIN`, `DEAN`, `CHAIRPERSON`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")` | Institutional Faculty Accounts directory table with College/Program columns. |
+| `FacultyProfileController` | `GET` | `/api/v1/faculty/{userId}/profile` | `ADMIN`, `DEAN`, `CHAIRPERSON`, `REGISTRAR` OR Authenticated Faculty Self | `@PreAuthorize("hasAnyRole(...) or @facultySecurity.isFacultySelf(#userId, authentication)")` | Faculty profile overview card, academic rank, tenure status, and College/Program affiliation. |
+| `FacultyProfileController` | `PUT` | `/api/v1/faculty/{userId}/profile` | `ADMIN`, `DEAN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")` | "Edit Faculty Profile" dialog (Rank, employment status, max units, College/Program affiliation). |
 | `FacultyProfileController` | `GET` | `/api/v1/reports/ched-e5` | `ADMIN`, `DEAN`, `REGISTRAR` | `@PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")` | "Export CHED E-5 Teaching Load Report" button & table. |
 
 ---
@@ -439,7 +439,7 @@ export const routes: Routes = [
       },
       {
         path: 'users',
-        canActivate: [roleGuard(['ADMIN'])],
+        canActivate: [roleGuard(['ADMIN', 'REGISTRAR'])],
         loadComponent: () => import('./features/admin/user-management/user-management.component').then(m => m.UserManagementComponent)
       },
       {
@@ -458,8 +458,9 @@ export const routes: Routes = [
 
 #### 1. `ADMIN` (Institutional Administrator)
 - **Scope:** System-wide, unrestricted across all campuses, colleges, departments, and programs.
-- **Intake Module:** **User Accounts** (`/dashboard/users`, `/api/v1/users`).
-  - Full CRUD on application users, role assignments (`ADMIN`, `DEAN`, `CHAIRPERSON`, `REGISTRAR`, `FACULTY`, `STUDENT`, `CASHIER`, `GUIDANCE`), password resets, and activation/deactivation.
+- **Intake Module:** **User Accounts** (`/dashboard/users`, `/api/v1/users`) & **Faculty Accounts** (`/dashboard/faculty-accounts`, `/api/v1/faculty`).
+  - Full CRUD on application users, role assignments (`ADMIN`, `DEAN`, `CHAIRPERSON`, `REGISTRAR`, `FACULTY`, `STUDENT`, `CASHIER`, `GUIDANCE`), College and Program attachment, password resets, and activation/deactivation.
+  - Hard deletion authority on user records (`DELETE /api/v1/users/{id}`).
 - **Allowed Modules:**
   - Overview: Dashboard, Academic Twin.
   - Academics: Institutional Registry, Curriculum Designer, Class Scheduling, Enrollment & Advising, Faculty Gradebook, Courses & Enrolled, Class Schedule, Grades & Progress, Attendance.
@@ -473,20 +474,22 @@ export const routes: Routes = [
 
 #### 2. `REGISTRAR` (University Registrar)
 - **Scope:** Institutional-wide academic and enrollment scope across all programs.
-- **Intake Module:** **Faculty Accounts** (`/dashboard/faculty-accounts`, `POST /api/v1/faculty`).
-  - Provisions new faculty users with default temporary credentials and automatically creates/links their `FacultyProfile` records.
+- **Intake Module:** **Faculty Accounts** (`/dashboard/faculty-accounts`, `POST /api/v1/faculty`) & **User Accounts** (`/dashboard/users`, `/api/v1/users`).
+  - Provisions new faculty users with default temporary credentials and automatically creates/links their `FacultyProfile` records, attaching College and Program.
+  - Provisions and updates application users (`/dashboard/users`), assigning roles and attaching College and Program affiliations. User deletion is reserved strictly for `ADMIN`.
 - **Allowed Modules:**
   - Overview: Dashboard.
   - Academics: Institutional Registry, Class Scheduling, Enrollment & Advising, Faculty Gradebook, ICT Helpdesk.
-  - Administration: Faculty Accounts.
+  - Administration: Faculty Accounts, User Accounts.
 - **Granular Action Permissions:**
   - Master Academic Calendar controls (Years, Terms, Enrollment Windows, Grading Windows, Add/Drop Periods).
   - Student Admissions intake (`POST /api/v1/students`).
   - Transferee crediting (`POST /api/v1/students/{id}/credit-courses`).
   - Student clearance management (`PATCH /api/v1/students/{id}/clearance`).
+  - User account management and College/Program attachment.
   - Enlistment overrides & status lifecycle changes (OFFICIALLY_ENROLLED, DROPPED).
   - Permanent official grade sealing (`POST /api/v1/sections/{id}/grades/seal`).
-  - **Restricted:** Cannot verify grades (academic peer review assigned to Dean/Chairperson); cannot access User Accounts intake (`/dashboard/users`).
+  - **Restricted:** Cannot verify grades (academic peer review assigned to Dean/Chairperson); cannot delete users (strictly `ADMIN`).
 
 #### 3. `DEAN` (College Dean)
 - **Scope:** Scoped strictly to assigned College and all child departments (`departmentRepository.findByParentDepartmentId(...)`).
@@ -596,7 +599,7 @@ export const routes: Routes = [
 ## 6. Implementation Checklist & Verification Status
 
 - [x] **Dynamic Navigation Filtering:** In `dashboard-layout.component.ts`, `filteredNavSections` dynamically filters menu sections against `currentUser().role`.
-- [x] **Route Guard Alignment:** Every route in `app.routes.ts` and feature routes strictly aligns with the institutional RBAC matrix, including `/dashboard/users` (`ADMIN`) and `/dashboard/faculty-accounts` (`ADMIN`, `REGISTRAR`).
+- [x] **Route Guard Alignment:** Every route in `app.routes.ts` and feature routes strictly aligns with the institutional RBAC matrix, including `/dashboard/users` (`ADMIN`, `REGISTRAR`) and `/dashboard/faculty-accounts` (`ADMIN`, `REGISTRAR`).
 - [x] **Action Button Conditional Visibility (`@if`):**
   - "Verify Grades" button -> `@if (canVerifyGrades())` (`ADMIN`, `DEAN`, `CHAIRPERSON`)
   - "Seal Grades" button -> `@if (canSealGrades())` (`ADMIN`, `REGISTRAR`)
@@ -605,7 +608,8 @@ export const routes: Routes = [
   - "Credit Transferee" -> `@if (canCredit())` (`ADMIN`, `DEAN`, `REGISTRAR`)
   - "Recalculate & Sync Grades" -> `@if (isInstructor() || canVerifyGrades())`
 - [x] **HTTP 403 Forbidden Handling:** Global HTTP error interceptor captures `403 Forbidden` errors and redirects to `/forbidden` or shows toast alerts without session termination.
-- [x] **User Accounts Intake Module:** Created full-stack user management feature for `ADMIN` (`/api/v1/users`, `/dashboard/users`).
+- [x] **User Accounts Intake Module:** Created full-stack user management feature for `ADMIN` & `REGISTRAR` (`/api/v1/users`, `/dashboard/users`), allowing deletion solely by `ADMIN`.
 - [x] **Faculty Accounts Intake Module:** Created full-stack faculty management feature for `REGISTRAR` & `ADMIN` (`/api/v1/faculty`, `/dashboard/faculty-accounts`).
+- [x] **Institutional College & Program Attachment:** Both `ADMIN` and `REGISTRAR` can attach and update College (`Department`) and `Program` linkages during User Account and Faculty Account provisioning, with strict cascading selection and role scoping validations (`DEAN` college-only; `CHAIRPERSON` college + program).
 - [x] **Departmental Data Scoping:** Implemented college and program level scoping for `DEAN` and `CHAIRPERSON` across scheduling and student queries.
 - [x] **Clearance & Enlistment Gates:** Enforced `financialClearance` and `departmentalClearance` checks across backend services and frontend UI.

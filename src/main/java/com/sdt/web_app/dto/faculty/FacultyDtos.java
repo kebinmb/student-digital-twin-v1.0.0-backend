@@ -31,8 +31,25 @@ public class FacultyDtos {
             @NotNull(message = "Employment status is required")
             String employmentStatus,
 
-            boolean isTenured
-    ) {}
+            boolean isTenured,
+
+            Long collegeId,
+
+            Long programId
+    ) {
+        public CreateFacultyAccountRequest(
+                String username,
+                String email,
+                String password,
+                String facultyIdNumber,
+                String highestDegree,
+                String academicRank,
+                String prcLicenseNo,
+                String employmentStatus,
+                boolean isTenured) {
+            this(username, email, password, facultyIdNumber, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null);
+        }
+    }
 
     public record FacultyProfileResponse(
             Long id,
@@ -44,8 +61,28 @@ public class FacultyDtos {
             String academicRank,
             String prcLicenseNo,
             String employmentStatus,
-            boolean isTenured
-    ) {}
+            boolean isTenured,
+            Long collegeId,
+            String collegeCode,
+            String collegeName,
+            Long programId,
+            String programCode,
+            String programName
+    ) {
+        public FacultyProfileResponse(
+                Long id,
+                Long userId,
+                String username,
+                String email,
+                String facultyIdNumber,
+                String highestDegree,
+                String academicRank,
+                String prcLicenseNo,
+                String employmentStatus,
+                boolean isTenured) {
+            this(id, userId, username, email, facultyIdNumber, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null, null, null, null, null);
+        }
+    }
 
     public record UpdateFacultyProfileRequest(
             @NotNull(message = "Highest degree is required")
@@ -59,8 +96,21 @@ public class FacultyDtos {
             @NotNull(message = "Employment status is required")
             String employmentStatus,
 
-            boolean isTenured
-    ) {}
+            boolean isTenured,
+
+            Long collegeId,
+
+            Long programId
+    ) {
+        public UpdateFacultyProfileRequest(
+                String highestDegree,
+                String academicRank,
+                String prcLicenseNo,
+                String employmentStatus,
+                boolean isTenured) {
+            this(highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null);
+        }
+    }
 
     public record ChedE5WorkloadSummaryDto(
             Long facultyUserId,
