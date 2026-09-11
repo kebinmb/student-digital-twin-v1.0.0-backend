@@ -605,4 +605,32 @@ class AcademicHierarchyScopingIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].studentIdNumber").value("STUD-CCS-001"));
     }
+
+    @Test
+    @DisplayName("ADMIN: Can update faculty account, syncing college and program without cycle or crash (200 OK)")
+    @WithMockUser(username = "admin_user", roles = {"ADMIN"})
+    void admin_UpdateFacultyUserAccount_SuccessAndSynchronized() throws Exception {
+        User faculty = userRepository.findByUsername("faculty_john").orElseThrow();
+        com.sdt.web_app.dto.authentication.UserDtos.UpdateUserRequest updateReq =
+                new com.sdt.web_app.dto.authentication.UserDtos.UpdateUserRequest(
+                        "faculty.john.updated@test.com",
+                        null,
+                        Set.of("FACULTY"),
+                        true,
+                        collegeA.getId(),
+                        progA1.getId()
+                );
+
+        mockMvc.perform(put("/api/v1/users/" + faculty.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("faculty.john.updated@test.com"))
+                .andExpect(jsonPath("$.collegeId").value(collegeA.getId()))
+                .andExpect(jsonPath("$.programId").value(progA1.getId()));
+
+        FacultyProfile fp = facultyProfileRepository.findByUserId(faculty.getId()).orElseThrow();
+        org.assertj.core.api.Assertions.assertThat(fp.getCollege().getId()).isEqualTo(collegeA.getId());
+        org.assertj.core.api.Assertions.assertThat(fp.getProgram().getId()).isEqualTo(progA1.getId());
+    }
 }

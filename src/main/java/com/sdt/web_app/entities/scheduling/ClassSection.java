@@ -7,6 +7,8 @@ import com.sdt.web_app.entities.institution.Term;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.Objects;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(exclude = {"term", "curriculum", "course", "schedules", "primaryInstructor"})
+@BatchSize(size = 50)
 public class ClassSection {
 
     public enum Status {
@@ -71,6 +74,7 @@ public class ClassSection {
     private User primaryInstructor;
 
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     @Builder.Default
     private List<ClassSchedule> schedules = new ArrayList<>();
 

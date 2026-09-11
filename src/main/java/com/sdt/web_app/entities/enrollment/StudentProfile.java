@@ -1,10 +1,13 @@
 package com.sdt.web_app.entities.enrollment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.institution.Curriculum;
 import com.sdt.web_app.entities.institution.Program;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,7 +19,8 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString(exclude = {"user", "program", "curriculum"})
+@ToString
+@BatchSize(size = 50)
 public class StudentProfile {
 
     public enum EnrollmentStatus {
@@ -37,6 +41,8 @@ public class StudentProfile {
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ToString.Exclude
+    @JsonIgnore
     private User user;
 
     @Column(name = "student_number", nullable = false, unique = true, length = 30)
@@ -44,10 +50,14 @@ public class StudentProfile {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "program_id", nullable = false)
+    @ToString.Exclude
+    @JsonIgnore
     private Program program;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "curriculum_id", nullable = false)
+    @ToString.Exclude
+    @JsonIgnore
     private Curriculum curriculum;
 
     @Column(name = "year_level", nullable = false)
@@ -131,12 +141,13 @@ public class StudentProfile {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof StudentProfile that)) return false;
-        return Objects.equals(id, that.id);
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        StudentProfile that = (StudentProfile) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return getClass().hashCode();
     }
 }

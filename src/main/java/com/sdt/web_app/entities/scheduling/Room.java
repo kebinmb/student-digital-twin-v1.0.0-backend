@@ -4,6 +4,8 @@ import com.sdt.web_app.entities.institution.Campus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.util.Objects;
 
 @Entity
@@ -13,6 +15,7 @@ import java.util.Objects;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(exclude = "campus")
+@BatchSize(size = 50)
 public class Room {
 
     public enum RoomType {

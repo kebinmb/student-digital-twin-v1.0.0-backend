@@ -492,4 +492,79 @@ class SchedulingServiceTest {
         assertThat(response).isNotNull();
         org.mockito.Mockito.verify(workloadRepository, org.mockito.Mockito.never()).save(any());
     }
+
+    @Test
+    @DisplayName("Query: Should get sections by term with batched schedules and zero Cartesian explosion")
+    void shouldGetSectionsByTermWithBatchedSchedules() {
+        ClassSection section1 = ClassSection.builder()
+                .term(term)
+                .curriculum(activeCurriculum)
+                .course(course)
+                .sectionCode("BSIT-1A")
+                .maxCapacity(40)
+                .build();
+        ReflectionTestUtils.setField(section1, "id", 101L);
+
+        ClassSchedule schedule1 = ClassSchedule.builder()
+                .section(section1)
+                .room(room)
+                .instructor(instructor)
+                .dayOfWeek("MONDAY")
+                .startTime(LocalTime.of(8, 0))
+                .endTime(LocalTime.of(10, 0))
+                .scheduleType("LECTURE")
+                .build();
+        ReflectionTestUtils.setField(schedule1, "id", 201L);
+
+        given(sectionRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class)))
+                .willReturn(List.of(section1));
+        given(scheduleRepository.findBySectionIdInWithRoomAndInstructor(List.of(101L)))
+                .willReturn(List.of(schedule1));
+
+        List<SectionDetailResponse> result = schedulingService.getSectionsByTerm(10L);
+
+        assertThat(result).hasSize(1);
+        SectionDetailResponse dto = result.get(0);
+        assertThat(dto.id()).isEqualTo(101L);
+        assertThat(dto.sectionCode()).isEqualTo("BSIT-1A");
+        assertThat(dto.schedules()).hasSize(1);
+        assertThat(dto.schedules().get(0).roomCode()).isEqualTo("LAB-1");
+        assertThat(dto.schedules().get(0).instructorName()).isEqualTo("faculty_alice");
+    }
+
+    @Test
+    @DisplayName("Query: Should get section by ID with eagerly fetched details and schedules")
+    void shouldGetSectionByIdWithDetailsAndSchedules() {
+        ClassSection section1 = ClassSection.builder()
+                .term(term)
+                .curriculum(activeCurriculum)
+                .course(course)
+                .sectionCode("BSIT-1B")
+                .maxCapacity(35)
+                .build();
+        ReflectionTestUtils.setField(section1, "id", 102L);
+
+        ClassSchedule schedule1 = ClassSchedule.builder()
+                .section(section1)
+                .room(room)
+                .instructor(instructor)
+                .dayOfWeek("TUESDAY")
+                .startTime(LocalTime.of(13, 0))
+                .endTime(LocalTime.of(16, 0))
+                .scheduleType("LABORATORY")
+                .build();
+        ReflectionTestUtils.setField(schedule1, "id", 202L);
+
+        given(sectionRepository.findByIdWithDetails(102L)).willReturn(Optional.of(section1));
+        given(scheduleRepository.findBySectionIdInWithRoomAndInstructor(List.of(102L)))
+                .willReturn(List.of(schedule1));
+
+        SectionDetailResponse dto = schedulingService.getSectionById(102L);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.id()).isEqualTo(102L);
+        assertThat(dto.sectionCode()).isEqualTo("BSIT-1B");
+        assertThat(dto.schedules()).hasSize(1);
+        assertThat(dto.schedules().get(0).scheduleType()).isEqualTo("LABORATORY");
+    }
 }

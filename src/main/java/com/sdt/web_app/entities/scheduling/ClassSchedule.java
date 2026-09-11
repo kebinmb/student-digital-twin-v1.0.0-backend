@@ -4,6 +4,8 @@ import com.sdt.web_app.entities.authentication.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.time.LocalTime;
 import java.util.Objects;
 
@@ -14,6 +16,7 @@ import java.util.Objects;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(exclude = {"section", "room", "instructor"})
+@BatchSize(size = 50)
 public class ClassSchedule {
 
     public enum DayOfWeek {

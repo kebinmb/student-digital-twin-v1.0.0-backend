@@ -155,6 +155,7 @@ public class FacultyProfileService {
                 .isTenured(request.isTenured())
                 .build();
 
+        savedUser.assignFacultyProfile(profile);
         FacultyProfile savedProfile = profileRepository.save(profile);
         log.info("Provisioned new faculty account: {} ({}) for user ID {}",
                 savedProfile.getFacultyIdNumber(), savedUser.getUsername(), savedUser.getId());

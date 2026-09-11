@@ -223,4 +223,63 @@ class UserServiceTest {
 
         verify(userRepository).delete(sampleUser);
     }
+
+    @Test
+    @DisplayName("Admin: Should update faculty user and synchronize faculty profile without circular recursion")
+    void updateUser_FacultyWithProfile_SynchronizesWithoutRecursion() {
+        User facultyUser = User.builder()
+                .username("faculty_alice")
+                .email("alice@test.com")
+                .password("hash")
+                .enabled(true)
+                .build();
+        facultyUser.addRole(Roles.FACULTY);
+        ReflectionTestUtils.setField(facultyUser, "id", 4L);
+
+        com.sdt.web_app.entities.faculty.FacultyProfile profile = com.sdt.web_app.entities.faculty.FacultyProfile.builder()
+                .user(facultyUser)
+                .facultyIdNumber("FAC-0004")
+                .highestDegree(com.sdt.web_app.entities.faculty.FacultyProfile.HighestDegree.MASTERS)
+                .academicRank(com.sdt.web_app.entities.faculty.FacultyProfile.AcademicRank.INSTRUCTOR_I)
+                .build();
+        ReflectionTestUtils.setField(profile, "id", 14L);
+        facultyUser.assignFacultyProfile(profile);
+
+        UpdateUserRequest request = new UpdateUserRequest(
+                "alice.updated@test.com",
+                null,
+                Set.of("FACULTY"),
+                true,
+                100L,
+                200L,
+                false,
+                false
+        );
+
+        given(userRepository.findById(4L)).willReturn(Optional.of(facultyUser));
+        given(userRepository.existsByEmail("alice.updated@test.com")).willReturn(false);
+        given(departmentRepository.findById(100L)).willReturn(Optional.of(college));
+        given(programRepository.findById(200L)).willReturn(Optional.of(program));
+        given(academicScopeAssertionService.resolveProgramCollegeId(program)).willReturn(100L);
+        given(userRepository.save(any(User.class))).willAnswer(inv -> inv.getArgument(0));
+
+        UserDetailResponse response = userService.updateUser(4L, request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.email()).isEqualTo("alice.updated@test.com");
+        assertThat(response.collegeId()).isEqualTo(100L);
+        assertThat(response.programId()).isEqualTo(200L);
+
+        // Verify profile college/program synchronized
+        assertThat(profile.getCollege()).isEqualTo(college);
+        assertThat(profile.getProgram()).isEqualTo(program);
+
+        // Verify toString, hashCode, and equals on bidirectional User <-> FacultyProfile do NOT overflow stack
+        assertThat(facultyUser.toString()).isNotEmpty().doesNotContain("password");
+        assertThat(profile.toString()).isNotEmpty();
+        assertThat(facultyUser.hashCode()).isNotZero();
+        assertThat(profile.hashCode()).isNotZero();
+        assertThat(facultyUser.equals(facultyUser)).isTrue();
+        assertThat(profile.equals(profile)).isTrue();
+    }
 }

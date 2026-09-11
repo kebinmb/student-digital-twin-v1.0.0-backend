@@ -173,11 +173,14 @@ public class UserService {
 
         validateRoleScoping(user.getRoles(), user.getCollege(), user.getProgram());
 
-        if (facultyProfileRepository != null) {
+        if (user.getFacultyProfile() != null) {
+            user.getFacultyProfile().assignCollege(user.getCollege());
+            user.getFacultyProfile().assignProgram(user.getProgram());
+        } else if (facultyProfileRepository != null) {
             facultyProfileRepository.findByUserId(user.getId()).ifPresent(fp -> {
                 fp.assignCollege(user.getCollege());
                 fp.assignProgram(user.getProgram());
-                facultyProfileRepository.save(fp);
+                user.setFacultyProfile(fp);
             });
         }
 

@@ -1,9 +1,13 @@
 package com.sdt.web_app.entities.authentication;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sdt.web_app.entities.faculty.FacultyProfile;
 import com.sdt.web_app.entities.institution.Department;
 import com.sdt.web_app.entities.institution.Program;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -16,7 +20,8 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString(exclude = {"password", "college", "program"})
+@ToString
+@BatchSize(size = 50)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,27 +32,39 @@ public class User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "college_id")
+    @ToString.Exclude
+    @JsonIgnore
     private Department college;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id")
+    @ToString.Exclude
+    @JsonIgnore
     private Program program;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @JsonIgnore
+    private FacultyProfile facultyProfile;
 
     @Column(unique = true, nullable = false, length = 100)
     private String email;
 
     @Column(nullable = false, length = 255)
     @Getter(AccessLevel.NONE)
+    @ToString.Exclude
+    @JsonIgnore
     private String password;
 
     @Column(nullable = false)
     @Builder.Default
     private boolean enabled = true;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING) // Maps enum values by name (e.g., "ADMIN") instead of ordinal
     @Column(name = "role", nullable = false, length = 30)
+    @BatchSize(size = 50)
     @Builder.Default
     @Getter(AccessLevel.NONE)
     private Set<Roles> roles = new HashSet<>();
@@ -91,18 +108,40 @@ public class User {
     // Strongly-typed helper methods
     public void addRole(Roles role) {
         if (role != null) {
-            this.roles.add(role);
+            if (this.roles == null) {
+                this.roles = new HashSet<>();
+            }
+            try {
+                this.roles.add(role);
+            } catch (UnsupportedOperationException e) {
+                this.roles = new HashSet<>(this.roles);
+                this.roles.add(role);
+            }
         }
     }
 
     public void removeRole(Roles role) {
-        this.roles.remove(role);
+        if (this.roles != null) {
+            try {
+                this.roles.remove(role);
+            } catch (UnsupportedOperationException e) {
+                this.roles = new HashSet<>(this.roles);
+                this.roles.remove(role);
+            }
+        }
     }
 
     public void setRoles(Set<Roles> newRoles) {
-        this.roles.clear();
-        if (newRoles != null) {
-            this.roles.addAll(newRoles);
+        if (this.roles == null) {
+            this.roles = new HashSet<>();
+        }
+        try {
+            this.roles.clear();
+            if (newRoles != null) {
+                this.roles.addAll(newRoles);
+            }
+        } catch (UnsupportedOperationException e) {
+            this.roles = new HashSet<>(newRoles != null ? newRoles : Collections.emptySet());
         }
     }
 
@@ -122,11 +161,27 @@ public class User {
         this.program = program;
     }
 
+    public FacultyProfile getFacultyProfile() {
+        return this.facultyProfile;
+    }
+
+    public void setFacultyProfile(FacultyProfile facultyProfile) {
+        this.facultyProfile = facultyProfile;
+    }
+
+    public void assignFacultyProfile(FacultyProfile facultyProfile) {
+        this.facultyProfile = facultyProfile;
+        if (facultyProfile != null && facultyProfile.getUser() != this) {
+            facultyProfile.assignUser(this);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof User user)) return false;
-        return username != null && username.equals(user.username);
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        User user = (User) o;
+        return getUsername() != null && getUsername().equals(user.getUsername());
     }
 
     @Override

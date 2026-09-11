@@ -3,6 +3,8 @@ package com.sdt.web_app.entities.institution;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -14,6 +16,7 @@ import java.util.Set;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(exclude = "program")
+@BatchSize(size = 50)
 public class Curriculum {
 
     public enum Status {DRAFT, UNDER_REVIEW, APPROVED, ACTIVE, ARCHIVED}

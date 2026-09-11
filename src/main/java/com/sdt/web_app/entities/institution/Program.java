@@ -4,6 +4,8 @@ package com.sdt.web_app.entities.institution;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.util.Objects;
 
 @Entity
@@ -13,6 +15,7 @@ import java.util.Objects;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(exclude = {"department", "college"})
+@BatchSize(size = 50)
 public class Program {
 
     @Id
@@ -79,7 +82,7 @@ public class Program {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Program program)) return false;
-        return code != null && Objects.equals(code, program.code);
+        return id != null && Objects.equals(id, program.id);
     }
 
     @Override

@@ -137,7 +137,9 @@ public class AcademicScopeAssertionService {
 
         // 4. FACULTY: Scoped to assigned load & sections
         if (authorities.contains("ROLE_FACULTY")) {
-            FacultyProfile fp = facultyProfileRepository.findByUserId(userId).orElse(null);
+            FacultyProfile fp = user.getFacultyProfile() != null
+                    ? user.getFacultyProfile()
+                    : (facultyProfileRepository != null ? facultyProfileRepository.findByUserId(userId).orElse(null) : null);
             Long collegeId = user.getCollege() != null ? user.getCollege().getId() : (fp != null && fp.getCollege() != null ? fp.getCollege().getId() : null);
             Long programId = user.getProgram() != null ? user.getProgram().getId() : (fp != null && fp.getProgram() != null ? fp.getProgram().getId() : null);
 

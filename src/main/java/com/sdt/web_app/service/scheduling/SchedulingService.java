@@ -39,8 +39,10 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -341,15 +343,24 @@ public class SchedulingService {
         }
 
         List<ClassSection> sections = sectionRepository.findAll(spec);
+        if (sections.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> sectionIds = sections.stream().map(ClassSection::getId).toList();
+        List<ClassSchedule> allSchedules = scheduleRepository.findBySectionIdInWithRoomAndInstructor(sectionIds);
+        Map<Long, List<ClassSchedule>> schedulesBySection = allSchedules.stream()
+                .collect(Collectors.groupingBy(s -> s.getSection().getId()));
 
         return sections.stream()
-                .map(this::mapToSectionDetail)
+                .map(sec -> mapToSectionDetail(sec, schedulesBySection.getOrDefault(sec.getId(), List.of())))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public SectionDetailResponse getSectionById(Long id) {
-        ClassSection section = sectionRepository.findByIdWithSchedules(id)
+        ClassSection section = sectionRepository.findByIdWithDetails(id)
+                .or(() -> sectionRepository.findByIdWithSchedules(id))
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + id));
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -358,7 +369,11 @@ public class SchedulingService {
             academicScopeAssertionService.validateSectionAccess(scope, section);
         }
 
-        return mapToSectionDetail(section);
+        List<ClassSchedule> schedules = scheduleRepository.findBySectionIdInWithRoomAndInstructor(List.of(id));
+        if (schedules.isEmpty() && section.getSchedules() != null && !section.getSchedules().isEmpty()) {
+            schedules = section.getSchedules();
+        }
+        return mapToSectionDetail(section, schedules);
     }
 
     @Transactional(readOnly = true)
@@ -577,11 +592,11 @@ public class SchedulingService {
 
     @Transactional(readOnly = true)
     public List<InstructorOptionDto> getAvailableInstructors() {
-        return userRepository.findAll().stream()
-                .filter(u -> u.isEnabled() && u.getRoles().stream()
-                        .anyMatch(r -> r == Roles.FACULTY || r == Roles.CHAIRPERSON || r == Roles.DEAN || r == Roles.ADMIN))
-                .map(u -> new InstructorOptionDto(u.getId(), u.getUsername(), u.getEmail()))
-                .toList();
+        return userRepository.findByEnabledTrueAndRolesIn(
+                List.of(Roles.FACULTY, Roles.CHAIRPERSON, Roles.DEAN, Roles.ADMIN)
+        ).stream()
+        .map(u -> new InstructorOptionDto(u.getId(), u.getUsername(), u.getEmail()))
+        .toList();
     }
 
     private String formatTermType(String termType) {
@@ -616,7 +631,11 @@ public class SchedulingService {
     }
 
     private SectionDetailResponse mapToSectionDetail(ClassSection sec) {
-        List<ScheduleSlotResponse> slotResponses = sec.getSchedules().stream()
+        return mapToSectionDetail(sec, sec.getSchedules() != null ? sec.getSchedules() : List.of());
+    }
+
+    private SectionDetailResponse mapToSectionDetail(ClassSection sec, List<ClassSchedule> schedules) {
+        List<ScheduleSlotResponse> slotResponses = schedules.stream()
                 .map(s -> new ScheduleSlotResponse(
                         s.getId(),
                         s.getRoom().getId(),

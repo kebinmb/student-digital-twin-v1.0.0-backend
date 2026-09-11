@@ -1,10 +1,13 @@
 package com.sdt.web_app.entities.faculty;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.institution.Department;
 import com.sdt.web_app.entities.institution.Program;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -15,7 +18,8 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString(exclude = {"user", "college", "program"})
+@ToString
+@BatchSize(size = 50)
 public class FacultyProfile {
 
     public enum HighestDegree {
@@ -40,14 +44,20 @@ public class FacultyProfile {
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ToString.Exclude
+    @JsonIgnore
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "college_id")
+    @ToString.Exclude
+    @JsonIgnore
     private Department college;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id")
+    @ToString.Exclude
+    @JsonIgnore
     private Program program;
 
     @Column(name = "faculty_id_number", nullable = false, unique = true, length = 30)
@@ -108,15 +118,20 @@ public class FacultyProfile {
         this.program = program;
     }
 
+    public void assignUser(User user) {
+        this.user = user;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FacultyProfile that)) return false;
-        return Objects.equals(id, that.id);
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        FacultyProfile that = (FacultyProfile) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return getClass().hashCode();
     }
 }

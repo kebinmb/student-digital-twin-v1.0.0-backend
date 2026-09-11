@@ -3,6 +3,8 @@ package com.sdt.web_app.entities.institution;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.util.Objects;
 
 @Entity
@@ -17,6 +19,7 @@ import java.util.Objects;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(exclude = {"parentDepartment", "campus"})
+@BatchSize(size = 50)
 public class Department {
 
     @Id
@@ -85,13 +88,7 @@ public class Department {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Department that)) return false;
-
-        String thisCampusCode = getCampus() != null ? getCampus().getCode() : null;
-        String thatCampusCode = that.getCampus() != null ? that.getCampus().getCode() : null;
-
-        return code != null
-                && Objects.equals(code, that.getCode())
-                && Objects.equals(thisCampusCode, thatCampusCode);
+        return id != null && Objects.equals(id, that.id);
     }
 
     @Override

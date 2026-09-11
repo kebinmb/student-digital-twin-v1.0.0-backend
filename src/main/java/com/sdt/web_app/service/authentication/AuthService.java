@@ -117,6 +117,7 @@ public class AuthService {
      * Rotate Refresh Token: Uses ReentrantLock to serialize concurrent requests on the same incoming token,
      * ensuring zero carrier-thread pinning under Java 21 Loom virtual threads.
      */
+    @Transactional(noRollbackFor = InvalidTokenException.class)
     public AuthDtos.AuthResult rotateRefreshToken(String incomingToken) {
         if (incomingToken == null || incomingToken.isBlank()) {
             throw new InvalidTokenException("Refresh token is required");

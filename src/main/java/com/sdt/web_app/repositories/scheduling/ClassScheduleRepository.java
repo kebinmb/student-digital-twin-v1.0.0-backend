@@ -21,6 +21,15 @@ public interface ClassScheduleRepository extends JpaRepository<ClassSchedule, Lo
     List<ClassSchedule> findByInstructorIdAndSectionTermId(Long instructorId, Long termId);
 
     @Query("""
+        SELECT s FROM ClassSchedule s
+        JOIN FETCH s.room
+        LEFT JOIN FETCH s.instructor
+        WHERE s.section.id IN :sectionIds
+        ORDER BY s.dayOfWeek ASC, s.startTime ASC
+    """)
+    List<ClassSchedule> findBySectionIdInWithRoomAndInstructor(@Param("sectionIds") java.util.Collection<Long> sectionIds);
+
+    @Query("""
         SELECT COUNT(s) > 0 FROM ClassSchedule s
         WHERE s.section.term.id = :termId
           AND :roomId IS NOT NULL
