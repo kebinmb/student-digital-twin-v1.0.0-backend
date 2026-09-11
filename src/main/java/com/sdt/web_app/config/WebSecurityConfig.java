@@ -27,6 +27,7 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class WebSecurityConfig {
+
     @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://sdt-webapp}")
     private List<String> expectedAudiences;
 
@@ -71,12 +72,10 @@ public class WebSecurityConfig {
                                 .policy("camera=(), microphone=(), geolocation=(), payment=()")
                         )
                 )
-                .authorizeHttpRequests(
-                        auth -> auth
-                                .requestMatchers("/api/public/**").permitAll()
-                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/orders/**").hasAnyRole("STUDENT", "ADMIN","FACULTY")
-                                .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt

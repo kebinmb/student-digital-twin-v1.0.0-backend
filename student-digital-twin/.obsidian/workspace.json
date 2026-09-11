@@ -4,21 +4,55 @@
     "type": "split",
     "children": [
       {
-        "id": "0e7efc579ce144e3",
+        "id": "ee5e94477c1fd310",
         "type": "tabs",
         "children": [
           {
-            "id": "445cf9d7661b60cb",
+            "id": "364e7b82cf3012b1",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 Projects/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
+                "file": "07 Prompt Guides/Type Backend Prompt Here.md",
+                "mode": "source",
+                "source": true
+              },
+              "icon": "lucide-file",
+              "title": "Type Backend Prompt Here"
+            }
+          }
+        ]
+      },
+      {
+        "id": "9b197e38c1e2dc80",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7a7fd5a1b8ddcade",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "07 Prompt Guides/Type Frontend Prompt Here.md",
+                "mode": "source",
+                "source": true
+              },
+              "icon": "lucide-file",
+              "title": "Type Frontend Prompt Here"
+            }
+          },
+          {
+            "id": "55f9f3948f15d6b5",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "07 Prompt Guides/00 Prompt Guide.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "02 Layer 2 Curriculum & Outcome-Based Education (OBE)"
+              "title": "00 Prompt Guide"
             }
           }
         ]
@@ -83,8 +117,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 499.5,
-    "collapsed": true
+    "width": 499.5
   },
   "right": {
     "id": "cd5569e06477ea45",
@@ -190,13 +223,20 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "445cf9d7661b60cb",
+  "active": "7a7fd5a1b8ddcade",
   "lastOpenFiles": [
+    "07 Prompt Guides/Type Backend Prompt Here.md",
+    "07 Prompt Guides/Type Frontend Prompt Here.md",
+    "07 Prompt Guides/Prompt Template.md",
+    "07 Prompt Guides/00 Prompt Guide.md",
+    "07 Prompt Guides",
+    "00 AI Index.md",
+    "06 Summary/00 Role Base Access.md",
+    "01 Projects/CLASS_RECORD_SPEC.md",
+    "01 Projects/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
     "06 Summary/01 Frontend RBAC Verification and Roadmap.md",
     "06 Summary/02 Entity-Database Alignment Summary.md",
     "06 Summary/AUDIT_AND_REFACTOR_SUMMARY.md",
-    "06 Summary/00 Role Base Access.md",
-    "00 AI Index.md",
     "04 Archives/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",
     "04 Archives/01 Login and Authentication Backend and Frontend Implementation.md",
     "01 Projects/01 Layer 1 System Master Data & RBAC.md",
@@ -213,12 +253,6 @@
     "03 Resources/05 Regulatory Compliance & CHED Reporting/01 Interoperability.md",
     "03 Resources/05 Regulatory Compliance & CHED Reporting/00 Statistical Data Generation.md",
     "03 Resources/04 Financial & Fee Management/02 Scholarship & UniFAST Billing.md",
-    "03 Resources/04 Financial & Fee Management/01 Billing, Cashiering & Ledgering.md",
-    "03 Resources/04 Financial & Fee Management/00 Tuition & Miscellaneous Assessment.md",
-    "03 Resources/03 Faculty & Grade Management/02 Grade Encoding & Verification.md",
-    "03 Resources/03 Faculty & Grade Management/01 Teaching Workload.md",
-    "03 Resources/03 Faculty & Grade Management/00 Faculty Profiling.md",
-    "03 Resources/02 Curriculum & Enrollment Management/02 Enrollment & Registration.md",
     "03 Resources/07 Student Digital Twin",
     "03 Resources/06 Stakeholder Portals & LMS Integration",
     "03 Resources/05 Regulatory Compliance & CHED Reporting",
@@ -227,7 +261,6 @@
     "03 Resources/02 Curriculum & Enrollment Management",
     "03 Resources/01 Student Information & Registrar Management",
     "03 Resources/00 Login and Authentication Springboot 4.1.0",
-    "03 Resources",
     "Pasted image 20260901220019.png",
     "Untitled.canvas"
   ]

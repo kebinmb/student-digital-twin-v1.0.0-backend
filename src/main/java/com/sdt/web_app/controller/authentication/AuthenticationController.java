@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/public/auth")
 public class AuthenticationController {
+
+    private static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 7L * 24L * 3600L;
     private final AuthService authService;
 
     public AuthenticationController(AuthService authService) {
@@ -21,7 +23,7 @@ public class AuthenticationController {
     }
 
     @Auditable(action = "REGISTER", entityName = "User")
-    @PostMapping("register")
+    @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody AuthDtos.RegisterRequest request) {
         authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -34,7 +36,7 @@ public class AuthenticationController {
             HttpServletResponse response) {
 
         AuthDtos.AuthResult result = authService.authenticate(request);
-        setRefreshTokenCookie(response, result.refreshToken(), 7 * 24 * 3600);
+        setRefreshTokenCookie(response, result.refreshToken(), REFRESH_TOKEN_COOKIE_MAX_AGE);
 
         return ResponseEntity.ok(new AuthDtos.AuthResponse(result.accessToken(), "Bearer", result.expiresInSeconds()));
     }
@@ -45,7 +47,7 @@ public class AuthenticationController {
             HttpServletResponse response) {
 
         AuthDtos.AuthResult result = authService.rotateRefreshToken(refreshToken);
-        setRefreshTokenCookie(response, result.refreshToken(), 7 * 24 * 3600);
+        setRefreshTokenCookie(response, result.refreshToken(), REFRESH_TOKEN_COOKIE_MAX_AGE);
 
         return ResponseEntity.ok(new AuthDtos.AuthResponse(result.accessToken(), "Bearer", result.expiresInSeconds()));
     }
@@ -57,7 +59,7 @@ public class AuthenticationController {
             HttpServletResponse response) {
 
         authService.logout(refreshToken);
-        setRefreshTokenCookie(response, "", 0);
+        setRefreshTokenCookie(response, "", 0L);
 
         return ResponseEntity.noContent().build();
     }

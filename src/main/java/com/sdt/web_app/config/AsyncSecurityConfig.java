@@ -15,6 +15,7 @@ import java.util.concurrent.Executor;
 @Configuration
 @EnableAsync
 public class AsyncSecurityConfig {
+
     @PostConstruct
     public void initContextRegistry() {
         ContextRegistry.getInstance().registerThreadLocalAccessor(
