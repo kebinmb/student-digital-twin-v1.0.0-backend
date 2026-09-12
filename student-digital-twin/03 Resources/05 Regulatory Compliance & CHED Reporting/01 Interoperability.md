@@ -1,1 +1,0 @@
-Enables data export aligned with the requirements of CHED’s electronic collection tools (HEIDA / CHECKS / DataViz).

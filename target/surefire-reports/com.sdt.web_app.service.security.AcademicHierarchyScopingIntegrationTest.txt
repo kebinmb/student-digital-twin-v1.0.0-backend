@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.security.AcademicHierarchyScopingIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.554 s -- in com.sdt.web_app.service.security.AcademicHierarchyScopingIntegrationTest
+Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.639 s -- in com.sdt.web_app.service.security.AcademicHierarchyScopingIntegrationTest

@@ -1,1 +1,0 @@
-Captures complete student biographical, demographic, and historical records (e.g., Form 137/138, previous school records).

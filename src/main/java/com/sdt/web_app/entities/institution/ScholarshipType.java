@@ -6,5 +6,7 @@ public enum ScholarshipType {
     CHED_TDP,
     ACADEMIC_FULL,
     DISCOUNT_FIXED,
-    LGU_GRANT
+    LGU_GRANT,
+    PERCENTAGE,
+    FIXED_AMOUNT
 }

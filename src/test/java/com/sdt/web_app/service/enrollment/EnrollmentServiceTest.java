@@ -28,6 +28,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -332,7 +334,7 @@ class EnrollmentServiceTest {
                 .status(StudentEnrollment.Status.ENLISTED)
                 .totalCreditUnits(new BigDecimal("22.00"))
                 .isOverloadApproved(false)
-                .items(new ArrayList<>())
+                .items(new LinkedHashSet<>())
                 .build();
         given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L))
                 .willReturn(Optional.of(existingEnrollment));
@@ -358,7 +360,7 @@ class EnrollmentServiceTest {
                 .status(StudentEnrollment.Status.DRAFT)
                 .totalCreditUnits(BigDecimal.ZERO)
                 .isOverloadApproved(false)
-                .items(new ArrayList<>())
+                .items(new LinkedHashSet<>())
                 .build();
         given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L))
                 .willReturn(Optional.of(existingEnrollment));
@@ -387,7 +389,7 @@ class EnrollmentServiceTest {
                 .status(StudentEnrollment.Status.DRAFT)
                 .totalCreditUnits(BigDecimal.ZERO)
                 .isOverloadApproved(false)
-                .items(new ArrayList<>())
+                .items(new LinkedHashSet<>())
                 .build();
         given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L))
                 .willReturn(Optional.of(existingEnrollment));
@@ -414,7 +416,7 @@ class EnrollmentServiceTest {
                 .term(term)
                 .status(StudentEnrollment.Status.ENLISTED)
                 .totalCreditUnits(new BigDecimal("18.00"))
-                .items(new ArrayList<>())
+                .items(new LinkedHashSet<>())
                 .build();
         ReflectionTestUtils.setField(enrollment, "id", 800L);
 

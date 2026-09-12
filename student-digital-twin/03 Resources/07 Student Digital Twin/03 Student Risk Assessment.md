@@ -1,3 +1,0 @@
-A **Student Risk Assessment & Early Warning Module** is a predictive analytics and diagnostic decision-support system designed to identify students at risk of course failure, academic probation, or dropout.
-
-By combining real-time behavioral and performance data (grades, attendance anomalies, historical academic track records) with contextual socioeconomic vulnerability indicators from the **Equity Target Profiling Module**, the system provides a holistic, multidimensional risk index for early, personalized intervention.

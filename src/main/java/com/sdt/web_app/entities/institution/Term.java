@@ -34,7 +34,7 @@ public class Term {
     @JoinColumn(name = "academic_year_id", nullable = false, updatable = false)
     private AcademicYear academicYear;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = TermTypeConverter.class)
     @Column(name = "term_type", nullable = false, length = 20, updatable = false)
     private TermType termType;
 

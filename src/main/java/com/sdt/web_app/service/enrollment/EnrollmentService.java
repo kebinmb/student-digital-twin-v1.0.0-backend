@@ -503,9 +503,9 @@ public class EnrollmentService {
         String sem = "1ST_SEM";
         if (term != null && term.getTermType() != null) {
             sem = switch (term.getTermType()) {
-                case SECOND_SEM -> "2ND_SEM";
+                case SECOND_SEM, SECOND_SEMESTER -> "2ND_SEM";
                 case SUMMER -> "SUMMER";
-                case FIRST_SEM -> "1ST_SEM";
+                default -> "1ST_SEM";
             };
         }
 

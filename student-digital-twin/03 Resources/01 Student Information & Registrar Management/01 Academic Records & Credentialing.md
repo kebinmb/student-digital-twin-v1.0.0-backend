@@ -1,1 +1,0 @@
-Tracks academic progress, prerequisite compliance, grade histories, and generates official documents such as the Transcript of Records (TOR), Certificate of Registration (COR), and Honorable Dismissals.

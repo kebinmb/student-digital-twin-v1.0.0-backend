@@ -61,11 +61,21 @@ public class ClassSchedule {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ClassSchedule that)) return false;
-        return Objects.equals(id, that.id);
+        if (id != null && that.id != null) {
+            return Objects.equals(id, that.id);
+        }
+        return Objects.equals(dayOfWeek, that.dayOfWeek) &&
+               Objects.equals(startTime, that.startTime) &&
+               Objects.equals(endTime, that.endTime) &&
+               Objects.equals(scheduleType, that.scheduleType) &&
+               Objects.equals(room, that.room);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        if (id != null) {
+            return Objects.hash(id);
+        }
+        return Objects.hash(dayOfWeek, startTime, endTime, scheduleType, room);
     }
 }

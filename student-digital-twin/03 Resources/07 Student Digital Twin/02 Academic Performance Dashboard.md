@@ -1,3 +1,0 @@
-An **Academic Performance Dashboard Module** is an automated analytical and monitoring tool that aggregates multi-source learning metrics in real time. It continuously computes weighted academic standings using live inputs—attendance records, seatworks, quizzes, major examinations, and project milestones—to provide actionable insights for students, faculty, academic advisors, and institutional administrators.
-
-In alignment with **CHED** outcome-based education (OBE) frameworks and standard grading systems, the module converts raw continuous assessments into diagnostic visualizations, predictive risk indicators, and final transmutation estimates.

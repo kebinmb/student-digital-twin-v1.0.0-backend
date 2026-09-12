@@ -371,7 +371,7 @@ public class SchedulingService {
 
         List<ClassSchedule> schedules = scheduleRepository.findBySectionIdInWithRoomAndInstructor(List.of(id));
         if (schedules.isEmpty() && section.getSchedules() != null && !section.getSchedules().isEmpty()) {
-            schedules = section.getSchedules();
+            schedules = new ArrayList<>(section.getSchedules());
         }
         return mapToSectionDetail(section, schedules);
     }
@@ -631,10 +631,10 @@ public class SchedulingService {
     }
 
     private SectionDetailResponse mapToSectionDetail(ClassSection sec) {
-        return mapToSectionDetail(sec, sec.getSchedules() != null ? sec.getSchedules() : List.of());
+        return mapToSectionDetail(sec, sec.getSchedules() != null ? sec.getSchedules() : java.util.Collections.emptySet());
     }
 
-    private SectionDetailResponse mapToSectionDetail(ClassSection sec, List<ClassSchedule> schedules) {
+    private SectionDetailResponse mapToSectionDetail(ClassSection sec, java.util.Collection<ClassSchedule> schedules) {
         List<ScheduleSlotResponse> slotResponses = schedules.stream()
                 .map(s -> new ScheduleSlotResponse(
                         s.getId(),

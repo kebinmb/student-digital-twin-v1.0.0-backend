@@ -32,7 +32,7 @@ public class StudentProfile {
     }
 
     public enum ClearanceStatus {
-        CLEARED, PENDING, BLOCKED
+        CLEARED, PENDING, BLOCKED, HOLD
     }
 
     @Id

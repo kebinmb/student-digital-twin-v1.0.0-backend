@@ -50,11 +50,17 @@ public class EnrollmentCourseItem {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof EnrollmentCourseItem that)) return false;
-        return Objects.equals(id, that.id);
+        if (id != null && that.id != null) {
+            return Objects.equals(id, that.id);
+        }
+        return Objects.equals(section, that.section);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        if (id != null) {
+            return Objects.hash(id);
+        }
+        return Objects.hash(section);
     }
 }

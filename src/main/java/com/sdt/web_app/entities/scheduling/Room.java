@@ -19,7 +19,7 @@ import java.util.Objects;
 public class Room {
 
     public enum RoomType {
-        LECTURE, LABORATORY, SPEECH_LAB, GYMNASIUM
+        LECTURE, LABORATORY, COMPUTER_LAB, SPEECH_LAB, GYMNASIUM, MULTIMEDIA, AUDITORIUM
     }
 
     @Id

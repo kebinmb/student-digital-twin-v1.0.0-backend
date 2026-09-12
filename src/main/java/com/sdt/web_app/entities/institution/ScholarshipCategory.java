@@ -4,5 +4,6 @@ public enum ScholarshipCategory {
     CHED_UNIFAST,
     GOVERNMENT_MANDATED,
     INSTITUTIONAL,
-    PRIVATE
+    PRIVATE,
+    NATIONAL_GOVT
 }

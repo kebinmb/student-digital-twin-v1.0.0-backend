@@ -48,10 +48,11 @@ public class AcademicYearService {
         return mapToResponse(academicYear);
     }
 
+    @Transactional
     public AcademicYearResponse setCurrentAcademicYear(Long id) {
         AcademicYear targetYear = findEntityById(id);
         if (!targetYear.isCurrent()) {
-            academicYearRepository.findByIsCurrentTrue().ifPresent(AcademicYear::unmarkAsCurrent);
+            academicYearRepository.findAllByIsCurrentTrue().forEach(AcademicYear::unmarkAsCurrent);
             targetYear.markAsCurrent();
         }
         return mapToResponse(targetYear);
@@ -72,7 +73,7 @@ public class AcademicYearService {
 
     @Transactional(readOnly = true)
     public AcademicYearResponse getCurrentAcademicYear() {
-        return academicYearRepository.findByIsCurrentTrue()
+        return academicYearRepository.findFirstByIsCurrentTrueOrderByIdDesc()
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new EntityNotFoundException("No active current academic year designated"));
     }

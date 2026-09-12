@@ -1,1 +1,0 @@
-Tracks faculty unit loads, course assignments, and class rosters according to CHED workload limit guidelines.

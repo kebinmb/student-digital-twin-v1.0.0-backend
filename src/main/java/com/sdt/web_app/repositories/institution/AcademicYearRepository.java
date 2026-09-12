@@ -16,5 +16,9 @@ public interface AcademicYearRepository extends JpaRepository<AcademicYear, Long
 
     Optional<AcademicYear> findByIsCurrentTrue();
 
+    Optional<AcademicYear> findFirstByIsCurrentTrueOrderByIdDesc();
+
+    List<AcademicYear> findAllByIsCurrentTrue();
+
     List<AcademicYear> findAllByOrderByStartDateDesc();
 }

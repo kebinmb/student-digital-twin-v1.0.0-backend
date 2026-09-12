@@ -43,5 +43,18 @@ public interface StudentEnrollmentRepository extends JpaRepository<StudentEnroll
         ORDER BY se.id DESC
     """)
     List<StudentEnrollment> findByTermIdWithDetails(@Param("termId") Long termId);
+
+    @Query("""
+        SELECT DISTINCT se FROM StudentEnrollment se
+        LEFT JOIN FETCH se.items item
+        LEFT JOIN FETCH item.section sec
+        LEFT JOIN FETCH sec.course
+        LEFT JOIN FETCH sec.schedules
+        WHERE se.student.id = :studentId
+        ORDER BY se.id DESC
+    """)
+    List<StudentEnrollment> findByStudentIdWithDetails(@Param("studentId") Long studentId);
 }
+
+
 

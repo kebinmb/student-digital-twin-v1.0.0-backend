@@ -11,8 +11,10 @@ import org.hibernate.annotations.BatchSize;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "class_sections")
@@ -76,7 +78,7 @@ public class ClassSection {
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 50)
     @Builder.Default
-    private List<ClassSchedule> schedules = new ArrayList<>();
+    private Set<ClassSchedule> schedules = new LinkedHashSet<>();
 
     @Column(name = "created_at", updatable = false)
     @Builder.Default

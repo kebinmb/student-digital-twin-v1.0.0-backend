@@ -1,1 +1,0 @@
-Provides instructor grade portals with automated calculation of grades, adherence to institutional grading systems, grade locking, and registrar verification workflows.

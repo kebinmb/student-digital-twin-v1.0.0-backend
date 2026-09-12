@@ -28,6 +28,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Set;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -93,7 +95,7 @@ class FeeAssessmentServiceTest {
         enrollment = StudentEnrollment.builder()
                 .student(studentProfile)
                 .term(term)
-                .items(List.of(item))
+                .items(Set.of(item))
                 .totalCreditUnits(new BigDecimal("4.00"))
                 .build();
 

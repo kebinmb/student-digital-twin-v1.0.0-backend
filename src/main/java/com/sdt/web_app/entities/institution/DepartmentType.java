@@ -3,5 +3,6 @@ package com.sdt.web_app.entities.institution;
 public enum DepartmentType {
     COLLEGE,
     DEPARTMENT,
+    ACADEMIC_DEPT,
     ADMINISTRATIVE
 }

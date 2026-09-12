@@ -7,8 +7,10 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "student_enrollments")
@@ -54,7 +56,7 @@ public class StudentEnrollment {
 
     @OneToMany(mappedBy = "enrollment", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<EnrollmentCourseItem> items = new ArrayList<>();
+    private Set<EnrollmentCourseItem> items = new LinkedHashSet<>();
 
     public void updateStatus(Status newStatus) {
         this.status = newStatus;

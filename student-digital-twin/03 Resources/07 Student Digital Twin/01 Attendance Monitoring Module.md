@@ -1,1 +1,0 @@
-An **Attendance Monitoring Module** is a secure, automated verification system designed to track student and faculty class presence in real time. It pairs dynamic QR code scanning with temporal validation and geofencing to prevent proxy attendance and ensure reliable compliance reporting for institutional and regulatory bodies (such as CHED and DepEd).
