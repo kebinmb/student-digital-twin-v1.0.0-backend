@@ -39,6 +39,7 @@ com\sdt\web_app\controller\TestSecurityControllers$DummyOrderController.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$DummySecureService.class
 com\sdt\web_app\service\institution\InstitutionalCrudPrerequisiteValidationTest.class
 com\sdt\web_app\service\security\DataScopingServiceTest.class
+com\sdt\web_app\service\grade\GradeChangeServiceTest.class
 com\sdt\web_app\AuthenticationIntegrationTest$ProtectedEndpointTests.class
 com\sdt\web_app\service\security\AcademicHierarchyScopingIntegrationTest.class
 com\sdt\web_app\service\enrollment\TransfereeCreditingServiceTest.class

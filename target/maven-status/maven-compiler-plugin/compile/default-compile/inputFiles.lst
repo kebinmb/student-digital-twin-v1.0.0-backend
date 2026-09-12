@@ -10,6 +10,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\RateLimitingFilter.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\SsrfProtectingClientInterceptor.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\WebSecurityConfig.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\audit\AuditLogController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\AuthenticationController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\PasswordResetController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\UserController.java
@@ -19,6 +20,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\faculty\FacultyProfileController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\financial\FinancialManagementController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\grade\ClassRecordController.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\grade\GradeChangeRequestController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\grade\GradeController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\AcademicYearController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\CampusController.java
@@ -40,6 +42,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\faculty\FacultyDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\financial\FinancialDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\grade\ClassRecordDtos.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\grade\GradeChangeDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\grade\GradeDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\AcademicYearDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\CampusDtos.java
@@ -67,6 +70,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\compliance\GraduationApplication.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\CourseEquivalency.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\EnrollmentCourseItem.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\GradeChangeRequest.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\StudentCourseGrade.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\StudentEnrollment.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\enrollment\StudentProfile.java
@@ -122,6 +126,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\compliance\GraduationApplicationRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\CourseEquivalencyRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\EnrollmentCourseItemRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\GradeChangeRequestRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\StudentCourseGradeRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\StudentEnrollmentRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\enrollment\StudentProfileRepository.java
@@ -176,6 +181,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\financial\FeeAssessmentService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\financial\UnifastBillingService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\grade\ClassRecordService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\grade\GradeChangeService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\grade\GradeService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\AcademicYearService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\CampusService.java

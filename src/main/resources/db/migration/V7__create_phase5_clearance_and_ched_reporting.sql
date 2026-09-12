@@ -39,6 +39,6 @@ CREATE TABLE graduation_applications (
     special_order_issued_at DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_grad_student FOREIGN KEY (student_profile_id) REFERENCES student_profiles(id),
-    CONSTRAINT fk_grad_curriculum FOREIGN KEY (curriculum_id) REFERENCES curriculums(id),
+    CONSTRAINT fk_grad_curriculum FOREIGN KEY (curriculum_id) REFERENCES curricula(id),
     CONSTRAINT fk_grad_term FOREIGN KEY (term_id) REFERENCES terms(id)
 );

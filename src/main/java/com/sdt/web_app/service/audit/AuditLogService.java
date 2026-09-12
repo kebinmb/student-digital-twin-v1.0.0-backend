@@ -26,4 +26,12 @@ public class AuditLogService {
             log.error("Failed to asynchronously save AuditLog entry for action: {}", auditLog.getAction(), e);
         }
     }
+
+    public java.util.List<AuditLog> getLogsForUser(Long userId) {
+        return auditLogRepository.findByUserId(userId);
+    }
+
+    public java.util.List<AuditLog> getAllLogs() {
+        return auditLogRepository.findAll();
+    }
 }

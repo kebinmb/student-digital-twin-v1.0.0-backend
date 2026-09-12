@@ -14,12 +14,14 @@ com\sdt\web_app\entities\faculty\FacultyProfile$EmploymentStatus.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$TransfereeCreditingSummaryResponse.class
 com\sdt\web_app\entities\institution\TermType.class
 com\sdt\web_app\service\institution\CampusService.class
+com\sdt\web_app\repositories\enrollment\GradeChangeRequestRepository.class
 com\sdt\web_app\dto\institution\DepartmentDtos$DepartmentResponse.class
 com\sdt\web_app\dto\institution\DepartmentDtos$CreateDepartmentRequest.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$RemoveEnlistedSectionRequest.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$ValidationSummary.class
 com\sdt\web_app\service\financial\CashieringService.class
 com\sdt\web_app\config\ActuatorSecurityConfig.class
+com\sdt\web_app\entities\enrollment\GradeChangeRequest.class
 com\sdt\web_app\controller\institution\CurriculumController.class
 com\sdt\web_app\service\institution\CourseService.class
 com\sdt\web_app\repositories\enrollment\StudentCourseGradeRepository.class
@@ -90,11 +92,13 @@ com\sdt\web_app\repositories\institution\CourseOutcomeRepository.class
 com\sdt\web_app\entities\financial\UnifastFheClaim$UnifastFheClaimBuilder.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CourseItemDto.class
 com\sdt\web_app\repositories\institution\ScholarshipDiscountRepository.class
+com\sdt\web_app\dto\grade\GradeChangeDtos$GradeChangeResponse.class
 com\sdt\web_app\controller\institution\ProgramController.class
 com\sdt\web_app\entities\financial\FeeTemplate.class
 com\sdt\web_app\service\institution\CurriculumValidationService.class
 com\sdt\web_app\dto\compliance\ComplianceDtos$GraduationApplicationDto.class
 com\sdt\web_app\entities\financial\UnifastFheClaimItem.class
+com\sdt\web_app\dto\grade\GradeChangeDtos.class
 com\sdt\web_app\repositories\compliance\ClearanceRequestRepository.class
 com\sdt\web_app\dto\institution\AcademicYearDtos$CreateAcademicYearRequest.class
 com\sdt\web_app\entities\faculty\FacultyProfile$FacultyProfileBuilder.class
@@ -149,6 +153,7 @@ com\sdt\web_app\dto\institution\CurriculumCourseDtos$AssignCourseToCurriculumReq
 com\sdt\web_app\dto\faculty\FacultyDtos$UpdateFacultyProfileRequest.class
 com\sdt\web_app\service\security\AcademicScopeAssertionService.class
 com\sdt\web_app\controller\institution\CiloPiloMappingController.class
+com\sdt\web_app\entities\enrollment\GradeChangeRequest$Status.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$EnrollmentConfirmationDto.class
 com\sdt\web_app\repositories\institution\FeeCatalogRepository.class
 com\sdt\web_app\entities\institution\PaymentTermTemplate$PaymentTermTemplateBuilder.class
@@ -171,6 +176,7 @@ com\sdt\web_app\entities\institution\Curriculum$CurriculumBuilder.class
 com\sdt\web_app\dto\authentication\AuthDtos$AuthResult.class
 com\sdt\web_app\repositories\institution\CampusRepository.class
 com\sdt\web_app\dto\institution\CurriculumDtos.class
+com\sdt\web_app\controller\audit\AuditLogController.class
 com\sdt\web_app\dto\institution\GradingScaleDtos$UpdateGradingScaleRequest.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$StudentEnrollmentResponse.class
 com\sdt\web_app\repositories\grade\ClassRecordItemRepository.class
@@ -334,6 +340,7 @@ com\sdt\web_app\dto\financial\FinancialDtos$ProcessPaymentRequest.class
 com\sdt\web_app\entities\enrollment\EnrollmentCourseItem$CompletionStatus.class
 com\sdt\web_app\repositories\scheduling\ClassScheduleRepository.class
 com\sdt\web_app\entities\financial\StudentAccountLedger$StudentAccountLedgerBuilder.class
+com\sdt\web_app\service\grade\GradeChangeService.class
 com\sdt\web_app\dto\compliance\ComplianceDtos$ChedFormE3EnrolmentDto.class
 com\sdt\web_app\entities\enrollment\EnrollmentCourseItem.class
 com\sdt\web_app\entities\institution\Campus.class
@@ -345,6 +352,7 @@ com\sdt\web_app\controller\institution\FinancialController.class
 com\sdt\web_app\dto\grade\ClassRecordDtos$CreateClassRecordItemRequest.class
 com\sdt\web_app\specifications\StudentProfileSpecifications.class
 com\sdt\web_app\exceptions\ResourceNotFoundException.class
+com\sdt\web_app\dto\grade\GradeChangeDtos$CreateGradeChangeRequest.class
 com\sdt\web_app\repositories\institution\ProgramOutcomeRepository.class
 com\sdt\web_app\dto\faculty\FacultyDtos.class
 com\sdt\web_app\dto\institution\FinancialDtos$CreateFeeCatalogRequest.class
@@ -377,6 +385,7 @@ com\sdt\web_app\WebAppApplication.class
 com\sdt\web_app\entities\financial\UnifastFheClaim.class
 com\sdt\web_app\entities\authentication\User.class
 com\sdt\web_app\repositories\institution\ProgramRepository.class
+com\sdt\web_app\entities\enrollment\GradeChangeRequest$GradeChangeRequestBuilder.class
 com\sdt\web_app\entities\scheduling\Room$RoomType.class
 com\sdt\web_app\service\grade\ClassRecordService.class
 com\sdt\web_app\dto\financial\FinancialDtos$CashierReceiptDto.class
@@ -401,6 +410,7 @@ com\sdt\web_app\dto\compliance\ComplianceDtos$ClearanceRequestDto.class
 com\sdt\web_app\controller\enrollment\EnrollmentController.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CurriculumLookupOption.class
 com\sdt\web_app\dto\financial\FinancialDtos.class
+com\sdt\web_app\controller\grade\GradeChangeRequestController.class
 com\sdt\web_app\entities\faculty\FacultyProfile.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$UpdateFacultyLoadLimitRequest.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$DiagnosticMessage.class
