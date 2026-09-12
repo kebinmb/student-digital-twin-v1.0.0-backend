@@ -32,6 +32,11 @@ spring:
     host: localhost
     port: 2525
 
+app:
+  security:
+    rate-limiting:
+      enabled: false
+
 management:
   health:
     mail:

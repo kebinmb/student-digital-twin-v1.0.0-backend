@@ -32,9 +32,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import java.util.Set;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 @Import(TestSecurityControllers.class)
 class CleanSlateSchemaAndEmptyDataIntegrationTest {
 
@@ -43,6 +47,9 @@ class CleanSlateSchemaAndEmptyDataIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private CampusRepository campusRepository;
@@ -74,6 +81,20 @@ class CleanSlateSchemaAndEmptyDataIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @BeforeEach
+    void setUp() {
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            User admin = User.builder()
+                    .username("admin")
+                    .email("admin@example.com")
+                    .password(passwordEncoder.encode("Password123!"))
+                    .enabled(true)
+                    .roles(Set.of(Roles.ADMIN))
+                    .build();
+            userRepository.saveAndFlush(admin);
+        }
+    }
+
 
 
     @Test
@@ -81,13 +102,13 @@ class CleanSlateSchemaAndEmptyDataIntegrationTest {
     void verifyGhostTableAndOrphanColumnRemoved() {
         // 1. Verify role_permissions table does not exist
         Integer rolePermTableCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'role_permissions'",
+                "SELECT COUNT(*) FROM information_schema.tables WHERE UPPER(table_name) = 'ROLE_PERMISSIONS' AND UPPER(table_schema) = 'PUBLIC'",
                 Integer.class);
         assertThat(rolePermTableCount).isZero();
 
         // 2. Verify terms.term_name column does not exist
         Integer termNameColCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'terms' AND column_name = 'term_name'",
+                "SELECT COUNT(*) FROM information_schema.columns WHERE UPPER(table_name) = 'TERMS' AND UPPER(column_name) = 'TERM_NAME' AND UPPER(table_schema) = 'PUBLIC'",
                 Integer.class);
         assertThat(termNameColCount).isZero();
     }
@@ -110,7 +131,7 @@ class CleanSlateSchemaAndEmptyDataIntegrationTest {
     void verifyAdminLoginAndClaims() throws Exception {
         String loginPayload = """
                 {
-                    "username": "admin",
+                    "usernameOrEmail": "admin",
                     "password": "Password123!"
                 }
                 """;

@@ -32,6 +32,7 @@ public class TokenService {
                 .map(Enum::name) // Converts Roles.ADMIN -> "ADMIN"
                 .toList();
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
+                .id(java.util.UUID.randomUUID().toString())
                 .issuer(issuer)
                 .issuedAt(now)
                 .expiresAt(now.plus(15, ChronoUnit.MINUTES))

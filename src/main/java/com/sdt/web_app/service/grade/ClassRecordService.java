@@ -227,16 +227,24 @@ public class ClassRecordService {
                 }
             }
 
-            // Calculations
+            // Progressive weighted calculations
             BigDecimal midtermPct = calculateTermPercentage(config, sectionItems, studentScores, SectionGradingCategory.TermPeriod.MIDTERM);
             BigDecimal finalPct = calculateTermPercentage(config, sectionItems, studentScores, SectionGradingCategory.TermPeriod.FINAL);
 
             BigDecimal totalRawPct = BigDecimal.ZERO;
+            BigDecimal assessedTermWeightSum = BigDecimal.ZERO;
+
             if (midtermPct != null) {
-                totalRawPct = totalRawPct.add(midtermPct.multiply(config.getMidtermWeight()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
+                totalRawPct = totalRawPct.add(midtermPct.multiply(config.getMidtermWeight()).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
+                assessedTermWeightSum = assessedTermWeightSum.add(config.getMidtermWeight());
             }
             if (finalPct != null) {
-                totalRawPct = totalRawPct.add(finalPct.multiply(config.getFinalWeight()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
+                totalRawPct = totalRawPct.add(finalPct.multiply(config.getFinalWeight()).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
+                assessedTermWeightSum = assessedTermWeightSum.add(config.getFinalWeight());
+            }
+
+            if (assessedTermWeightSum.compareTo(BigDecimal.ZERO) > 0) {
+                totalRawPct = totalRawPct.divide(assessedTermWeightSum, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
             }
 
             BigDecimal transmutedGrade = null;
@@ -248,7 +256,11 @@ public class ClassRecordService {
                     if (scale != null) {
                         transmutedGrade = scale.getNumericGrade();
                         if (transmutedGrade != null) {
-                            status = transmutedGrade.compareTo(new BigDecimal("3.00")) <= 0 ? "PASSED" : "FAILED";
+                            if (finalPct != null && section.getGradeStatus() != ClassSection.GradeStatus.DRAFT) {
+                                status = transmutedGrade.compareTo(new BigDecimal("3.00")) <= 0 ? "PASSED" : "FAILED";
+                            } else {
+                                status = "IN_PROGRESS";
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -421,6 +433,7 @@ public class ClassRecordService {
                 ));
 
         BigDecimal termWeightedSum = BigDecimal.ZERO;
+        BigDecimal assessedCategoryWeightSum = BigDecimal.ZERO;
         boolean hasScoresInTerm = false;
 
         for (SectionGradingCategory cat : termCategories) {
@@ -443,10 +456,19 @@ public class ClassRecordService {
             if (totalMax.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal catPct = totalEarned.divide(totalMax, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100"));
                 termWeightedSum = termWeightedSum.add(catPct.multiply(cat.getWeightPercentage()).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
+                assessedCategoryWeightSum = assessedCategoryWeightSum.add(cat.getWeightPercentage());
             }
         }
 
-        return hasScoresInTerm ? termWeightedSum.setScale(2, RoundingMode.HALF_UP) : null;
+        if (!hasScoresInTerm || assessedCategoryWeightSum.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+
+        BigDecimal normalizedTermPct = termWeightedSum
+                .divide(assessedCategoryWeightSum, 4, RoundingMode.HALF_UP)
+                .multiply(new BigDecimal("100"));
+
+        return normalizedTermPct.setScale(2, RoundingMode.HALF_UP);
     }
 
     private SectionGradingConfig createDefaultConfig(ClassSection section) {

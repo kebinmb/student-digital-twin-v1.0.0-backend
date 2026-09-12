@@ -64,7 +64,7 @@ public class AuthCryptoConfig {
     }
 
     @Bean(name = "localJwtDecoder")
-    public JwtDecoder jwtDecoder(RSAKey rsaJwkKey) throws Exception {
+    public JwtDecoder jwtDecoder(RSAKey rsaJwkKey, JwtDenylistValidator denylistValidator) throws Exception {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey(rsaJwkKey.toRSAPublicKey()).build();
         OAuth2TokenValidator<Jwt> clockSkewValidator = new JwtTimestampValidator(Duration.ofSeconds(20));
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
@@ -73,7 +73,8 @@ public class AuthCryptoConfig {
         );
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                 clockSkewValidator,
-                audienceValidator
+                audienceValidator,
+                denylistValidator
         ));
         return decoder;
     }

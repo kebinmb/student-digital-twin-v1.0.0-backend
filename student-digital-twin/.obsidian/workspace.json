@@ -13,46 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "07 Prompt Guides/Type Backend Prompt Here.md",
-                "mode": "source",
-                "source": true
-              },
-              "icon": "lucide-file",
-              "title": "Type Backend Prompt Here"
-            }
-          }
-        ]
-      },
-      {
-        "id": "9b197e38c1e2dc80",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "7a7fd5a1b8ddcade",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "07 Prompt Guides/Type Frontend Prompt Here.md",
-                "mode": "source",
-                "source": true
-              },
-              "icon": "lucide-file",
-              "title": "Type Frontend Prompt Here"
-            }
-          },
-          {
-            "id": "55f9f3948f15d6b5",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "07 Prompt Guides/00 Prompt Guide.md",
+                "file": "06 Summary/AUDIT_AND_REFACTOR_SUMMARY.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 Prompt Guide"
+              "title": "AUDIT_AND_REFACTOR_SUMMARY"
             }
           }
         ]
@@ -225,18 +191,18 @@
   },
   "active": "364e7b82cf3012b1",
   "lastOpenFiles": [
-    "07 Prompt Guides/Type Frontend Prompt Here.md",
+    "01 Projects/CLASS_RECORD_SPEC.md",
+    "01 Projects/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
+    "06 Summary/AUDIT_AND_REFACTOR_SUMMARY.md",
+    "00 AI Index.md",
     "07 Prompt Guides/Type Backend Prompt Here.md",
+    "07 Prompt Guides/Type Frontend Prompt Here.md",
     "07 Prompt Guides/Prompt Template.md",
     "07 Prompt Guides/00 Prompt Guide.md",
     "07 Prompt Guides",
-    "00 AI Index.md",
     "06 Summary/00 Role Base Access.md",
-    "01 Projects/CLASS_RECORD_SPEC.md",
-    "01 Projects/02 Layer 2 Curriculum & Outcome-Based Education (OBE).md",
     "06 Summary/01 Frontend RBAC Verification and Roadmap.md",
     "06 Summary/02 Entity-Database Alignment Summary.md",
-    "06 Summary/AUDIT_AND_REFACTOR_SUMMARY.md",
     "04 Archives/03 Phase 1 Foundation Layer Implementation Audit & Phase 2 Readiness Sign-Off.md",
     "04 Archives/01 Login and Authentication Backend and Frontend Implementation.md",
     "01 Projects/01 Layer 1 System Master Data & RBAC.md",

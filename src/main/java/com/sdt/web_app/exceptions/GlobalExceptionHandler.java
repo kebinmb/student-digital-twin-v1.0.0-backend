@@ -84,8 +84,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
-    public ProblemDetail handleEntityNotFoundException(jakarta.persistence.EntityNotFoundException ex) {
+    @ExceptionHandler({jakarta.persistence.EntityNotFoundException.class, ResourceNotFoundException.class})
+    public ProblemDetail handleEntityNotFoundException(Exception ex) {
         log.info("Requested entity not found: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Resource Not Found");

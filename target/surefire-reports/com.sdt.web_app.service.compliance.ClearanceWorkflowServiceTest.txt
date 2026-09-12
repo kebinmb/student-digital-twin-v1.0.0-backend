@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.sdt.web_app.service.compliance.ClearanceWorkflowServiceTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.557 s -- in com.sdt.web_app.service.compliance.ClearanceWorkflowServiceTest

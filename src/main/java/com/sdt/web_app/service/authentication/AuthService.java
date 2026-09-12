@@ -35,6 +35,8 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final TokenDenylistService tokenDenylistService;
+    private final org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
     // Bounded concurrency gate for CPU/Memory intensive Argon2 hashing (prevents OOM on virtual threads)
@@ -49,11 +51,15 @@ public class AuthService {
     public AuthService(UserRepository userRepository,
                        RefreshTokenRepository refreshTokenRepository,
                        PasswordEncoder passwordEncoder,
-                       TokenService tokenService) {
+                       TokenService tokenService,
+                       TokenDenylistService tokenDenylistService,
+                       @org.springframework.beans.factory.annotation.Qualifier("localJwtDecoder") org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.tokenDenylistService = tokenDenylistService;
+        this.jwtDecoder = jwtDecoder;
     }
 
     /**
@@ -157,8 +163,28 @@ public class AuthService {
 
     @Transactional
     public void logout(String incomingToken) {
-        if (incomingToken != null && !incomingToken.isBlank()) {
-            refreshTokenRepository.findByToken(incomingToken).ifPresent(RefreshToken::revoke);
+        logout(incomingToken, null);
+    }
+
+    @Transactional
+    public void logout(String incomingRefreshToken, String accessTokenValue) {
+        if (incomingRefreshToken != null && !incomingRefreshToken.isBlank()) {
+            refreshTokenRepository.findByToken(incomingRefreshToken).ifPresent(RefreshToken::revoke);
+        }
+        if (accessTokenValue != null && !accessTokenValue.isBlank()) {
+            String rawToken = accessTokenValue.startsWith("Bearer ")
+                    ? accessTokenValue.substring(7).trim()
+                    : accessTokenValue.trim();
+            if (!rawToken.isBlank()) {
+                try {
+                    org.springframework.security.oauth2.jwt.Jwt jwt = jwtDecoder.decode(rawToken);
+                    String jti = jwt.getId();
+                    Instant expiresAt = jwt.getExpiresAt();
+                    tokenDenylistService.revokeToken(jti != null ? jti : rawToken, expiresAt != null ? expiresAt : Instant.now().plusSeconds(900));
+                } catch (Exception e) {
+                    tokenDenylistService.revokeToken(rawToken, Instant.now().plusSeconds(900));
+                }
+            }
         }
     }
 

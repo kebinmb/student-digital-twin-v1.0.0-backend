@@ -28,6 +28,8 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
 
     boolean existsByStudentNumber(String studentNumber);
 
+    long countByProgramId(Long programId);
+
     @Query("SELECT sp FROM StudentProfile sp LEFT JOIN FETCH sp.program LEFT JOIN FETCH sp.user " +
            "WHERE :query IS NULL OR :query = '' " +
            "OR LOWER(sp.studentNumber) LIKE LOWER(CONCAT('%', :query, '%')) " +

@@ -196,7 +196,7 @@ class ClassRecordServiceTest {
         StudentScoreMatrixRowDto row = matrix.rows().get(0);
         assertThat(row.studentId()).isEqualTo(601L);
         assertThat(row.transmutedGrade()).isEqualByComparingTo("1.75");
-        assertThat(row.completionStatus()).isEqualTo("PASSED");
+        assertThat(row.completionStatus()).isEqualTo("IN_PROGRESS");
     }
 
     @Test

@@ -58,11 +58,13 @@ public class WebSecurityConfig {
     public SecurityFilterChain apiSecurityFilterChain(
             HttpSecurity http,
             @Qualifier("localJwtDecoder") JwtDecoder jwtDecoder,
-            JwtRoleConverter jwtRoleConverter) throws Exception {
+            JwtRoleConverter jwtRoleConverter,
+            RateLimitingFilter rateLimitingFilter) throws Exception {
         return http
                 .securityMatcher("/api/**", "/ws/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+                .addFilterBefore(rateLimitingFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp
@@ -88,7 +90,7 @@ public class WebSecurityConfig {
 
     @Bean(name = "resourceServerJwtDecoder")
     @Primary
-    public JwtDecoder jwtDecoder(OAuth2ResourceServerProperties properties) {
+    public JwtDecoder jwtDecoder(OAuth2ResourceServerProperties properties, JwtDenylistValidator denylistValidator) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder
                 .withJwkSetUri(properties.getJwt().getJwkSetUri())
                 .build();
@@ -101,7 +103,8 @@ public class WebSecurityConfig {
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                 defaultWithIssuer,
                 clockSkewValidator,
-                audienceValidator
+                audienceValidator,
+                denylistValidator
         ));
         return decoder;
     }
