@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,8 +62,8 @@ class TermLifecycleServiceTest {
     @DisplayName("Should successfully activate a term and set parent academic year as current")
     void activateTerm_Success() {
         given(termRepository.findWithAcademicYearById(10L)).willReturn(Optional.of(term));
-        given(termRepository.findByIsActiveTrue()).willReturn(Optional.empty());
-        given(academicYearRepository.findByIsCurrentTrue()).willReturn(Optional.empty());
+        given(termRepository.findAllByIsActiveTrue()).willReturn(List.of());
+        given(academicYearRepository.findFirstByIsCurrentTrueOrderByIdDesc()).willReturn(Optional.empty());
 
         Term result = termLifecycleService.activateTerm(10L);
 
@@ -108,7 +109,7 @@ class TermLifecycleServiceTest {
     @DisplayName("Should return currently active term")
     void getActiveTerm_Success() {
         term.activate();
-        given(termRepository.findByIsActiveTrue()).willReturn(Optional.of(term));
+        given(termRepository.findFirstByIsActiveTrueOrderByIdDesc()).willReturn(Optional.of(term));
 
         Term activeTerm = termLifecycleService.getActiveTerm();
 

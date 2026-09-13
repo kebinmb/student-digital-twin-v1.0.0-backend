@@ -13,9 +13,13 @@ import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
 import com.sdt.web_app.repositories.enrollment.*;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
+import com.sdt.web_app.entities.compliance.ClearanceRequest;
+import com.sdt.web_app.repositories.compliance.ClearanceRequestRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.sdt.web_app.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,36 +33,44 @@ import java.util.stream.Collectors;
 public class EnrollmentService {
 
     private final StudentProfileRepository studentProfileRepository;
+    private final StudentService studentService;
     private final StudentCourseGradeRepository studentCourseGradeRepository;
     private final StudentEnrollmentRepository studentEnrollmentRepository;
     private final EnrollmentCourseItemRepository enrollmentItemRepository;
     private final ClassSectionRepository sectionRepository;
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final CoursePrerequisiteRepository prerequisiteRepository;
-    private final TermRepository termRepository;
+    private final com.sdt.web_app.service.institution.TermService termService;
+    private final ClearanceRequestRepository clearanceRequestRepository;
 
     // -------------------------------------------------------------------------
     // Gate 3: Student Advising & Eligibility Evaluation
     // -------------------------------------------------------------------------
-    @Transactional(readOnly = true)
+    @Transactional
     public AdvisingEligibilityResponse getAdvisingEligibility(Long studentId, Long termId) {
         return getAdvisingEligibility(studentId, termId, null, null, false);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AdvisingEligibilityResponse getAdvisingEligibility(
             Long studentId, Long termId, Integer targetYearLevel, String targetSemester) {
         return getAdvisingEligibility(studentId, termId, targetYearLevel, targetSemester, false);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AdvisingEligibilityResponse getAdvisingEligibility(
             Long studentId, Long termId, Integer targetYearLevel, String targetSemester, Boolean allCourses) {
-        StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId)
-                .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + studentId));
+        final Long resolvedStudentId;
+        if (studentId != null && studentId < 0) {
+            resolvedStudentId = studentService.createStudentFromAdmissionAppId(-studentId).id();
+        } else {
+            resolvedStudentId = studentId;
+        }
 
-        Term term = termRepository.findById(termId)
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + termId));
+        StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(resolvedStudentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
+
+        Term term = termService.getTermById(termId);
 
         // 1. Fetch student's historical passed grades
         List<StudentCourseGrade> passedGrades = studentCourseGradeRepository.findPassedGradesByStudentId(student.getId());
@@ -103,11 +115,6 @@ public class EnrollmentService {
             boolean isEnrolled = currentlyEnrolledCourseIds.contains(course.getId());
             boolean isInTargetPeriod = Boolean.TRUE.equals(allCourses) || !hasPeriodMatches || matchesPeriod(cc, targetPeriod);
 
-            // Backend filtering:
-            // 1. Retain ALREADY_PASSED courses so student/advisor can view completed records
-            // 2. Retain CURRENTLY_ENROLLED courses for active term visibility
-            // 3. If allCourses is requested, retain all curriculum courses with live prerequisite evaluation
-            // 4. Otherwise, limit eligible & term courses strictly to the target next year level / semester
             if (!isPassed && !isEnrolled && !isInTargetPeriod) {
                 continue;
             }
@@ -209,7 +216,7 @@ public class EnrollmentService {
                 currentEnrolledUnits,
                 student.getFinancialClearance() != null ? student.getFinancialClearance().name() : "CLEARED",
                 student.getDepartmentalClearance() != null ? student.getDepartmentalClearance().name() : "CLEARED",
-                student.isClearedForEnrollment(),
+                checkMultiDepartmentClearanceStatus(student, term.getId()),
                 courseEligibilityList
         );
     }
@@ -219,20 +226,22 @@ public class EnrollmentService {
     // -------------------------------------------------------------------------
     @Transactional
     public StudentEnrollmentResponse enlistSection(Long studentId, EnlistSectionRequest request) {
-        StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId)
-                .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + studentId));
+        final Long resolvedStudentId;
+        if (studentId != null && studentId < 0) {
+            resolvedStudentId = studentService.createStudentFromAdmissionAppId(-studentId).id();
+        } else {
+            resolvedStudentId = studentId;
+        }
 
-        Term term = termRepository.findById(request.termId())
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + request.termId()));
+        StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(resolvedStudentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
+
+        Term term = termService.getTermById(request.termId());
 
         ClassSection section = sectionRepository.findByIdWithSchedules(request.sectionId())
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + request.sectionId()));
 
-        if (!student.isClearedForEnrollment()) {
-            throw new IllegalStateException(String.format(
-                    "Clearance Violation: Student cannot enlist. Financial Clearance: %s, Departmental Clearance: %s.",
-                    student.getFinancialClearance(), student.getDepartmentalClearance()));
-        }
+        verifyMultiDepartmentClearanceGate(student, term.getId());
 
         if (section.getStatus() != ClassSection.Status.OPEN) {
             throw new IllegalStateException(String.format(
@@ -259,8 +268,6 @@ public class EnrollmentService {
                     ? new BigDecimal(cp.getMinGradeRequired())
                     : new BigDecimal("3.00");
 
-            // Philippine Grading Scale: 1.00 is best, 3.00 is passing, 5.00 is failure.
-            // Higher numerical values signify worse performance.
             if (grade.getNumericalGrade() != null && grade.getNumericalGrade().compareTo(minThreshold) > 0) {
                 throw new IllegalStateException(String.format(
                         "Gate 3 Violation: Prerequisite '%s' requires a minimum grade of %.2f, but student achieved %.2f.",
@@ -281,7 +288,6 @@ public class EnrollmentService {
                     return studentEnrollmentRepository.save(newEnrollment);
                 });
 
-        // Check if student is already enrolled in this section or another section of the same course
         boolean alreadyEnrolledInCourse = enrollment.getItems().stream()
                 .anyMatch(item -> item.getSection().getCourse().getId().equals(course.getId()));
         if (alreadyEnrolledInCourse) {
@@ -343,8 +349,9 @@ public class EnrollmentService {
 
     @Transactional
     public StudentEnrollmentResponse removeEnlistedSection(Long studentId, Long termId, Long sectionId) {
-        StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(studentId, termId)
-                .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + studentId + " in term " + termId));
+        final Long resolvedStudentId = studentId != null && studentId < 0 ? studentService.createStudentFromAdmissionAppId(-studentId).id() : studentId;
+        StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, termId)
+                .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + resolvedStudentId + " in term " + termId));
 
         EnrollmentCourseItem itemToRemove = enrollment.getItems().stream()
                 .filter(item -> item.getSection().getId().equals(sectionId))
@@ -355,7 +362,6 @@ public class EnrollmentService {
         enrollmentItemRepository.delete(itemToRemove);
         enrollment.recalculateUnits();
 
-        // Decrement section capacity
         sectionRepository.decrementEnrolledCount(sectionId);
 
         StudentEnrollment saved = studentEnrollmentRepository.save(enrollment);
@@ -363,18 +369,16 @@ public class EnrollmentService {
     }
 
     @Transactional
+    @CacheEvict(value = {CacheConfig.CACHE_PROGRAMS, CacheConfig.CACHE_EQUITY_PROFILES}, allEntries = true)
     public EnrollmentConfirmationDto confirmEnrollment(Long studentId, ConfirmEnrollmentRequest request) {
-        StudentProfile student = studentProfileRepository.findById(studentId)
-                .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + studentId));
+        final Long resolvedStudentId = studentId != null && studentId < 0 ? studentService.createStudentFromAdmissionAppId(-studentId).id() : studentId;
+        StudentProfile student = studentProfileRepository.findById(resolvedStudentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
 
-        if (!student.isClearedForEnrollment()) {
-            throw new IllegalStateException(String.format(
-                    "Clearance Violation: Student cannot confirm enrollment. Financial Clearance: %s, Departmental Clearance: %s.",
-                    student.getFinancialClearance(), student.getDepartmentalClearance()));
-        }
+        verifyMultiDepartmentClearanceGate(student, request.termId());
 
-        StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(studentId, request.termId())
-                .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + studentId + " in term " + request.termId()));
+        StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, request.termId())
+                .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + resolvedStudentId + " in term " + request.termId()));
 
         if (enrollment.getItems().isEmpty()) {
             throw new IllegalStateException("Cannot confirm enrollment: no courses have been enlisted.");
@@ -393,9 +397,21 @@ public class EnrollmentService {
 
     @Transactional(readOnly = true)
     public StudentEnrollmentResponse getEnrollment(Long studentId, Long termId) {
-        StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(studentId, termId)
-                .orElseThrow(() -> new EntityNotFoundException("Enrollment not found for student " + studentId + " in term " + termId));
-        return mapToEnrollmentResponse(enrollment);
+        final Long resolvedStudentId = studentId != null && studentId < 0 ? studentService.createStudentFromAdmissionAppId(-studentId).id() : studentId;
+        return studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, termId)
+                .map(this::mapToEnrollmentResponse)
+                .orElseGet(() -> new StudentEnrollmentResponse(
+                        null,
+                        resolvedStudentId,
+                        null,
+                        termId,
+                        "UNENROLLED",
+                        null,
+                        "NOT_ENROLLED",
+                        BigDecimal.ZERO,
+                        false,
+                        Collections.emptyList()
+                ));
     }
 
     // -------------------------------------------------------------------------
@@ -481,7 +497,6 @@ public class EnrollmentService {
             return new AcademicPeriod(requestedYearLevel, normalizeSemester(requestedSemester));
         }
 
-        // Determine highest completed semester rank from student's passed courses
         int maxPassedRank = 0;
         for (CurriculumCourse cc : curriculumCourses) {
             if (passedCourseIds.contains(cc.getCourse().getId())) {
@@ -492,13 +507,11 @@ public class EnrollmentService {
             }
         }
 
-        // If student has passed courses, the next progressive period is maxPassedRank + 1
         if (maxPassedRank > 0) {
             int nextRank = Math.min(maxPassedRank + 1, 8);
             return getPeriodFromRank(nextRank);
         }
 
-        // Fallback when no passed courses: infer from term type and student's current year level
         int year = student.getYearLevel() > 0 ? student.getYearLevel() : 1;
         String sem = "1ST_SEM";
         if (term != null && term.getTermType() != null) {
@@ -562,5 +575,63 @@ public class EnrollmentService {
         if (isSecondSem(semA) && isSecondSem(semB)) return true;
         if (isSummer(semA) && isSummer(semB)) return true;
         return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Gate 3: Multi-Department Clearance Verification
+    // -------------------------------------------------------------------------
+    public boolean checkMultiDepartmentClearanceStatus(StudentProfile student, Long termId) {
+        if (!student.isClearedForEnrollment()) {
+            return false;
+        }
+        Optional<ClearanceRequest> clearanceOpt = clearanceRequestRepository.findByStudentProfileIdAndTermId(student.getId(), termId);
+        if (clearanceOpt.isEmpty()) {
+            List<ClearanceRequest> list = clearanceRequestRepository.findByStudentProfileId(student.getId());
+            if (!list.isEmpty()) {
+                clearanceOpt = Optional.of(list.get(0));
+            }
+        }
+        if (clearanceOpt.isPresent()) {
+            ClearanceRequest cr = clearanceOpt.get();
+            if (!"CLEARED".equalsIgnoreCase(cr.getOverallStatus())) {
+                return false;
+            }
+            if (cr.getSignoffs() == null || cr.getSignoffs().isEmpty()) {
+                return false;
+            }
+            return cr.getSignoffs().stream()
+                    .allMatch(s -> "APPROVED".equalsIgnoreCase(s.getSignoffStatus()));
+        }
+        return true;
+    }
+
+    public void verifyMultiDepartmentClearanceGate(StudentProfile student, Long termId) {
+        if (!student.isClearedForEnrollment()) {
+            throw new IllegalStateException(String.format(
+                    "Clearance Violation: Multi-Department Clearance Gate Blocked: Student '%s' has uncleared profile status (Financial: %s, Departmental: %s).",
+                    student.getStudentNumber(), student.getFinancialClearance(), student.getDepartmentalClearance()));
+        }
+        Optional<ClearanceRequest> clearanceOpt = clearanceRequestRepository.findByStudentProfileIdAndTermId(student.getId(), termId);
+        if (clearanceOpt.isEmpty()) {
+            List<ClearanceRequest> list = clearanceRequestRepository.findByStudentProfileId(student.getId());
+            if (!list.isEmpty()) {
+                clearanceOpt = Optional.of(list.get(0));
+            }
+        }
+        if (clearanceOpt.isPresent()) {
+            ClearanceRequest cr = clearanceOpt.get();
+            if (!"CLEARED".equalsIgnoreCase(cr.getOverallStatus())) {
+                throw new IllegalStateException(String.format(
+                        "Clearance Violation: Multi-Department Clearance Gate Blocked: Student '%s' clearance request status is '%s' (Required: CLEARED for all departments).",
+                        student.getStudentNumber(), cr.getOverallStatus()));
+            }
+            boolean allApproved = cr.getSignoffs() != null && !cr.getSignoffs().isEmpty() &&
+                    cr.getSignoffs().stream().allMatch(s -> "APPROVED".equalsIgnoreCase(s.getSignoffStatus()));
+            if (!allApproved) {
+                throw new IllegalStateException(String.format(
+                        "Clearance Violation: Multi-Department Clearance Gate Blocked: Student '%s' has pending or rejected department sign-offs.",
+                        student.getStudentNumber()));
+            }
+        }
     }
 }

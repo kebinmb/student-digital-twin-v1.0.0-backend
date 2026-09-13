@@ -64,6 +64,12 @@ public class Term {
     @Builder.Default
     private BigDecimal maxHoursPerClass = new BigDecimal("3.0");
 
+    public String getName() {
+        String ayCode = academicYear != null ? academicYear.getCode() : "AY";
+        String typeName = termType != null ? termType.name() : "TERM";
+        return ayCode + " - " + typeName;
+    }
+
     public void updateMaxHoursPerClass(BigDecimal maxHours) {
         if (maxHours == null || maxHours.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Maximum hours per class session must be greater than 0");

@@ -2,6 +2,7 @@ package com.sdt.web_app.service.enrollment;
 
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
+import com.sdt.web_app.service.security.SecurityProfileCache;
 import com.sdt.web_app.service.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class EnrollmentSecurity {
 
     private final StudentProfileRepository studentProfileRepository;
+    private final SecurityProfileCache securityProfileCache;
     private final SecurityUtils securityUtils;
     private final com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
@@ -54,7 +56,7 @@ public class EnrollmentSecurity {
         if (academicScopeAssertionService != null && (authorities.contains("ROLE_DEAN") || authorities.contains("ROLE_CHAIRPERSON") || authorities.contains("ROLE_FACULTY"))) {
             try {
                 com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
-                Optional<StudentProfile> studentOpt = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId);
+                Optional<StudentProfile> studentOpt = securityProfileCache.getStudentProfileById(studentId);
                 if (studentOpt.isEmpty()) return false;
                 academicScopeAssertionService.validateStudentAccess(scope, studentOpt.get());
                 return true;
@@ -91,7 +93,7 @@ public class EnrollmentSecurity {
         if (academicScopeAssertionService != null && (authorities.contains("ROLE_DEAN") || authorities.contains("ROLE_CHAIRPERSON"))) {
             try {
                 com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
-                Optional<StudentProfile> studentOpt = studentProfileRepository.findByIdWithProgramAndCurriculum(studentId);
+                Optional<StudentProfile> studentOpt = securityProfileCache.getStudentProfileById(studentId);
                 if (studentOpt.isEmpty()) return false;
                 academicScopeAssertionService.validateStudentAccess(scope, studentOpt.get());
                 return true;
@@ -111,7 +113,7 @@ public class EnrollmentSecurity {
             return false;
         }
 
-        Optional<StudentProfile> profileOpt = studentProfileRepository.findByUserId(userId);
+        Optional<StudentProfile> profileOpt = securityProfileCache.getStudentProfile(userId);
         if (profileOpt.isEmpty()) {
             log.warn("No StudentProfile found for user ID: {}", userId);
             return false;

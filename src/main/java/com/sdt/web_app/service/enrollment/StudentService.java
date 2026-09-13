@@ -1,16 +1,20 @@
 package com.sdt.web_app.service.enrollment;
 
 import com.sdt.web_app.dto.enrollment.EnrollmentDtos.*;
+import com.sdt.web_app.entities.admission.AdmissionApplication;
 import com.sdt.web_app.entities.authentication.Roles;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.entities.enrollment.StudentProfile.StudentClassification;
 import com.sdt.web_app.entities.institution.Curriculum;
 import com.sdt.web_app.entities.institution.Program;
+import com.sdt.web_app.repositories.admission.AdmissionApplicationRepository;
 import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
 import com.sdt.web_app.repositories.institution.CurriculumRepository;
 import com.sdt.web_app.repositories.institution.ProgramRepository;
+import com.sdt.web_app.entities.compliance.StudentEquityProfile;
+import com.sdt.web_app.repositories.compliance.StudentEquityProfileRepository;
 import com.sdt.web_app.service.security.AcademicScopeAssertionService;
 import com.sdt.web_app.service.security.AcademicScopeContext;
 import com.sdt.web_app.specifications.StudentProfileSpecifications;
@@ -25,7 +29,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import com.sdt.web_app.service.security.StudentProfileL2CacheService;
 
 @Service
 @RequiredArgsConstructor
@@ -33,11 +41,14 @@ import java.util.List;
 public class StudentService {
 
     private final StudentProfileRepository studentProfileRepository;
+    private final AdmissionApplicationRepository admissionApplicationRepository;
+    private final StudentEquityProfileRepository studentEquityProfileRepository;
     private final UserRepository userRepository;
     private final ProgramRepository programRepository;
     private final CurriculumRepository curriculumRepository;
     private final PasswordEncoder passwordEncoder;
     private final AcademicScopeAssertionService academicScopeAssertionService;
+    private final StudentProfileL2CacheService studentProfileL2CacheService;
 
     @Transactional
     public StudentProfileResponse createStudent(CreateStudentRequest request) {
@@ -112,9 +123,117 @@ public class StudentService {
         return mapToProfileResponse(savedProfile);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
+    public StudentProfileResponse createStudentFromAdmissionAppId(Long appId) {
+        AdmissionApplication app = admissionApplicationRepository.findById(appId)
+                .orElseThrow(() -> new EntityNotFoundException("Admission application not found with ID: " + appId));
+
+        String email = app.getEmail().trim().toLowerCase();
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            Optional<StudentProfile> existingProfile = studentProfileRepository.findByUserIdWithProgramAndCurriculum(existingUser.get().getId());
+            if (existingProfile.isPresent()) {
+                return mapToProfileResponse(existingProfile.get());
+            }
+        }
+
+        String studentNumber = generateStudentNumberForAdmission();
+        String baseUsername = email.contains("@") ? email.substring(0, email.indexOf("@")).replaceAll("[^a-zA-Z0-9_]", "") : app.getApplicationNumber().toLowerCase().replace("-", "_");
+        if (baseUsername.isBlank()) {
+            baseUsername = app.getApplicationNumber().toLowerCase().replace("-", "_");
+        }
+        String username = baseUsername;
+        int suffixIndex = 1;
+        while (userRepository.existsByUsername(username)) {
+            username = baseUsername + "_" + suffixIndex++;
+        }
+
+        Program program = app.getTargetProgram();
+        Curriculum curriculum = curriculumRepository.findByProgramId(program.getId()).stream()
+                .findFirst()
+                .orElseGet(() -> curriculumRepository.findAll().stream()
+                        .filter(c -> c.getProgram().getId().equals(program.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new EntityNotFoundException("No curriculum configured for program: " + program.getCode())));
+
+        User user = User.builder()
+                .username(username)
+                .email(email)
+                .password(passwordEncoder.encode("Student123!"))
+                .enabled(true)
+                .build();
+        user.addRole(Roles.STUDENT);
+        User savedUser = userRepository.save(user);
+
+        StudentProfile profile = StudentProfile.builder()
+                .user(savedUser)
+                .studentNumber(studentNumber)
+                .firstName(app.getFirstName())
+                .middleName(app.getMiddleName())
+                .lastName(app.getLastName())
+                .suffix(app.getSuffix())
+                .program(program)
+                .curriculum(curriculum)
+                .yearLevel(1)
+                .classification(StudentClassification.INCOMING_FIRST_YEAR)
+                .enrollmentStatus(StudentProfile.EnrollmentStatus.REGULAR)
+                .isGraduating(false)
+                .totalUnitsEarned(BigDecimal.ZERO)
+                .build();
+
+        StudentProfile savedProfile = studentProfileRepository.save(profile);
+        app.setApplicationStatus(AdmissionApplication.ApplicationStatus.ENROLLED);
+        admissionApplicationRepository.save(app);
+
+        if (studentEquityProfileRepository != null && (app.is4psBeneficiary() || app.isIndigenousPeople() || app.isPersonWithDisability() || app.isSoloParentOrDependent())) {
+            if (studentEquityProfileRepository.findByStudentProfileId(savedProfile.getId()).isEmpty()) {
+                StudentEquityProfile.DisabilityType mappedDisabilityType = null;
+                if (app.getDisabilityType() != null && !app.getDisabilityType().isBlank()) {
+                    try {
+                        mappedDisabilityType = StudentEquityProfile.DisabilityType.valueOf(app.getDisabilityType().trim().toUpperCase());
+                    } catch (Exception ignored) {
+                        mappedDisabilityType = StudentEquityProfile.DisabilityType.OTHER;
+                    }
+                }
+
+                StudentEquityProfile equityProfile = StudentEquityProfile.builder()
+                        .studentProfile(savedProfile)
+                        .is4psBeneficiary(app.is4psBeneficiary())
+                        .household4psIdNumber(app.getHousehold4psIdNumber())
+                        .isIndigenousPeople(app.isIndigenousPeople())
+                        .ipEthnicGroup(app.getIpEthnicGroup())
+                        .isPersonWithDisability(app.isPersonWithDisability())
+                        .disabilityType(mappedDisabilityType)
+                        .isSoloParentOrDependent(app.isSoloParentOrDependent())
+                        .verificationStatus(StudentEquityProfile.EquityVerificationStatus.SELF_DECLARED)
+                        .build();
+
+                studentEquityProfileRepository.save(equityProfile);
+            }
+        }
+
+        log.info("Auto-provisioned student profile {} for incoming first year admission application {}", savedProfile.getStudentNumber(), app.getApplicationNumber());
+        return mapToProfileResponse(savedProfile);
+    }
+
+    private String generateStudentNumberForAdmission() {
+        int year = java.time.LocalDate.now().getYear();
+        long count = studentProfileRepository.count() + 1;
+        String candidate = String.format("%d-%04d", year, count);
+        while (studentProfileRepository.existsByStudentNumber(candidate)) {
+            count++;
+            candidate = String.format("%d-%04d", year, count);
+        }
+        return candidate;
+    }
+
+    @Transactional
     public StudentProfileResponse getStudentById(Long id) {
-        StudentProfile profile = studentProfileRepository.findByIdWithProgramAndCurriculum(id)
+        if (id != null && id < 0) {
+            return createStudentFromAdmissionAppId(-id);
+        }
+
+        StudentProfile profile = Optional.ofNullable(studentProfileL2CacheService.findById(id))
                 .orElseThrow(() -> new EntityNotFoundException("Student not found with ID: " + id));
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -160,15 +279,45 @@ public class StudentService {
         }
 
         List<StudentProfile> profiles = studentProfileRepository.findAll(spec);
-
-        return profiles.stream().map(sp -> new StudentSearchResultDto(
+        List<StudentSearchResultDto> results = new ArrayList<>(profiles.stream().map(sp -> new StudentSearchResultDto(
                 sp.getId(),
                 sp.getStudentNumber(),
-                sp.getUser() != null ? sp.getUser().getUsername() : "Student " + sp.getStudentNumber(),
+                sp.getFullName() != null && !sp.getFullName().isBlank() ? sp.getFullName() : (sp.getUser() != null ? sp.getUser().getUsername() : "Student " + sp.getStudentNumber()),
                 sp.getProgram() != null ? sp.getProgram().getCode() : "BSIT",
                 sp.getYearLevel(),
-                sp.getEnrollmentStatus() != null ? sp.getEnrollmentStatus().name() : "REGULAR"
-        )).toList();
+                sp.getClassification() != null ? sp.getClassification().name() : (sp.getEnrollmentStatus() != null ? sp.getEnrollmentStatus().name() : "REGULAR")
+        )).toList());
+
+        // Also search Admission Applications for Incoming First Years
+        boolean canSearchAdmissions = auth == null || auth.getAuthorities().stream().anyMatch(a ->
+                a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_REGISTRAR") || a.getAuthority().equals("ROLE_DEAN") || a.getAuthority().equals("ROLE_CHAIRPERSON"));
+
+        if (canSearchAdmissions) {
+            List<AdmissionApplication> matchingApps = admissionApplicationRepository.searchKeyword(cleanQuery);
+            for (AdmissionApplication app : matchingApps) {
+                String appEmail = app.getEmail() != null ? app.getEmail().trim().toLowerCase() : "";
+                boolean alreadyExists = profiles.stream().anyMatch(p ->
+                        p.getStudentNumber().equalsIgnoreCase(app.getApplicationNumber()) ||
+                        (p.getUser() != null && p.getUser().getEmail() != null && p.getUser().getEmail().equalsIgnoreCase(appEmail))
+                );
+
+                if (!alreadyExists) {
+                    String displayName = app.getFullName() != null && !app.getFullName().isBlank()
+                            ? app.getFullName()
+                            : (app.getFirstName() + " " + app.getLastName());
+                    results.add(new StudentSearchResultDto(
+                            -app.getId(),
+                            app.getApplicationNumber(),
+                            displayName,
+                            app.getTargetProgram() != null ? app.getTargetProgram().getCode() : "BSIT",
+                            1,
+                            "INCOMING_FIRST_YEAR"
+                    ));
+                }
+            }
+        }
+
+        return results;
     }
 
     private StudentProfileResponse mapToProfileResponse(StudentProfile sp) {
@@ -221,7 +370,7 @@ public class StudentService {
         if (userId == null) {
             throw new IllegalArgumentException("User ID cannot be null.");
         }
-        StudentProfile profile = studentProfileRepository.findByUserIdWithProgramAndCurriculum(userId)
+        StudentProfile profile = Optional.ofNullable(studentProfileL2CacheService.findByUserId(userId))
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found for user ID: " + userId));
         return mapToProfileResponse(profile);
     }

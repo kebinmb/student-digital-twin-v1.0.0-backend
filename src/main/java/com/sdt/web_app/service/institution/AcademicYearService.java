@@ -6,6 +6,8 @@ import com.sdt.web_app.repositories.institution.AcademicYearRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class AcademicYearService {
     private final AcademicYearRepository academicYearRepository;
     private final TermRepository termRepository;
 
+    @CacheEvict(value = "academicYears", allEntries = true)
     public AcademicYearResponse createAcademicYear(CreateAcademicYearRequest request) {
         if (academicYearRepository.existsByCode(request.code())) {
             throw new IllegalArgumentException("Academic year with code already exists: " + request.code());
@@ -42,6 +45,7 @@ public class AcademicYearService {
         return mapToResponse(saved);
     }
 
+    @CacheEvict(value = "academicYears", allEntries = true)
     public AcademicYearResponse updateAcademicYear(Long id, UpdateAcademicYearRequest request) {
         AcademicYear academicYear = findEntityById(id);
         academicYear.updateDates(request.startDate(), request.endDate());
@@ -49,6 +53,7 @@ public class AcademicYearService {
     }
 
     @Transactional
+    @CacheEvict(value = "academicYears", allEntries = true)
     public AcademicYearResponse setCurrentAcademicYear(Long id) {
         AcademicYear targetYear = findEntityById(id);
         if (!targetYear.isCurrent()) {
@@ -58,6 +63,7 @@ public class AcademicYearService {
         return mapToResponse(targetYear);
     }
 
+    @CacheEvict(value = "academicYears", allEntries = true)
     public void deleteAcademicYear(Long id) {
         AcademicYear academicYear = findEntityById(id);
         if (termRepository.existsByAcademicYearId(id)) {
@@ -67,11 +73,13 @@ public class AcademicYearService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "academicYears", key = "#id")
     public AcademicYearResponse getAcademicYearById(Long id) {
         return mapToResponse(findEntityById(id));
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "academicYears", key = "'current'")
     public AcademicYearResponse getCurrentAcademicYear() {
         return academicYearRepository.findFirstByIsCurrentTrueOrderByIdDesc()
                 .map(this::mapToResponse)
@@ -79,6 +87,7 @@ public class AcademicYearService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "academicYears", key = "'all'")
     public List<AcademicYearResponse> getAllAcademicYears() {
         return academicYearRepository.findAllByOrderByStartDateDesc().stream()
                 .map(this::mapToResponse)

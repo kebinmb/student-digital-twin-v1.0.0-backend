@@ -27,6 +27,7 @@ com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.class
 com\sdt\web_app\SsrfProtectionTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$CourseCatalogAndOutcomesTests.class
 com\sdt\web_app\controller\TestSecurityControllers.class
+com\sdt\web_app\service\PerformanceAndCachingOptimizationTest.class
 com\sdt\web_app\service\grade\ClassRecordInProgressGradingTest.class
 com\sdt\web_app\BaseIntegrationTest.class
 com\sdt\web_app\TestWebAppApplication.class

@@ -4,6 +4,8 @@ import com.sdt.web_app.entities.institution.GradingScale;
 import com.sdt.web_app.repositories.institution.GradingScaleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ public class GradingScaleService {
 
     private final GradingScaleRepository gradingScaleRepository;
 
+    @CacheEvict(value = "gradingScales", allEntries = true)
     public GradingScale createGradingScale(
             String code,
             BigDecimal numericGrade,
@@ -58,23 +61,27 @@ public class GradingScaleService {
         return gradingScaleRepository.save(scale);
     }
 
+    @CacheEvict(value = "gradingScales", allEntries = true)
     public GradingScale updateGradingScale(Long id, BigDecimal min, BigDecimal max, String remarks, boolean isPassing) {
         GradingScale scale = findScaleById(id);
         scale.updateBracket(min, max, remarks, isPassing);
         return scale;
     }
 
+    @CacheEvict(value = "gradingScales", allEntries = true)
     public void deleteGradingScale(Long id) {
         GradingScale scale = findScaleById(id);
         gradingScaleRepository.delete(scale);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "gradingScales", key = "#id")
     public GradingScale getGradingScaleById(Long id) {
         return findScaleById(id);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "gradingScales", key = "'all'")
     public List<GradingScale> getAllGradingScales() {
         return gradingScaleRepository.findAllByOrderByPercentageMinDesc();
     }

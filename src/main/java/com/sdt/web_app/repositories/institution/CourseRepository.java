@@ -33,4 +33,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT c FROM Course c WHERE c.isActive = true AND (:search IS NULL OR :search = '' OR LOWER(c.code) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(c.title) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Course> searchCourses(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT c FROM Course c WHERE c.isActive = true AND (:search IS NULL OR :search = '' OR LOWER(c.code) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(c.title) LIKE LOWER(CONCAT('%', :search, '%')))")
+    org.springframework.data.domain.Slice<Course> searchCoursesSlice(@Param("search") String search, Pageable pageable);
 }

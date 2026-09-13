@@ -6,6 +6,8 @@ import com.sdt.web_app.repositories.institution.CampusRepository;
 import com.sdt.web_app.repositories.institution.DepartmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class CampusService {
     private final CampusRepository campusRepository;
     private final DepartmentRepository departmentRepository;
 
+    @CacheEvict(value = "campuses", allEntries = true)
     public CampusResponse createCampus(CreateCampusRequest request) {
         if (campusRepository.existsByCode(request.code())) {
             throw new IllegalArgumentException("Campus with code already exists: " + request.code());
@@ -44,6 +47,7 @@ public class CampusService {
         return mapToResponse(saved);
     }
 
+    @CacheEvict(value = "campuses", allEntries = true)
     public CampusResponse updateCampus(Long id, UpdateCampusRequest request) {
         Campus campus = findEntityById(id);
         campus.updateDetails(
@@ -56,6 +60,7 @@ public class CampusService {
         return mapToResponse(campus);
     }
 
+    @CacheEvict(value = "campuses", allEntries = true)
     public CampusResponse toggleCampusActive(Long id, boolean active) {
         Campus campus = findEntityById(id);
         if (active) {
@@ -66,6 +71,7 @@ public class CampusService {
         return mapToResponse(campus);
     }
 
+    @CacheEvict(value = "campuses", allEntries = true)
     public void deleteCampus(Long id) {
         Campus campus = findEntityById(id);
         if (departmentRepository.existsByCampusId(id)) {
@@ -75,11 +81,13 @@ public class CampusService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "campuses", key = "#id")
     public CampusResponse getCampusById(Long id) {
         return mapToResponse(findEntityById(id));
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "campuses", key = "'all'")
     public List<CampusResponse> getAllCampuses() {
         return campusRepository.findAll().stream()
                 .map(this::mapToResponse)
@@ -87,6 +95,7 @@ public class CampusService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "campuses", key = "'active'")
     public List<CampusResponse> getActiveCampuses() {
         return campusRepository.findByIsActiveTrue().stream()
                 .map(this::mapToResponse)

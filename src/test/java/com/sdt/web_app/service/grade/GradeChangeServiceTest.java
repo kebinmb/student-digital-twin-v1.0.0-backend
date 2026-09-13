@@ -37,6 +37,7 @@ class GradeChangeServiceTest {
     @Mock private StudentProfileRepository profileRepository;
     @Mock private CourseRepository courseRepository;
     @Mock private TermRepository termRepository;
+    @Mock private com.sdt.web_app.service.institution.TermService termService;
     @Mock private UserRepository userRepository;
     @Mock private StudentCourseGradeRepository gradeRepository;
 
@@ -55,6 +56,7 @@ class GradeChangeServiceTest {
         mockStudent = StudentProfile.builder().id(10L).studentNumber("2024-0001").user(mockUser).build();
         mockCourse = Course.builder().id(100L).code("CS101").title("Intro to CS").creditUnits(new BigDecimal("3.00")).build();
         mockTerm = Term.builder().id(50L).termType(TermType.FIRST_SEM).build();
+        lenient().when(termService.getTermById(any())).thenReturn(mockTerm);
 
 
         mockRequest = GradeChangeRequest.builder()
@@ -75,7 +77,6 @@ class GradeChangeServiceTest {
     void submitRequest_Success() {
         when(profileRepository.findById(10L)).thenReturn(Optional.of(mockStudent));
         when(courseRepository.findById(100L)).thenReturn(Optional.of(mockCourse));
-        when(termRepository.findById(50L)).thenReturn(Optional.of(mockTerm));
         when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
         when(requestRepository.save(any(GradeChangeRequest.class))).thenReturn(mockRequest);
 

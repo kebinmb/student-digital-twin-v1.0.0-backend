@@ -1,6 +1,8 @@
 package com.sdt.web_app.repositories.scheduling;
 
 import com.sdt.web_app.entities.scheduling.ClassSchedule;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +17,8 @@ public interface ClassScheduleRepository extends JpaRepository<ClassSchedule, Lo
     List<ClassSchedule> findBySectionId(Long sectionId);
 
     List<ClassSchedule> findBySectionTermId(Long termId);
+
+    Slice<ClassSchedule> findBySectionTermId(Long termId, Pageable pageable);
 
     List<ClassSchedule> findByRoomIdAndSectionTermId(Long roomId, Long termId);
 

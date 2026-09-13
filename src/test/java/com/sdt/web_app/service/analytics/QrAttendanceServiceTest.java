@@ -28,6 +28,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.sdt.web_app.service.security.StudentProfileL2CacheService;
+
 @ExtendWith(MockitoExtension.class)
 class QrAttendanceServiceTest {
 
@@ -35,6 +37,7 @@ class QrAttendanceServiceTest {
     @Mock private AttendanceRecordRepository recordRepository;
     @Mock private ClassScheduleRepository scheduleRepository;
     @Mock private StudentProfileRepository studentProfileRepository;
+    @Mock private StudentProfileL2CacheService studentProfileL2CacheService;
 
     @InjectMocks
     private QrAttendanceService attendanceService;
@@ -71,7 +74,7 @@ class QrAttendanceServiceTest {
     @DisplayName("Scan attendance succeeds when within geofence and not expired")
     void scanAttendance_Success() {
         when(sessionRepository.findByQrSeed("QR-SEED-12345")).thenReturn(Optional.of(mockSession));
-        when(studentProfileRepository.findById(200L)).thenReturn(Optional.of(mockStudent));
+        when(studentProfileL2CacheService.findById(200L)).thenReturn(mockStudent);
         when(recordRepository.findBySessionIdAndStudentId(1L, 200L)).thenReturn(Optional.empty());
 
         AttendanceRecord record = AttendanceRecord.builder()
@@ -98,7 +101,7 @@ class QrAttendanceServiceTest {
     @DisplayName("Scan attendance fails when geofence radius exceeded (> 50 meters)")
     void scanAttendance_GeofenceViolation() {
         when(sessionRepository.findByQrSeed("QR-SEED-12345")).thenReturn(Optional.of(mockSession));
-        when(studentProfileRepository.findById(200L)).thenReturn(Optional.of(mockStudent));
+        when(studentProfileL2CacheService.findById(200L)).thenReturn(mockStudent);
 
         // Location 5km away
         ScanAttendanceRequest req = new ScanAttendanceRequest(

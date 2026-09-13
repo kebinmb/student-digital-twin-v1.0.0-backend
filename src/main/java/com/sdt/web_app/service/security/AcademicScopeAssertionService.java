@@ -9,7 +9,6 @@ import com.sdt.web_app.entities.institution.Program;
 import com.sdt.web_app.entities.scheduling.ClassSection;
 import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
-import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
 import com.sdt.web_app.repositories.institution.DepartmentRepository;
 import com.sdt.web_app.repositories.institution.ProgramRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
@@ -34,7 +33,8 @@ public class AcademicScopeAssertionService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final ProgramRepository programRepository;
-    private final FacultyProfileRepository facultyProfileRepository;
+    private final SecurityProfileCache securityProfileCache;
+    private final CachedScopeReader cachedScopeReader;
     private final ClassSectionRepository classSectionRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final SecurityUtils securityUtils;
@@ -53,104 +53,118 @@ public class AcademicScopeAssertionService {
             throw new AccessDeniedException("Unable to resolve authenticated user identity.");
         }
 
+        // Request-scope cache check
+        String cacheKey = "SDT_CACHED_SCOPE_" + userId;
+        org.springframework.web.context.request.RequestAttributes attributes = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            Object cachedObj = attributes.getAttribute(cacheKey, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+            if (cachedObj instanceof AcademicScopeContext cachedScope) {
+                return cachedScope;
+            }
+        }
+
+        AcademicScopeContext resolvedScope;
+
         // 1. ADMIN and REGISTRAR: System-wide unrestricted academic scope
         if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_REGISTRAR")) {
-            return AcademicScopeContext.unrestricted(userId);
-        }
+            resolvedScope = AcademicScopeContext.unrestricted(userId);
+        } else {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new AccessDeniedException("User record not found."));
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AccessDeniedException("User record not found."));
-
-        // 2. DEAN: Mandatory assignment chain: Account -> college_id
-        if (authorities.contains("ROLE_DEAN")) {
-            Long collegeId = null;
-            if (user.getCollege() != null) {
-                collegeId = user.getCollege().getId();
-            } else {
-                List<Department> colleges = departmentRepository.findByDeanUserId(userId);
-                if (!colleges.isEmpty()) {
-                    collegeId = colleges.get(0).getId();
+            // 2. DEAN: Mandatory assignment chain: Account -> college_id
+            if (authorities.contains("ROLE_DEAN")) {
+                Long collegeId = null;
+                if (user.getCollege() != null) {
+                    collegeId = user.getCollege().getId();
+                } else {
+                    List<Department> colleges = departmentRepository.findByDeanUserId(userId);
+                    if (!colleges.isEmpty()) {
+                        collegeId = colleges.get(0).getId();
+                    }
                 }
-            }
 
-            if (collegeId == null) {
-                log.warn("DEAN user {} is not linked to any College.", userId);
-                throw new AccessDeniedException("Account not linked to an active College.");
-            }
+                if (collegeId == null) {
+                    log.warn("DEAN user {} is not linked to any College.", userId);
+                    throw new AccessDeniedException("Account not linked to an active College.");
+                }
 
-            // Resolve all programs under this college (both direct and child departments)
-            List<Long> deptIds = new ArrayList<>();
-            deptIds.add(collegeId);
-            List<Department> children = departmentRepository.findByParentDepartmentId(collegeId);
-            for (Department child : children) {
-                deptIds.add(child.getId());
-            }
+                // Resolve all programs under this college (both direct and child departments)
+                List<Long> deptIds = new ArrayList<>();
+                deptIds.add(collegeId);
+                List<Department> children = departmentRepository.findByParentDepartmentId(collegeId);
+                for (Department child : children) {
+                    deptIds.add(child.getId());
+                }
 
-            List<Program> programs = programRepository.findByDepartmentIdIn(deptIds);
-            List<Long> allowedProgramIds = programs.stream().map(Program::getId).toList();
+                List<Program> programs = programRepository.findByDepartmentIdIn(deptIds);
+                List<Long> allowedProgramIds = programs.stream().map(Program::getId).toList();
 
-            log.debug("Resolved DEAN scope for user {}: collegeId={}, allowedPrograms={}", userId, collegeId, allowedProgramIds);
-            return AcademicScopeContext.dean(userId, collegeId, allowedProgramIds);
-        }
+                log.debug("Resolved DEAN scope for user {}: collegeId={}, allowedPrograms={}", userId, collegeId, allowedProgramIds);
+                resolvedScope = AcademicScopeContext.dean(userId, collegeId, allowedProgramIds);
+            } else if (authorities.contains("ROLE_CHAIRPERSON")) {
+                // 3. CHAIRPERSON: Mandatory assignment chain: Account -> college_id AND program_id
+                Long collegeId = user.getCollege() != null ? user.getCollege().getId() : null;
+                Long programId = user.getProgram() != null ? user.getProgram().getId() : null;
 
-        // 3. CHAIRPERSON: Mandatory assignment chain: Account -> college_id AND program_id
-        if (authorities.contains("ROLE_CHAIRPERSON")) {
-            Long collegeId = user.getCollege() != null ? user.getCollege().getId() : null;
-            Long programId = user.getProgram() != null ? user.getProgram().getId() : null;
-
-            if (programId == null) {
-                Optional<Program> progOpt = programRepository.findFirstByChairpersonUserId(userId);
-                if (progOpt.isPresent()) {
-                    Program p = progOpt.get();
-                    programId = p.getId();
-                    if (collegeId == null) {
+                if (programId == null) {
+                    Optional<Program> progOpt = programRepository.findFirstByChairpersonUserId(userId);
+                    if (progOpt.isPresent()) {
+                        Program p = progOpt.get();
+                        programId = p.getId();
+                        if (collegeId == null) {
+                            collegeId = resolveProgramCollegeId(p);
+                        }
+                    }
+                } else if (collegeId == null) {
+                    Program p = programRepository.findById(programId).orElse(null);
+                    if (p != null) {
                         collegeId = resolveProgramCollegeId(p);
                     }
                 }
-            } else if (collegeId == null) {
-                Program p = programRepository.findById(programId).orElse(null);
-                if (p != null) {
-                    collegeId = resolveProgramCollegeId(p);
-                }
-            }
 
-            if (collegeId == null || programId == null) {
-                log.warn("CHAIRPERSON user {} is missing college or program linkage: collegeId={}, programId={}",
-                        userId, collegeId, programId);
-                throw new AccessDeniedException("Account not linked to an active College and Program.");
-            }
-
-            // Verify program actually belongs to the assigned college
-            Program assignedProg = programRepository.findById(programId).orElse(null);
-            if (assignedProg != null) {
-                Long actualCollegeId = resolveProgramCollegeId(assignedProg);
-                if (actualCollegeId != null && !actualCollegeId.equals(collegeId)) {
-                    log.warn("CHAIRPERSON user {} has mismatched collegeId {} vs program's collegeId {}",
-                            userId, collegeId, actualCollegeId);
+                if (collegeId == null || programId == null) {
+                    log.warn("CHAIRPERSON user {} is missing college or program linkage: collegeId={}, programId={}",
+                            userId, collegeId, programId);
                     throw new AccessDeniedException("Account not linked to an active College and Program.");
                 }
+
+                // Verify program actually belongs to the assigned college
+                Program assignedProg = programRepository.findById(programId).orElse(null);
+                if (assignedProg != null) {
+                    Long actualCollegeId = resolveProgramCollegeId(assignedProg);
+                    if (actualCollegeId != null && !actualCollegeId.equals(collegeId)) {
+                        log.warn("CHAIRPERSON user {} has mismatched collegeId {} vs program's collegeId {}",
+                                userId, collegeId, actualCollegeId);
+                        throw new AccessDeniedException("Account not linked to an active College and Program.");
+                    }
+                }
+
+                log.debug("Resolved CHAIRPERSON scope for user {}: collegeId={}, programId={}", userId, collegeId, programId);
+                resolvedScope = AcademicScopeContext.chairperson(userId, collegeId, programId);
+            } else if (authorities.contains("ROLE_FACULTY")) {
+                // 4. FACULTY: Scoped to assigned load & sections
+                FacultyProfile fp = user.getFacultyProfile() != null
+                        ? user.getFacultyProfile()
+                        : (securityProfileCache != null ? securityProfileCache.getFacultyProfile(userId).orElse(null) : null);
+                Long collegeId = user.getCollege() != null ? user.getCollege().getId() : (fp != null && fp.getCollege() != null ? fp.getCollege().getId() : null);
+                Long programId = user.getProgram() != null ? user.getProgram().getId() : (fp != null && fp.getProgram() != null ? fp.getProgram().getId() : null);
+
+                List<Long> assignedSections = classSectionRepository.findAssignedSectionIdsByInstructor(userId);
+
+                log.debug("Resolved FACULTY scope for user {}: collegeId={}, programId={}, assignedSections={}",
+                        userId, collegeId, programId, assignedSections);
+                resolvedScope = AcademicScopeContext.faculty(userId, collegeId, programId, assignedSections);
+            } else {
+                resolvedScope = AcademicScopeContext.other(userId);
             }
-
-            log.debug("Resolved CHAIRPERSON scope for user {}: collegeId={}, programId={}", userId, collegeId, programId);
-            return AcademicScopeContext.chairperson(userId, collegeId, programId);
         }
 
-        // 4. FACULTY: Scoped to assigned load & sections
-        if (authorities.contains("ROLE_FACULTY")) {
-            FacultyProfile fp = user.getFacultyProfile() != null
-                    ? user.getFacultyProfile()
-                    : (facultyProfileRepository != null ? facultyProfileRepository.findByUserId(userId).orElse(null) : null);
-            Long collegeId = user.getCollege() != null ? user.getCollege().getId() : (fp != null && fp.getCollege() != null ? fp.getCollege().getId() : null);
-            Long programId = user.getProgram() != null ? user.getProgram().getId() : (fp != null && fp.getProgram() != null ? fp.getProgram().getId() : null);
-
-            List<Long> assignedSections = classSectionRepository.findAssignedSectionIdsByInstructor(userId);
-
-            log.debug("Resolved FACULTY scope for user {}: collegeId={}, programId={}, assignedSections={}",
-                    userId, collegeId, programId, assignedSections);
-            return AcademicScopeContext.faculty(userId, collegeId, programId, assignedSections);
+        if (attributes != null && resolvedScope != null) {
+            attributes.setAttribute(cacheKey, resolvedScope, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
         }
 
-        return AcademicScopeContext.other(userId);
+        return resolvedScope;
     }
 
     public Long resolveProgramCollegeId(Program program) {

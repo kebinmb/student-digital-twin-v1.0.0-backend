@@ -15,6 +15,8 @@ import com.sdt.web_app.service.security.AcademicScopeContext;
 import com.sdt.web_app.specifications.ProgramSpecifications;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class ProgramService {
     private final CiloPiloMappingRepository ciloPiloMappingRepository;
     private final AcademicScopeAssertionService academicScopeAssertionService;
 
+    @CacheEvict(value = {"programs", "programsById"}, allEntries = true)
     public ProgramResponse createProgram(
             Long departmentId,
             String code,
@@ -74,6 +77,7 @@ public class ProgramService {
         return mapToProgramResponse(saved);
     }
 
+    @CacheEvict(value = {"programs", "programsById"}, allEntries = true)
     public ProgramResponse updateProgram(
             Long id,
             String name,
@@ -95,6 +99,7 @@ public class ProgramService {
         return mapToProgramResponse(program);
     }
 
+    @CacheEvict(value = {"programs", "programsById"}, allEntries = true)
     public void deleteProgram(Long id) {
         Program program = programRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + id));
@@ -160,6 +165,7 @@ public class ProgramService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "programsById", key = "#id")
     public ProgramResponse getProgramById(Long id) {
         Program program = programRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Program not found with ID: " + id));
@@ -174,6 +180,7 @@ public class ProgramService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "programs", key = "'dept:' + #departmentId")
     public List<ProgramResponse> getProgramsByDepartment(Long departmentId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {

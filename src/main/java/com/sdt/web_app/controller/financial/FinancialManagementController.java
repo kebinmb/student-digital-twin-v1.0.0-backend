@@ -87,6 +87,16 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/receipts/student/{studentProfileId}/slice")
+    public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<CashierReceiptDto>> getReceiptsByStudentProfileSlice(
+            @PathVariable Long studentProfileId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "DESC") String sortDir) {
+        return ResponseEntity.ok(cashieringService.getReceiptsByStudentProfileSlice(studentProfileId, page, size, sortBy, sortDir));
+    }
+
     @PostMapping("/unifast/claims")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
     public ResponseEntity<UnifastFheClaimDto> generateUnifastClaimBatch(@Valid @RequestBody CreateUnifastClaimRequest request, Authentication authentication) {

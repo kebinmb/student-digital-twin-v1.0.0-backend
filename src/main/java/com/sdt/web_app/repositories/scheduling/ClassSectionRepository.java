@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface ClassSectionRepository extends JpaRepository<ClassSection, Long>, JpaSpecificationExecutor<ClassSection> {
 
-    @EntityGraph(attributePaths = {"term", "course", "curriculum", "curriculum.program", "primaryInstructor"})
+    @EntityGraph(attributePaths = {"term", "course", "curriculum", "curriculum.program", "primaryInstructor", "primaryInstructor.facultyProfile"})
     @Override
     List<ClassSection> findAll(org.springframework.data.jpa.domain.Specification<ClassSection> spec);
 
@@ -34,7 +34,7 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
     @Query("SELECT DISTINCT s FROM ClassSection s JOIN FETCH s.curriculum cur JOIN FETCH cur.program p JOIN FETCH s.course c LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.term.id = :termId")
     List<ClassSection> findAllWithSchedulesByTermId(@Param("termId") Long termId);
 
-    @Query("SELECT s FROM ClassSection s JOIN FETCH s.term JOIN FETCH s.course JOIN FETCH s.curriculum cur JOIN FETCH cur.program LEFT JOIN FETCH s.primaryInstructor WHERE s.id = :id")
+    @Query("SELECT s FROM ClassSection s JOIN FETCH s.term JOIN FETCH s.course JOIN FETCH s.curriculum cur JOIN FETCH cur.program LEFT JOIN FETCH s.primaryInstructor inst LEFT JOIN FETCH inst.facultyProfile WHERE s.id = :id")
     Optional<ClassSection> findByIdWithDetails(@Param("id") Long id);
 
     @Query("SELECT DISTINCT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.id = :id")

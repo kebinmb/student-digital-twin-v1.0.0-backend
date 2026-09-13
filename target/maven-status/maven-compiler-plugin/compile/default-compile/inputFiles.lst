@@ -3,6 +3,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\ActuatorSecurityConfig.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\AsyncSecurityConfig.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\AuthCryptoConfig.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\CacheConfig.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\GrpcAuthInterceptor.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\JacksonHardeningConfig.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\JwtDenylistValidator.java
@@ -10,6 +11,8 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\RateLimitingFilter.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\SsrfProtectingClientInterceptor.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\config\WebSecurityConfig.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\admission\AdmissionManagementController.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\admission\PublicAdmissionController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\analytics\AttendanceController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\analytics\DigitalTwinAnalyticsController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\audit\AuditLogController.java
@@ -41,9 +44,11 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\lms\LtiController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\lms\StudentPortalController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\scheduling\SchedulingController.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\admission\AdmissionDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\analytics\AnalyticsDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\authentication\AuthDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\authentication\UserDtos.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\common\SliceResponse.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\compliance\ComplianceDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\compliance\EquityDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\enrollment\EnrollmentDtos.java
@@ -68,6 +73,9 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\TermDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\lms\LmsDtos.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\scheduling\SchedulingDtos.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\admission\AdmissionApplication.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\admission\AdmissionConfig.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\admission\EntranceExamSlot.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\AttendanceRecord.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\AttendanceSession.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\StudentRiskScore.java
@@ -132,6 +140,9 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\exceptions\InvalidTokenException.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\exceptions\ResourceNotFoundException.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\exceptions\UserAlreadyExistsException.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\admission\AdmissionApplicationRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\admission\AdmissionConfigRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\admission\EntranceExamSlotRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\AttendanceRecordRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\AttendanceSessionRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\StudentRiskScoreRepository.java
@@ -183,6 +194,8 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\ClassSectionRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\FacultyWorkloadRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\RoomRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\admission\AdmissionQueueService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\admission\AdmissionService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\DigitalTwinRiskService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\EquityTargetService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\QrAttendanceService.java
@@ -232,10 +245,16 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\scheduling\SectionSecurity.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\AcademicScopeAssertionService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\AcademicScopeContext.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\CachedScopeReader.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\DataScopingService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\FacultyProfileL2CacheService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\RequestScopeProfileCache.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\SecurityProfileCache.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\SecurityUtils.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\security\StudentProfileL2CacheService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\specifications\ClassSectionSpecifications.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\specifications\FacultyProfileSpecifications.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\specifications\ProgramSpecifications.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\specifications\StudentProfileSpecifications.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\utils\SortPropertyMapper.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\WebAppApplication.java

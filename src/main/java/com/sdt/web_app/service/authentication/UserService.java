@@ -34,6 +34,7 @@ public class UserService {
     private final ProgramRepository programRepository;
     private final AcademicScopeAssertionService academicScopeAssertionService;
     private final FacultyProfileRepository facultyProfileRepository;
+    private final com.sdt.web_app.service.security.CachedScopeReader cachedScopeReader;
 
     @Transactional
     public UserDetailResponse createUser(CreateUserRequest request) {
@@ -176,8 +177,8 @@ public class UserService {
         if (user.getFacultyProfile() != null) {
             user.getFacultyProfile().assignCollege(user.getCollege());
             user.getFacultyProfile().assignProgram(user.getProgram());
-        } else if (facultyProfileRepository != null) {
-            facultyProfileRepository.findByUserId(user.getId()).ifPresent(fp -> {
+        } else if (cachedScopeReader != null) {
+            cachedScopeReader.findByUserId(user.getId()).ifPresent(fp -> {
                 fp.assignCollege(user.getCollege());
                 fp.assignProgram(user.getProgram());
                 user.setFacultyProfile(fp);

@@ -1,15 +1,15 @@
 package com.sdt.web_app.controller.compliance;
 
+import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.dto.compliance.EquityDtos.*;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile.EquityVerificationStatus;
 import com.sdt.web_app.service.compliance.StudentEquityProfileService;
 import com.sdt.web_app.service.security.SecurityUtils;
+import com.sdt.web_app.utils.SortPropertyMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -74,9 +74,29 @@ public class StudentEquityProfileController {
             @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = SortPropertyMapper.createEquityProfilePageable(page, size, sortBy, sortDir);
         Page<StudentEquityProfileDto> result = equityProfileService.searchEquityProfiles(
+                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/search-slice")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
+    public ResponseEntity<SliceResponse<StudentEquityProfileDto>> searchEquityProfilesSlice(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) EquityVerificationStatus status,
+            @RequestParam(required = false) Boolean is4ps,
+            @RequestParam(required = false) Boolean isIp,
+            @RequestParam(required = false) Boolean isPwd,
+            @RequestParam(required = false) Boolean isGida,
+            @RequestParam(required = false) Boolean isFirstGen,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir) {
+
+        Pageable pageable = SortPropertyMapper.createEquityProfilePageable(page, size, sortBy, sortDir);
+        SliceResponse<StudentEquityProfileDto> result = equityProfileService.searchEquityProfilesSlice(
                 search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
         return ResponseEntity.ok(result);
     }

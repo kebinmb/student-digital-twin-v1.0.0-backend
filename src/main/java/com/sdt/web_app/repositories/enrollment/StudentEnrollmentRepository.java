@@ -25,6 +25,8 @@ public interface StudentEnrollmentRepository extends JpaRepository<StudentEnroll
         LEFT JOIN FETCH se.items item
         LEFT JOIN FETCH item.section sec
         LEFT JOIN FETCH sec.course
+        LEFT JOIN FETCH sec.primaryInstructor inst
+        LEFT JOIN FETCH inst.facultyProfile
         WHERE se.student.id = :studentId
           AND se.term.id = :termId
     """)
@@ -39,6 +41,8 @@ public interface StudentEnrollmentRepository extends JpaRepository<StudentEnroll
         LEFT JOIN FETCH se.items item
         LEFT JOIN FETCH item.section sec
         LEFT JOIN FETCH sec.course
+        LEFT JOIN FETCH sec.primaryInstructor inst
+        LEFT JOIN FETCH inst.facultyProfile
         WHERE se.term.id = :termId
         ORDER BY se.id DESC
     """)
@@ -50,6 +54,8 @@ public interface StudentEnrollmentRepository extends JpaRepository<StudentEnroll
         LEFT JOIN FETCH item.section sec
         LEFT JOIN FETCH sec.course
         LEFT JOIN FETCH sec.schedules
+        LEFT JOIN FETCH sec.primaryInstructor inst
+        LEFT JOIN FETCH inst.facultyProfile
         WHERE se.student.id = :studentId
         ORDER BY se.id DESC
     """)

@@ -10,8 +10,11 @@ import com.sdt.web_app.repositories.institution.CourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumRepository;
 import com.sdt.web_app.repositories.institution.ProgramRepository;
+import com.sdt.web_app.config.CacheConfig;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ public class CurriculumService {
     private final ProgramRepository programRepository;
     private final CourseRepository courseRepository;
 
+    @CacheEvict(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, allEntries = true)
     public CurriculumResponse createCurriculum(CreateCurriculumRequest request) {
         Program program = programRepository.findById(request.programId())
                 .orElseThrow(() -> new IllegalArgumentException("Program not found with ID: " + request.programId()));
@@ -49,12 +53,14 @@ public class CurriculumService {
         return mapToResponse(saved);
     }
 
+    @CacheEvict(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, allEntries = true)
     public CurriculumResponse updateCurriculum(Long id, UpdateCurriculumRequest request) {
         Curriculum curriculum = findCurriculumById(id);
         curriculum.updateDetails(request.name(), request.effectiveAcademicYear());
         return mapToResponse(curriculum);
     }
 
+    @CacheEvict(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, allEntries = true)
     public CurriculumCourseResponse assignCourseToCurriculum(Long curriculumId, AssignCourseToCurriculumRequest request) {
         Curriculum curriculum = findCurriculumById(curriculumId);
         if (!curriculum.isEditable()) {
@@ -98,6 +104,7 @@ public class CurriculumService {
         return mapToCourseResponse(saved);
     }
 
+    @CacheEvict(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, allEntries = true)
     public void removeCourseFromCurriculum(Long curriculumId, Long curriculumCourseId) {
         Curriculum curriculum = findCurriculumById(curriculumId);
         if (!curriculum.isEditable()) {
@@ -120,6 +127,7 @@ public class CurriculumService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, key = "#programId")
     public List<CurriculumResponse> getCurriculaByProgramId(Long programId) {
         if (!programRepository.existsById(programId)) {
             throw new IllegalArgumentException("Program not found with ID: " + programId);
@@ -139,12 +147,14 @@ public class CurriculumService {
                 .toList();
     }
 
+    @CacheEvict(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, allEntries = true)
     public CurriculumResponse transitionStatus(Long id, Curriculum.Status targetStatus) {
         Curriculum curriculum = findCurriculumById(id);
         curriculum.transitionTo(targetStatus);
         return mapToResponse(curriculum);
     }
 
+    @CacheEvict(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, allEntries = true)
     public void deleteCurriculum(Long id) {
         Curriculum curriculum = findCurriculumById(id);
         if (curriculum.getStatus() == Curriculum.Status.ACTIVE) {

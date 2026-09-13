@@ -58,6 +58,8 @@ public final class StudentProfileSpecifications {
             return cb.or(
                     cb.like(cb.lower(root.get("studentNumber")), pattern),
                     cb.like(cb.lower(user.get("username")), pattern),
+                    cb.like(cb.lower(root.get("firstName")), pattern),
+                    cb.like(cb.lower(root.get("lastName")), pattern),
                     cb.like(cb.lower(program.get("code")), pattern)
             );
         };

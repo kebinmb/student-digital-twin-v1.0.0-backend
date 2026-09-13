@@ -12,10 +12,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sdt.web_app.dto.common.SliceResponse;
+import com.sdt.web_app.utils.SortPropertyMapper;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import com.sdt.web_app.service.security.StudentProfileL2CacheService;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,10 +35,11 @@ public class DigitalTwinRiskService {
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final StudentRiskScoreRepository riskScoreRepository;
     private final EquityTargetService equityTargetService;
+    private final StudentProfileL2CacheService studentProfileL2CacheService;
 
     @Transactional
     public DigitalTwinRiskProfileDto evaluateStudentRiskProfile(Long studentId) {
-        StudentProfile student = profileRepository.findByIdWithProgramAndCurriculum(studentId)
+        StudentProfile student = Optional.ofNullable(studentProfileL2CacheService.findById(studentId))
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found: " + studentId));
 
         // 1. Calculate Academic Risk Score (0.00 to 100.00) based on GPA
@@ -145,5 +155,35 @@ public class DigitalTwinRiskService {
                     );
                 })
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SliceResponse<DigitalTwinRiskProfileDto> getEarlyWarningRadarSlice(int page, int size, String sortBy, String sortDir) {
+        Pageable pageable = SortPropertyMapper.createStudentRiskScorePageable(page, size, sortBy, sortDir);
+        List<StudentRiskScore.RiskLevel> levels = List.of(StudentRiskScore.RiskLevel.HIGH, StudentRiskScore.RiskLevel.CRITICAL);
+        Slice<StudentRiskScore> slice = riskScoreRepository.findByCompositeRiskLevelIn(levels, pageable);
+        Slice<DigitalTwinRiskProfileDto> responseSlice = slice.map(srs -> {
+            StudentProfile sp = srs.getStudent();
+            String name = sp != null && sp.getUser() != null ? sp.getUser().getUsername() : "Student #" + (sp != null ? sp.getStudentNumber() : srs.getId());
+            List<String> interventions = srs.getRecommendedInterventions() != null
+                    ? Arrays.asList(srs.getRecommendedInterventions().split("; "))
+                    : List.of("Dispatch Academic Counselor");
+
+            return new DigitalTwinRiskProfileDto(
+                    sp != null ? sp.getId() : null,
+                    sp != null ? sp.getStudentNumber() : "N/A",
+                    name,
+                    sp != null && sp.getProgram() != null ? sp.getProgram().getCode() : "N/A",
+                    sp != null ? sp.getYearLevel() : 1,
+                    srs.getAcademicRiskScore(),
+                    srs.getAttendanceRiskScore(),
+                    srs.getSocioeconomicRiskScore(),
+                    srs.getCompositeRiskLevel().name(),
+                    srs.getPredictedDropoutProbability(),
+                    interventions,
+                    srs.getEvaluatedAt()
+            );
+        });
+        return SliceResponse.from(responseSlice);
     }
 }

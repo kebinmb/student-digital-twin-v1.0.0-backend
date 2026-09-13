@@ -21,6 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.sdt.web_app.service.security.StudentProfileL2CacheService;
+
 @ExtendWith(MockitoExtension.class)
 class DigitalTwinRiskServiceTest {
 
@@ -28,6 +30,7 @@ class DigitalTwinRiskServiceTest {
     @Mock private AttendanceRecordRepository attendanceRecordRepository;
     @Mock private StudentRiskScoreRepository riskScoreRepository;
     @Mock private EquityTargetService equityTargetService;
+    @Mock private StudentProfileL2CacheService studentProfileL2CacheService;
 
     @InjectMocks
     private DigitalTwinRiskService riskService;
@@ -47,7 +50,7 @@ class DigitalTwinRiskServiceTest {
     @Test
     @DisplayName("Evaluate risk profile generates HIGH/CRITICAL risk for low GPA & poor attendance")
     void evaluateStudentRiskProfile_HighRisk() {
-        when(profileRepository.findByIdWithProgramAndCurriculum(10L)).thenReturn(Optional.of(mockStudent));
+        when(studentProfileL2CacheService.findById(10L)).thenReturn(mockStudent);
         when(attendanceRecordRepository.countTotalByStudentId(10L)).thenReturn(10L);
         when(attendanceRecordRepository.countPresentByStudentId(10L)).thenReturn(5L); // 50% attendance
         when(equityTargetService.calculateSocioeconomicRiskScore(10L)).thenReturn(new BigDecimal("40.00"));

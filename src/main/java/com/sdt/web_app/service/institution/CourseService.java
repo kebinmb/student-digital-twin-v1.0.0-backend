@@ -8,6 +8,10 @@ import com.sdt.web_app.repositories.institution.CourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import com.sdt.web_app.dto.common.SliceResponse;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +30,7 @@ public class CourseService {
     private final CoursePrerequisiteRepository prerequisiteRepository;
     private final CourseOutcomeRepository courseOutcomeRepository;
 
+    @CacheEvict(value = "courses", allEntries = true)
     public CourseResponse createCourse(CreateCourseRequest request) {
         if (courseRepository.existsByCode(request.code())) {
             throw new IllegalArgumentException("Course with code already exists: " + request.code());
@@ -54,6 +59,7 @@ public class CourseService {
         return mapToResponse(saved);
     }
 
+    @CacheEvict(value = "courses", allEntries = true)
     public CourseResponse updateCourse(Long id, UpdateCourseRequest request) {
         Course course = findEntityById(id);
         course.updateCourseDetails(
@@ -68,6 +74,7 @@ public class CourseService {
         return mapToResponse(course);
     }
 
+    @CacheEvict(value = "courses", allEntries = true)
     public CourseResponse toggleCourseActive(Long id, boolean active) {
         Course course = findEntityById(id);
         if (active) {
@@ -78,6 +85,7 @@ public class CourseService {
         return mapToResponse(course);
     }
 
+    @CacheEvict(value = "courses", allEntries = true)
     public void deleteCourse(Long id) {
         Course course = findEntityById(id);
         if (curriculumCourseRepository.existsByCourseId(id)) {
@@ -93,11 +101,13 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "courses", key = "#id")
     public CourseResponse getCourseById(Long id) {
         return mapToResponse(findEntityById(id));
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "courses", key = "'all'")
     public List<CourseResponse> getAllCourses() {
         return courseRepository.findAll().stream()
                 .map(this::mapToResponse)
@@ -105,6 +115,7 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "courses", key = "'active'")
     public List<CourseResponse> getActiveCourses() {
         return courseRepository.findByIsActiveTrue().stream()
                 .map(this::mapToResponse)
@@ -115,6 +126,13 @@ public class CourseService {
     public Page<CourseResponse> searchCourses(String search, Pageable pageable) {
         return courseRepository.searchCourses(search, pageable)
                 .map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public SliceResponse<CourseResponse> searchCoursesSlice(String search, Pageable pageable) {
+        Slice<Course> slice = courseRepository.searchCoursesSlice(search, pageable);
+        Slice<CourseResponse> dtoSlice = slice.map(this::mapToResponse);
+        return SliceResponse.from(dtoSlice);
     }
 
     private Course findEntityById(Long id) {

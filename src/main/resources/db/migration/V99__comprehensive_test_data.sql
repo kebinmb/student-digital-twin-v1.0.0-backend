@@ -62,10 +62,12 @@ AS new_prog ON DUPLICATE KEY UPDATE name = new_prog.name;
 INSERT INTO academic_years (id, code, start_date, end_date, is_current)
 VALUES (10, 'AY-2026-2027', '2026-08-01', '2027-07-31', TRUE)
 AS new_ay ON DUPLICATE KEY UPDATE is_current = new_ay.is_current;
+UPDATE academic_years SET is_current = FALSE WHERE id <> 10;
 
 INSERT INTO terms (id, academic_year_id, term_type, start_date, end_date, enrollment_open, grading_open, add_drop_open, is_active, max_hours_per_class)
 VALUES (10, 10, 'FIRST_SEM', '2026-08-15', '2026-12-20', TRUE, TRUE, TRUE, TRUE, 5)
 AS new_term ON DUPLICATE KEY UPDATE enrollment_open = new_term.enrollment_open;
+UPDATE terms SET is_active = FALSE WHERE id <> 10;
 
 INSERT INTO rooms (id, campus_id, code, name, building, floor, capacity, room_type, is_active)
 VALUES 
@@ -135,9 +137,9 @@ AS new_sched ON DUPLICATE KEY UPDATE start_time = new_sched.start_time;
 
 INSERT INTO student_enrollments (id, student_id, term_id, enrollment_date, status, total_credit_units, is_overload_approved)
 VALUES 
-    (10, 10, 10, '2026-08-16 09:00:00', 'OFFICIALLY_ENROLLED', 6.00, FALSE),
-    (11, 11, 10, '2026-08-16 10:30:00', 'OFFICIALLY_ENROLLED', 6.00, FALSE),
-    (12, 12, 10, '2026-08-16 11:15:00', 'OFFICIALLY_ENROLLED', 6.00, FALSE)
+    (10, 10, 10, '2026-08-16 09:00:00', 'ENROLLED', 6.00, FALSE),
+    (11, 11, 10, '2026-08-16 10:30:00', 'ENROLLED', 6.00, FALSE),
+    (12, 12, 10, '2026-08-16 11:15:00', 'ENROLLED', 6.00, FALSE)
 AS new_enr ON DUPLICATE KEY UPDATE status = new_enr.status;
 
 INSERT INTO enrollment_course_items (id, enrollment_id, section_id, final_numerical_grade, completion_status)
@@ -305,5 +307,36 @@ VALUES
     (10, 10, 14, 'canvas-sub-prof-smith'),
     (11, 10, 18, 'canvas-sub-student-a')
 AS new_lti_map ON DUPLICATE KEY UPDATE sub_claim = new_lti_map.sub_claim;
+
+-- -----------------------------------------------------------------------------
+-- 12. MULTI-DEPARTMENT CLEARANCE REQUESTS & SIGNOFFS
+-- -----------------------------------------------------------------------------
+INSERT INTO clearance_requests (id, student_profile_id, term_id, purpose, overall_status)
+VALUES 
+    (10, 10, 10, 'GRADUATION', 'PENDING'),
+    (11, 11, 10, 'TRANSFER', 'PENDING'),
+    (12, 12, 10, 'GRADUATION', 'CLEARED')
+AS new_clr ON DUPLICATE KEY UPDATE overall_status = new_clr.overall_status;
+
+INSERT INTO clearance_signoffs (id, clearance_request_id, department_type, signoff_status, remarks)
+VALUES 
+    (101, 10, 'LIBRARY', 'APPROVED', 'No unreturned books'),
+    (102, 10, 'ACCOUNTING', 'PENDING', NULL),
+    (103, 10, 'LABORATORY', 'APPROVED', 'Equipment returned'),
+    (104, 10, 'STUDENT_AFFAIRS', 'PENDING', NULL),
+    (105, 10, 'DEAN', 'PENDING', NULL),
+    
+    (111, 11, 'LIBRARY', 'APPROVED', NULL),
+    (112, 11, 'ACCOUNTING', 'REJECTED', 'Unpaid balance of P1,200.00'),
+    (113, 11, 'LABORATORY', 'APPROVED', NULL),
+    (114, 11, 'STUDENT_AFFAIRS', 'APPROVED', NULL),
+    (115, 11, 'DEAN', 'PENDING', NULL),
+
+    (121, 12, 'LIBRARY', 'APPROVED', 'Cleared'),
+    (122, 12, 'ACCOUNTING', 'APPROVED', 'Cleared'),
+    (123, 12, 'LABORATORY', 'APPROVED', 'Cleared'),
+    (124, 12, 'STUDENT_AFFAIRS', 'APPROVED', 'Cleared'),
+    (125, 12, 'DEAN', 'APPROVED', 'Cleared')
+AS new_so ON DUPLICATE KEY UPDATE signoff_status = new_so.signoff_status;
 
 SET FOREIGN_KEY_CHECKS = 1;

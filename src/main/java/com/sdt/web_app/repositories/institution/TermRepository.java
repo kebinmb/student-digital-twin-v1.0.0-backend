@@ -29,7 +29,14 @@ public interface TermRepository extends JpaRepository<Term, Long> {
     List<Term> findByAcademicYearId(Long academicYearId);
 
     @EntityGraph(attributePaths = {"academicYear"})
-    Optional<Term> findByIsActiveTrue();
+    Optional<Term> findFirstByIsActiveTrueOrderByIdDesc();
+
+    @EntityGraph(attributePaths = {"academicYear"})
+    List<Term> findAllByIsActiveTrue();
+
+    default Optional<Term> findByIsActiveTrue() {
+        return findFirstByIsActiveTrueOrderByIdDesc();
+    }
 
     @EntityGraph(attributePaths = {"academicYear"})
     List<Term> findByEnrollmentOpenTrue();

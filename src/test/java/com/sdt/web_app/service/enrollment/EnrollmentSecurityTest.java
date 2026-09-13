@@ -2,6 +2,7 @@ package com.sdt.web_app.service.enrollment;
 
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
+import com.sdt.web_app.service.security.SecurityProfileCache;
 import com.sdt.web_app.service.security.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +27,9 @@ class EnrollmentSecurityTest {
 
     @Mock
     private StudentProfileRepository studentProfileRepository;
+
+    @Mock
+    private SecurityProfileCache securityProfileCache;
 
     @Mock
     private SecurityUtils securityUtils;
@@ -64,7 +68,7 @@ class EnrollmentSecurityTest {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "student1", "pass", List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
         given(securityUtils.resolveUserId(auth)).willReturn(42L);
-        given(studentProfileRepository.findByUserId(42L)).willReturn(Optional.of(ownedProfile));
+        given(securityProfileCache.getStudentProfile(42L)).willReturn(Optional.of(ownedProfile));
 
         boolean result = enrollmentSecurity.canAccessStudentAdvising(auth, 100L);
 
@@ -77,7 +81,7 @@ class EnrollmentSecurityTest {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "student1", "pass", List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
         given(securityUtils.resolveUserId(auth)).willReturn(42L);
-        given(studentProfileRepository.findByUserId(42L)).willReturn(Optional.of(ownedProfile));
+        given(securityProfileCache.getStudentProfile(42L)).willReturn(Optional.of(ownedProfile));
 
         boolean result = enrollmentSecurity.canAccessStudentAdvising(auth, 999L);
 
@@ -90,7 +94,7 @@ class EnrollmentSecurityTest {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "student1", "pass", List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
         given(securityUtils.resolveUserId(auth)).willReturn(42L);
-        given(studentProfileRepository.findByUserId(42L)).willReturn(Optional.of(ownedProfile));
+        given(securityProfileCache.getStudentProfile(42L)).willReturn(Optional.of(ownedProfile));
 
         boolean result = enrollmentSecurity.canAccessStudentEnrollment(auth, 100L);
 
@@ -103,7 +107,7 @@ class EnrollmentSecurityTest {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "student1", "pass", List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
         given(securityUtils.resolveUserId(auth)).willReturn(42L);
-        given(studentProfileRepository.findByUserId(42L)).willReturn(Optional.of(ownedProfile));
+        given(securityProfileCache.getStudentProfile(42L)).willReturn(Optional.of(ownedProfile));
 
         boolean result = enrollmentSecurity.canAccessStudentEnrollment(auth, 999L);
 

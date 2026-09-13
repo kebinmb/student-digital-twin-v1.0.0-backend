@@ -6,6 +6,7 @@ import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.faculty.FacultyProfile;
 import com.sdt.web_app.entities.institution.AcademicYear;
 import com.sdt.web_app.entities.institution.Term;
+import com.sdt.web_app.entities.institution.TermType;
 import com.sdt.web_app.entities.scheduling.FacultyWorkload;
 import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +42,8 @@ class FacultyProfileServiceTest {
     private UserRepository userRepository;
     @Mock
     private TermRepository termRepository;
+    @Mock
+    private com.sdt.web_app.service.institution.TermService termService;
     @Mock
     private FacultyWorkloadRepository workloadRepository;
     @Mock
@@ -79,6 +83,12 @@ class FacultyProfileServiceTest {
                 .isTenured(true)
                 .build();
         ReflectionTestUtils.setField(profile, "id", 1001L);
+        Term mockTerm = Term.builder()
+                .academicYear(com.sdt.web_app.entities.institution.AcademicYear.builder().code("AY 2026-2027").build())
+                .termType(TermType.FIRST_SEM)
+                .build();
+        ReflectionTestUtils.setField(mockTerm, "id", 100L);
+        lenient().when(termService.getTermById(any())).thenReturn(mockTerm);
     }
 
     @org.junit.jupiter.api.AfterEach
@@ -89,7 +99,6 @@ class FacultyProfileServiceTest {
     @Test
     @DisplayName("Should retrieve existing faculty profile")
     void getProfileByUserId_Existing_Success() {
-        given(userRepository.findById(42L)).willReturn(Optional.of(facultyUser));
         given(profileRepository.findByUserIdWithUser(42L)).willReturn(Optional.of(profile));
 
         FacultyProfileResponse response = facultyService.getProfileByUserId(42L);
@@ -139,7 +148,6 @@ class FacultyProfileServiceTest {
                 .numberOfPreparations(2)
                 .build();
 
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(userRepository.findAll()).willReturn(List.of(facultyUser));
         given(profileRepository.findAllWithUser()).willReturn(List.of(profile));
         given(workloadRepository.findByTermId(10L)).willReturn(List.of(workload));

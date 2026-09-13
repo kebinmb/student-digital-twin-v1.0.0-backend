@@ -16,6 +16,7 @@ import com.sdt.web_app.repositories.institution.CoursePrerequisiteRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
+import com.sdt.web_app.repositories.compliance.ClearanceRequestRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -57,7 +58,9 @@ class EnrollmentServiceTest {
     @Mock
     private CoursePrerequisiteRepository prerequisiteRepository;
     @Mock
-    private TermRepository termRepository;
+    private com.sdt.web_app.service.institution.TermService termService;
+    @Mock
+    private ClearanceRequestRepository clearanceRequestRepository;
 
     @InjectMocks
     private EnrollmentService enrollmentService;
@@ -144,7 +147,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Advising should lock course with unfulfilled prerequisite")
     void shouldLockCourseWithUnfulfilledPrerequisite() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
 
         // Student has NOT passed course1 (IT 101)
         given(studentCourseGradeRepository.findPassedGradesByStudentId(50L)).willReturn(Collections.emptyList());
@@ -183,7 +186,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Advising should filter eligible courses to next semester (Year 1 - 2nd Sem) and retain passed courses")
     void shouldFilterEligibleCoursesToNextSemesterAndRetainPassed() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
 
         // Student has PASSED course1 (IT 101 - Year 1, 1ST_SEM)
         StudentCourseGrade passedGrade = StudentCourseGrade.builder()
@@ -241,7 +244,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Advising with allCourses=true should retain all curriculum courses across all years")
     void shouldRetainAllCurriculumCoursesWhenAllCoursesIsTrue() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
 
         StudentCourseGrade passedGrade = StudentCourseGrade.builder()
                 .student(student)
@@ -286,7 +289,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Should block enlistment in closed or full section")
     void shouldBlockEnlistmentInClosedSection() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
         given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(closedSection));
 
         EnlistSectionRequest request = new EnlistSectionRequest(20L, 201L);
@@ -300,7 +303,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Should block enlistment when prerequisite is not passed")
     void shouldBlockEnlistmentWhenPrerequisiteMissing() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
         given(sectionRepository.findByIdWithSchedules(200L)).willReturn(Optional.of(openSection));
 
         CoursePrerequisite prereq = CoursePrerequisite.builder()
@@ -323,7 +326,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Should block enlistment when total units would exceed term cap (24.0 regular)")
     void shouldBlockEnlistmentWhenUnitCapExceeded() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
         given(sectionRepository.findByIdWithSchedules(200L)).willReturn(Optional.of(openSection));
         given(prerequisiteRepository.findByCourseId(102L)).willReturn(Collections.emptyList());
 
@@ -350,7 +353,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Should fail enlistment atomically if section capacity reached during checkout")
     void shouldFailEnlistmentWhenCapacityDecrementsToZero() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
         given(sectionRepository.findByIdWithSchedules(200L)).willReturn(Optional.of(openSection));
         given(prerequisiteRepository.findByCourseId(102L)).willReturn(Collections.emptyList());
 
@@ -379,7 +382,7 @@ class EnrollmentServiceTest {
     @DisplayName("Gate 3: Should successfully enlist section and increment units when valid")
     void shouldEnlistSectionSuccessfully() {
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
         given(sectionRepository.findByIdWithSchedules(200L)).willReturn(Optional.of(openSection));
         given(prerequisiteRepository.findByCourseId(102L)).willReturn(Collections.emptyList());
 
@@ -444,7 +447,7 @@ class EnrollmentServiceTest {
     void shouldRejectEnlistmentWhenFinancialClearanceNotCleared() {
         student.updateClearance(StudentProfile.ClearanceStatus.PENDING, StudentProfile.ClearanceStatus.CLEARED);
         given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
-        given(termRepository.findById(20L)).willReturn(Optional.of(term));
+        given(termService.getTermById(20L)).willReturn(term);
         given(sectionRepository.findByIdWithSchedules(301L)).willReturn(Optional.of(openSection));
 
         EnlistSectionRequest request = new EnlistSectionRequest(20L, 301L);

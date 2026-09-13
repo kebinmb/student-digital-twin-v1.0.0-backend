@@ -23,6 +23,8 @@ import com.sdt.web_app.repositories.institution.ProgramRepository;
 import com.sdt.web_app.service.security.AcademicScopeAssertionService;
 import com.sdt.web_app.service.security.AcademicScopeContext;
 import com.sdt.web_app.specifications.FacultyProfileSpecifications;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,6 +46,7 @@ public class FacultyProfileService {
     private final FacultyProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final TermRepository termRepository;
+    private final com.sdt.web_app.service.institution.TermService termService;
     private final FacultyWorkloadRepository workloadRepository;
     private final ClassScheduleRepository scheduleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -52,6 +55,7 @@ public class FacultyProfileService {
     private final ProgramRepository programRepository;
 
     @Transactional
+    @CacheEvict(value = "facultyProfileByUser", allEntries = true)
     public FacultyProfileResponse createFacultyAccount(CreateFacultyAccountRequest request) {
         String trimmedUsername = request.username().trim();
         String trimmedEmail = request.email().trim().toLowerCase();
@@ -182,12 +186,12 @@ public class FacultyProfileService {
     }
 
     @Transactional
+    @Cacheable(value = "facultyProfileByUser", key = "#userId")
     public FacultyProfileResponse getProfileByUserId(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
-
         FacultyProfile profile = profileRepository.findByUserIdWithUser(userId)
                 .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
                     FacultyProfile defaultProfile = FacultyProfile.builder()
                             .user(user)
                             .facultyIdNumber("FAC-" + user.getId())
@@ -203,10 +207,10 @@ public class FacultyProfileService {
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
             AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
             if (scope != null && scope.isDean()) {
-                Long targetCollegeId = profile.getCollege() != null ? profile.getCollege().getId() : (user.getCollege() != null ? user.getCollege().getId() : null);
+                Long targetCollegeId = profile.getCollege() != null ? profile.getCollege().getId() : (profile.getUser() != null && profile.getUser().getCollege() != null ? profile.getUser().getCollege().getId() : null);
                 academicScopeAssertionService.validateCollegeMutation(scope, targetCollegeId);
             } else if (scope != null && scope.isChairperson()) {
-                Long targetProgramId = profile.getProgram() != null ? profile.getProgram().getId() : (user.getProgram() != null ? user.getProgram().getId() : null);
+                Long targetProgramId = profile.getProgram() != null ? profile.getProgram().getId() : (profile.getUser() != null && profile.getUser().getProgram() != null ? profile.getUser().getProgram().getId() : null);
                 academicScopeAssertionService.validateProgramMutation(scope, targetProgramId);
             } else if (scope != null && scope.isFaculty() && !scope.userId().equals(userId)) {
                 throw new AccessDeniedException("Access Denied: Faculty can only view their own profile.");
@@ -217,6 +221,10 @@ public class FacultyProfileService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+            @CacheEvict(value = "facultyProfiles", key = "#userId"),
+            @CacheEvict(value = "facultyProfileByUser", key = "#userId")
+    })
     public FacultyProfileResponse updateProfile(Long userId, UpdateFacultyProfileRequest request) {
         FacultyProfile profile = profileRepository.findByUserIdWithUser(userId)
                 .orElseGet(() -> {
@@ -273,8 +281,7 @@ public class FacultyProfileService {
 
     @Transactional(readOnly = true)
     public ChedE5ReportResponse generateChedE5Report(Long termId) {
-        Term term = termRepository.findById(termId)
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with ID: " + termId));
+        Term term = termService.getTermById(termId);
 
         List<User> facultyUsers = userRepository.findAll().stream()
                 .filter(u -> u.isEnabled() && u.getRoles().stream()

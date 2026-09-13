@@ -16,6 +16,8 @@ import com.sdt.web_app.repositories.institution.TermRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.sdt.web_app.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class GradeChangeService {
     private final StudentProfileRepository profileRepository;
     private final CourseRepository courseRepository;
     private final TermRepository termRepository;
+    private final com.sdt.web_app.service.institution.TermService termService;
     private final UserRepository userRepository;
     private final StudentCourseGradeRepository gradeRepository;
 
@@ -43,8 +46,7 @@ public class GradeChangeService {
         Course course = courseRepository.findById(request.courseId())
                 .orElseThrow(() -> new EntityNotFoundException("Course not found: " + request.courseId()));
 
-        Term term = termRepository.findById(request.termId())
-                .orElseThrow(() -> new EntityNotFoundException("Term not found: " + request.termId()));
+        Term term = termService.getTermById(request.termId());
 
         User requester = userRepository.findById(requestedByUserId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + requestedByUserId));
@@ -73,6 +75,7 @@ public class GradeChangeService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_EQUITY_PROFILES, allEntries = true)
     public GradeChangeResponse approveRequest(Long requestId, Long approvedByUserId) {
         GradeChangeRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("Grade change request not found: " + requestId));

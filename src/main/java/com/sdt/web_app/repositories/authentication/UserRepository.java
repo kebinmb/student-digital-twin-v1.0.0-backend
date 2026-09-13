@@ -15,14 +15,14 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    @EntityGraph(attributePaths = {"roles", "college", "program"})
+    @EntityGraph(attributePaths = {"roles", "college", "program", "facultyProfile"})
     @Override
     Optional<User> findById(Long id);
 
-    @EntityGraph(attributePaths = {"roles", "college", "program"})
+    @EntityGraph(attributePaths = {"roles", "college", "program", "facultyProfile"})
     Optional<User> findByUsername(String username);
 
-    @EntityGraph(attributePaths = "roles")
+    @EntityGraph(attributePaths = {"roles", "facultyProfile"})
     Optional<User> findByEmail(String email);
 
     boolean existsByUsername(String username);

@@ -27,4 +27,14 @@ public class DigitalTwinAnalyticsController {
     public ResponseEntity<List<EarlyWarningRadarItemDto>> getEarlyWarningRadar() {
         return ResponseEntity.ok(riskService.getEarlyWarningRadar());
     }
+
+    @GetMapping("/early-warning/slice")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
+    public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<DigitalTwinRiskProfileDto>> getEarlyWarningRadarSlice(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "DESC") String sortDir) {
+        return ResponseEntity.ok(riskService.getEarlyWarningRadarSlice(page, size, sortBy, sortDir));
+    }
 }

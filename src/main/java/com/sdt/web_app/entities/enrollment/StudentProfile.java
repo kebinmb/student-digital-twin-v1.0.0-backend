@@ -48,6 +48,18 @@ public class StudentProfile {
     @Column(name = "student_number", nullable = false, unique = true, length = 30)
     private String studentNumber;
 
+    @Column(name = "first_name", length = 50)
+    private String firstName;
+
+    @Column(name = "middle_name", length = 50)
+    private String middleName;
+
+    @Column(name = "last_name", length = 50)
+    private String lastName;
+
+    @Column(name = "suffix", length = 10)
+    private String suffix;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "program_id", nullable = false)
     @ToString.Exclude
@@ -98,6 +110,25 @@ public class StudentProfile {
     @Column(name = "created_at", updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
+
+    public String getFullName() {
+        if (firstName == null && lastName == null) {
+            return user != null ? user.getUsername() : studentNumber;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (firstName != null) sb.append(firstName);
+        if (middleName != null && !middleName.isBlank()) sb.append(" ").append(middleName);
+        if (lastName != null) sb.append(" ").append(lastName);
+        if (suffix != null && !suffix.isBlank()) sb.append(" ").append(suffix);
+        return sb.toString().trim();
+    }
+
+    public void updateName(String firstName, String middleName, String lastName, String suffix) {
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+        this.suffix = suffix;
+    }
 
     public void updateAcademicStanding(int yearLevel, EnrollmentStatus status, boolean isGraduating) {
         this.yearLevel = yearLevel;

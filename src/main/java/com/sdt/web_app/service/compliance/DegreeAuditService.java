@@ -34,10 +34,12 @@ public class DegreeAuditService {
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final StudentCourseGradeRepository studentCourseGradeRepository;
     private final TermRepository termRepository;
+    private final com.sdt.web_app.service.institution.TermService termService;
 
     @Transactional(readOnly = true)
     public DegreeAuditResultDto evaluateDegreeAudit(Long studentProfileId) {
-        StudentProfile student = studentProfileRepository.findById(studentProfileId)
+        StudentProfile student = studentProfileRepository.findByUserId(studentProfileId)
+                .or(() -> studentProfileRepository.findById(studentProfileId))
                 .orElseThrow(() -> new ResourceNotFoundException("Student Profile not found: " + studentProfileId));
 
         Curriculum curriculum = student.getCurriculum();
@@ -139,11 +141,11 @@ public class DegreeAuditService {
 
     @Transactional
     public GraduationApplicationDto applyForGraduation(ApplyForGraduationRequest request, Long actorUserId) {
-        StudentProfile student = studentProfileRepository.findById(request.studentProfileId())
+        StudentProfile student = studentProfileRepository.findByUserId(request.studentProfileId())
+                .or(() -> studentProfileRepository.findById(request.studentProfileId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Student Profile not found: " + request.studentProfileId()));
 
-        Term term = termRepository.findById(request.termId())
-                .orElseThrow(() -> new ResourceNotFoundException("Term not found: " + request.termId()));
+        Term term = termService.getTermById(request.termId());
 
         DegreeAuditResultDto audit = evaluateDegreeAudit(student.getId());
 

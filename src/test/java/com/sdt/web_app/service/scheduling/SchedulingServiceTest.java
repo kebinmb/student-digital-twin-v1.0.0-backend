@@ -57,6 +57,8 @@ class SchedulingServiceTest {
     @Mock
     private TermRepository termRepository;
     @Mock
+    private com.sdt.web_app.service.institution.TermService termService;
+    @Mock
     private CurriculumRepository curriculumRepository;
     @Mock
     private CurriculumCourseRepository curriculumCourseRepository;
@@ -131,6 +133,7 @@ class SchedulingServiceTest {
                 .email("alice@chmsu.edu.ph")
                 .build();
         ReflectionTestUtils.setField(instructor, "id", 30L);
+        org.mockito.Mockito.lenient().when(termService.getTermById(any())).thenReturn(term);
     }
 
     @Test
@@ -152,7 +155,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should reject section if course is not prescribed in active curriculum")
     void shouldRejectOffCurriculumCourse() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(false);
 
@@ -171,7 +173,6 @@ class SchedulingServiceTest {
     void shouldRejectWhenScheduledMinutesMismatch() {
         // Course has 2.00 lec (120 min) and 1.00 lab (180 min)
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -194,7 +195,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should detect and block room schedule collision")
     void shouldDetectRoomCollision() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -221,7 +221,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should detect and block faculty schedule collision")
     void shouldDetectFacultyCollision() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -250,7 +249,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should block faculty assignment when workload cap (>24 hrs/wk) is exceeded")
     void shouldBlockWorkloadCapExceeded() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -287,7 +285,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should successfully create section and schedules when all constraints are met")
     void shouldCreateSectionSuccessfully() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -325,7 +322,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should reject schedule slot exceeding term max class hours")
     void shouldRejectScheduleSlotExceedingMaxHoursPerClass() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -347,7 +343,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should support multi-day recurring schedule slots")
     void shouldCreateSectionWithMultiDaySlot() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -386,7 +381,6 @@ class SchedulingServiceTest {
     @DisplayName("Gate 2: Should enforce 18.0 units cap when instructor preparations exceed 2")
     void shouldEnforce18UnitsLimitWhenPreparationsExceedTwo() {
         given(curriculumRepository.findById(1L)).willReturn(Optional.of(activeCurriculum));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(courseRepository.findById(100L)).willReturn(Optional.of(course));
         given(curriculumCourseRepository.existsByCurriculumIdAndCourseId(1L, 100L)).willReturn(true);
         given(sectionRepository.existsByTermIdAndCourseIdAndSectionCode(10L, 100L, "BSIT-1A")).willReturn(false);
@@ -431,7 +425,6 @@ class SchedulingServiceTest {
         ReflectionTestUtils.setField(admin, "id", 1L);
 
         given(userRepository.findById(30L)).willReturn(Optional.of(instructor));
-        given(termRepository.findById(10L)).willReturn(Optional.of(term));
         given(userRepository.findById(1L)).willReturn(Optional.of(admin));
 
         FacultyWorkload workload = FacultyWorkload.builder()

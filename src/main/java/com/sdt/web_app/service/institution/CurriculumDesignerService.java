@@ -12,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import com.sdt.web_app.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import com.sdt.web_app.service.security.AcademicScopeAssertionService;
 import com.sdt.web_app.service.security.AcademicScopeContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -432,6 +435,7 @@ public class CurriculumDesignerService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, key = "#programId")
     public List<CurriculumSummaryResponse> getCurriculaByProgram(Long programId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {

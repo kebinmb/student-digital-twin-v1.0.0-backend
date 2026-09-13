@@ -24,6 +24,8 @@ public class DataScopingService {
     private final SecurityUtils securityUtils;
     private final DepartmentRepository departmentRepository;
     private final ProgramRepository programRepository;
+    private final SecurityProfileCache securityProfileCache;
+    private final CachedScopeReader cachedScopeReader;
 
     public Long resolveUserId(Authentication authentication) {
         return securityUtils.resolveUserId(authentication);
@@ -56,7 +58,7 @@ public class DataScopingService {
             return Optional.empty();
         }
 
-        Long userId = resolveUserId(authentication);
+        Long userId = securityUtils.resolveUserId(authentication);
         if (userId == null) {
             return Optional.empty();
         }

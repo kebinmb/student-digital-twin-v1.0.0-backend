@@ -10,12 +10,19 @@ import com.sdt.web_app.repositories.compliance.StudentEquityProfileRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.sdt.web_app.dto.common.SliceResponse;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+
+import com.sdt.web_app.service.security.StudentProfileL2CacheService;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,24 +32,30 @@ public class StudentEquityProfileService {
     private final StudentEquityProfileRepository equityRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+    private final StudentProfileL2CacheService studentProfileL2CacheService;
 
     @Transactional(readOnly = true)
     public StudentEquityProfileDto getEquityProfileByStudentProfileId(Long studentProfileId) {
-        StudentEquityProfile equity = equityRepository.findByStudentProfileId(studentProfileId)
-                .orElseGet(() -> createDefaultProfileForStudentId(studentProfileId));
+        StudentProfile sp = Optional.ofNullable(studentProfileL2CacheService.findByUserId(studentProfileId))
+                .or(() -> Optional.ofNullable(studentProfileL2CacheService.findById(studentProfileId)))
+                .orElseThrow(() -> new IllegalArgumentException("Student profile not found: " + studentProfileId));
+        StudentEquityProfile equity = equityRepository.findByStudentProfileId(sp.getId())
+                .orElseGet(() -> createDefaultProfileForStudentId(sp.getId()));
         return mapToDto(equity);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "equityProfiles", key = "#userId")
     public StudentEquityProfileDto getEquityProfileForUser(Long userId) {
-        StudentProfile studentProfile = studentProfileRepository.findByUserId(userId)
+        StudentProfile studentProfile = Optional.ofNullable(studentProfileL2CacheService.findByUserId(userId))
                 .orElseThrow(() -> new IllegalArgumentException("Student profile not found for user ID: " + userId));
         return getEquityProfileByStudentProfileId(studentProfile.getId());
     }
 
     @Transactional
+    @CacheEvict(value = "equityProfiles", allEntries = true)
     public StudentEquityProfileDto upsertEquityProfileForUser(Long userId, UpdateStudentEquityProfileRequest request) {
-        StudentProfile studentProfile = studentProfileRepository.findByUserId(userId)
+        StudentProfile studentProfile = Optional.ofNullable(studentProfileL2CacheService.findByUserId(userId))
                 .orElseThrow(() -> new IllegalArgumentException("Student profile not found for user ID: " + userId));
 
         StudentEquityProfile profile = equityRepository.findByStudentProfileId(studentProfile.getId())
@@ -88,6 +101,7 @@ public class StudentEquityProfileService {
     }
 
     @Transactional
+    @CacheEvict(value = "equityProfiles", allEntries = true)
     public StudentEquityProfileDto verifyEquityProfile(Long profileId, Long verifierUserId, VerifyEquityProfileRequest request) {
         StudentEquityProfile profile = equityRepository.findById(profileId)
                 .orElseThrow(() -> new IllegalArgumentException("Equity profile not found with ID: " + profileId));
@@ -119,6 +133,23 @@ public class StudentEquityProfileService {
         Page<StudentEquityProfile> page = equityRepository.searchProfiles(
                 search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
         return page.map(this::mapToDto);
+    }
+
+    @Transactional(readOnly = true)
+    public SliceResponse<StudentEquityProfileDto> searchEquityProfilesSlice(
+            String search,
+            EquityVerificationStatus status,
+            Boolean is4ps,
+            Boolean isIp,
+            Boolean isPwd,
+            Boolean isGida,
+            Boolean isFirstGen,
+            Pageable pageable) {
+
+        Slice<StudentEquityProfile> slice = equityRepository.searchProfilesSlice(
+                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
+        Slice<StudentEquityProfileDto> dtoSlice = slice.map(this::mapToDto);
+        return SliceResponse.from(dtoSlice);
     }
 
     @Transactional(readOnly = true)
@@ -156,7 +187,8 @@ public class StudentEquityProfileService {
     }
 
     private StudentEquityProfile createDefaultProfileForStudentId(Long studentProfileId) {
-        StudentProfile sp = studentProfileRepository.findById(studentProfileId)
+        StudentProfile sp = Optional.ofNullable(studentProfileL2CacheService.findByUserId(studentProfileId))
+                .or(() -> Optional.ofNullable(studentProfileL2CacheService.findById(studentProfileId)))
                 .orElseThrow(() -> new IllegalArgumentException("Student profile not found: " + studentProfileId));
         StudentEquityProfile defaultProfile = StudentEquityProfile.builder()
                 .studentProfile(sp)

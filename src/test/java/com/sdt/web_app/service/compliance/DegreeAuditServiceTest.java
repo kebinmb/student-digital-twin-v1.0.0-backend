@@ -5,6 +5,7 @@ import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.enrollment.StudentCourseGrade;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.entities.institution.Course;
+import com.sdt.web_app.repositories.institution.TermRepository;
 import com.sdt.web_app.entities.institution.Curriculum;
 import com.sdt.web_app.entities.institution.CurriculumCourse;
 import com.sdt.web_app.entities.institution.Program;
@@ -41,6 +42,12 @@ class DegreeAuditServiceTest {
 
     @Mock
     private StudentCourseGradeRepository studentCourseGradeRepository;
+
+    @Mock
+    private TermRepository termRepository;
+
+    @Mock
+    private com.sdt.web_app.service.institution.TermService termService;
 
     @InjectMocks
     private DegreeAuditService degreeAuditService;

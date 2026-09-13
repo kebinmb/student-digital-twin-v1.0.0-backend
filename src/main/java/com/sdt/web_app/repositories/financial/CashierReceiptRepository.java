@@ -1,6 +1,8 @@
 package com.sdt.web_app.repositories.financial;
 
 import com.sdt.web_app.entities.financial.CashierReceipt;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -14,6 +16,8 @@ public interface CashierReceiptRepository extends JpaRepository<CashierReceipt, 
 
     @Query("SELECT r FROM CashierReceipt r WHERE r.studentProfile.id = :studentProfileId ORDER BY r.issuedAt DESC")
     List<CashierReceipt> findByStudentProfileId(Long studentProfileId);
+
+    Slice<CashierReceipt> findByStudentProfileId(Long studentProfileId, Pageable pageable);
 
     @Query("SELECT COUNT(r) FROM CashierReceipt r")
     long countTotalReceipts();

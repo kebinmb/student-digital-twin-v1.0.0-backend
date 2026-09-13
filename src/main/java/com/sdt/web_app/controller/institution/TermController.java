@@ -30,6 +30,12 @@ public class TermController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<TermResponse> getActiveTerm() {
+        return ResponseEntity.ok(mapToResponse(termService.getActiveTerm()));
+    }
+
     @GetMapping("/academic-year/{academicYearId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<TermResponse>> getTermsByAcademicYear(@PathVariable Long academicYearId) {

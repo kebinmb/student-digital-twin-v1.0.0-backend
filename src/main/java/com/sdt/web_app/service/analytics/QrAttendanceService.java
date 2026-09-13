@@ -15,11 +15,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sdt.web_app.dto.common.SliceResponse;
+import com.sdt.web_app.utils.SortPropertyMapper;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+
+import com.sdt.web_app.service.security.StudentProfileL2CacheService;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +37,7 @@ public class QrAttendanceService {
     private final AttendanceRecordRepository recordRepository;
     private final ClassScheduleRepository scheduleRepository;
     private final StudentProfileRepository studentProfileRepository;
+    private final StudentProfileL2CacheService studentProfileL2CacheService;
 
     @Transactional
     public AttendanceSessionResponse startSession(StartAttendanceSessionRequest request) {
@@ -75,7 +83,7 @@ public class QrAttendanceService {
             throw new IllegalStateException("Attendance QR code has expired. Please request instructor to generate a fresh QR session.");
         }
 
-        StudentProfile student = studentProfileRepository.findById(request.studentId())
+        StudentProfile student = Optional.ofNullable(studentProfileL2CacheService.findById(request.studentId()))
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found: " + request.studentId()));
 
         // Geofence GPS Distance Verification using Haversine formula
@@ -128,5 +136,26 @@ public class QrAttendanceService {
                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return EARTH_RADIUS_METERS * c;
+    }
+
+    @Transactional(readOnly = true)
+    public SliceResponse<AttendanceRecordResponse> getStudentAttendanceSlice(Long studentId, int page, int size, String sortBy, String sortDir) {
+        Pageable pageable = SortPropertyMapper.createAttendanceRecordPageable(page, size, sortBy, sortDir);
+        Slice<AttendanceRecord> slice = recordRepository.findByStudentId(studentId, pageable);
+        Slice<AttendanceRecordResponse> responseSlice = slice.map(saved -> {
+            StudentProfile student = saved.getStudent();
+            String studentName = student != null && student.getUser() != null ? student.getUser().getUsername() : "Student #" + (student != null ? student.getStudentNumber() : saved.getId());
+            return new AttendanceRecordResponse(
+                    saved.getId(),
+                    saved.getSession() != null ? saved.getSession().getId() : null,
+                    student != null ? student.getId() : null,
+                    student != null ? student.getStudentNumber() : "N/A",
+                    studentName,
+                    saved.getStatus() != null ? saved.getStatus().name() : "PRESENT",
+                    true,
+                    saved.getScannedAt()
+            );
+        });
+        return SliceResponse.from(responseSlice);
     }
 }

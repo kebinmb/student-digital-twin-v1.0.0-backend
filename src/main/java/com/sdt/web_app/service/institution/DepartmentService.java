@@ -8,6 +8,8 @@ import com.sdt.web_app.repositories.institution.DepartmentRepository;
 import com.sdt.web_app.repositories.institution.ProgramRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class DepartmentService {
     private final CampusRepository campusRepository;
     private final ProgramRepository programRepository;
 
+    @CacheEvict(value = "departments", allEntries = true)
     public DepartmentResponse createDepartment(CreateDepartmentRequest request) {
         // Prerequisite check: Campus must exist
         Campus campus = campusRepository.findById(request.campusId())
@@ -56,6 +59,7 @@ public class DepartmentService {
         return mapToResponse(saved);
     }
 
+    @CacheEvict(value = "departments", allEntries = true)
     public DepartmentResponse updateDepartment(Long id, UpdateDepartmentRequest request) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Department not found with ID: " + id));
@@ -81,6 +85,7 @@ public class DepartmentService {
         return mapToResponse(department);
     }
 
+    @CacheEvict(value = "departments", allEntries = true)
     public void deleteDepartment(Long id) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Department not found with ID: " + id));
@@ -97,6 +102,7 @@ public class DepartmentService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "departments", key = "#id")
     public DepartmentResponse getDepartmentById(Long id) {
         Department dept = departmentRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Department not found with ID: " + id));
@@ -104,6 +110,7 @@ public class DepartmentService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "departments", key = "'all'")
     public List<DepartmentResponse> getAllDepartments() {
         return departmentRepository.findAll().stream()
                 .map(this::mapToResponse)
@@ -111,6 +118,7 @@ public class DepartmentService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "departments", key = "'campus:' + #campusId")
     public List<DepartmentResponse> getDepartmentsByCampus(Long campusId) {
         if (!campusRepository.existsById(campusId)) {
             throw new IllegalArgumentException("Campus not found with ID: " + campusId);

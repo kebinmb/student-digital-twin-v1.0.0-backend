@@ -17,6 +17,7 @@ import com.sdt.web_app.repositories.institution.CourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
+import com.sdt.web_app.service.institution.TermService;
 import com.sdt.web_app.repositories.scheduling.ClassScheduleRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
 import com.sdt.web_app.repositories.scheduling.FacultyWorkloadRepository;
@@ -55,6 +56,7 @@ public class SchedulingService {
     private final FacultyWorkloadRepository workloadRepository;
     private final CampusRepository campusRepository;
     private final TermRepository termRepository;
+    private final TermService termService;
     private final CurriculumRepository curriculumRepository;
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final CourseRepository courseRepository;
@@ -125,8 +127,7 @@ public class SchedulingService {
             }
         }
 
-        Term term = termRepository.findById(request.termId())
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + request.termId()));
+        Term term = termService.getTermById(request.termId());
 
         Course course = courseRepository.findById(request.courseId())
                 .orElseThrow(() -> new EntityNotFoundException("Course not found with id: " + request.courseId()));
@@ -380,8 +381,7 @@ public class SchedulingService {
     public FacultyLoadSummaryResponse getFacultyWorkload(Long termId, Long facultyUserId) {
         User faculty = userRepository.findById(facultyUserId)
                 .orElseThrow(() -> new EntityNotFoundException("Faculty not found with id: " + facultyUserId));
-        Term term = termRepository.findById(termId)
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + termId));
+        Term term = termService.getTermById(termId);
 
         FacultyWorkload workload = workloadRepository.findByTermIdAndFacultyId(termId, facultyUserId).orElse(null);
         List<ClassSchedule> schedules = scheduleRepository.findByInstructorIdAndSectionTermId(facultyUserId, termId);
@@ -441,8 +441,7 @@ public class SchedulingService {
             Long facultyUserId, Long termId, BigDecimal customMaxUnits, String reason, Long adminUserId) {
         User faculty = userRepository.findById(facultyUserId)
                 .orElseThrow(() -> new EntityNotFoundException("Faculty not found with id: " + facultyUserId));
-        Term term = termRepository.findById(termId)
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + termId));
+        Term term = termService.getTermById(termId);
         User adminUser = userRepository.findById(adminUserId)
                 .orElseThrow(() -> new EntityNotFoundException("Admin user not found with id: " + adminUserId));
 
@@ -466,8 +465,7 @@ public class SchedulingService {
 
     @Transactional
     public SchedulingTermDto updateTermMaxHoursPerClass(Long termId, BigDecimal maxHoursPerClass) {
-        Term term = termRepository.findById(termId)
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with id: " + termId));
+        Term term = termService.getTermById(termId);
         term.updateMaxHoursPerClass(maxHoursPerClass);
         Term saved = termRepository.save(term);
         return new SchedulingTermDto(
@@ -575,7 +573,7 @@ public class SchedulingService {
 
     @Transactional(readOnly = true)
     public List<SchedulingTermDto> getSchedulingTerms() {
-        return termRepository.findAll().stream()
+        return termService.getAllTerms().stream()
                 .map(t -> new SchedulingTermDto(
                         t.getId(),
                         t.getAcademicYear().getId(),

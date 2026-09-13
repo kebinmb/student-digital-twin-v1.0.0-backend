@@ -34,9 +34,9 @@ public class ClearanceAndChedController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @GetMapping("/clearance/requests/student/{studentProfileId}/term/{termId}")
-    public ResponseEntity<ClearanceRequestDto> getClearanceByStudentAndTerm(@PathVariable Long studentProfileId, @PathVariable Long termId) {
-        ClearanceRequestDto result = clearanceWorkflowService.getClearanceByStudentAndTerm(studentProfileId, termId);
+    @GetMapping("/clearance/requests/student/{studentIdentifier}/term/{termId}")
+    public ResponseEntity<ClearanceRequestDto> getClearanceByStudentAndTerm(@PathVariable String studentIdentifier, @PathVariable Long termId) {
+        ClearanceRequestDto result = clearanceWorkflowService.getClearanceByStudentAndTerm(studentIdentifier, termId);
         return ResponseEntity.ok(result);
     }
 
@@ -47,7 +47,7 @@ public class ClearanceAndChedController {
     }
 
     @PutMapping("/clearance/signoffs/{signoffId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'CHAIRPERSON', 'FACULTY')")
     public ResponseEntity<ClearanceSignoffDto> processSignoff(
             @PathVariable Long signoffId,
             @Valid @RequestBody ProcessSignoffRequest request,
@@ -58,9 +58,17 @@ public class ClearanceAndChedController {
     }
 
     @GetMapping("/clearance/signoffs/pending/{departmentType}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'CHAIRPERSON', 'FACULTY')")
     public ResponseEntity<List<ClearanceSignoffDto>> getPendingSignoffsByDepartment(@PathVariable String departmentType) {
         List<ClearanceSignoffDto> result = clearanceWorkflowService.getPendingSignoffsByDepartment(departmentType);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/clearance/requests/students/suggestions")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'FACULTY')")
+    public ResponseEntity<List<ClearanceStudentSuggestionDto>> getClearanceStudentSuggestions(
+            @RequestParam(value = "query", required = false, defaultValue = "") String query) {
+        List<ClearanceStudentSuggestionDto> result = clearanceWorkflowService.getClearanceStudentSuggestions(query);
         return ResponseEntity.ok(result);
     }
 

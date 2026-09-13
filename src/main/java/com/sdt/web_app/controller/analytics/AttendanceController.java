@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.sdt.web_app.dto.common.SliceResponse;
+
 @RestController
 @RequestMapping("/api/v1/attendance")
 @RequiredArgsConstructor
@@ -26,5 +28,16 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'FACULTY')")
     public ResponseEntity<AttendanceRecordResponse> scanAttendance(@Valid @RequestBody ScanAttendanceRequest request) {
         return ResponseEntity.ok(attendanceService.scanAttendance(request));
+    }
+
+    @GetMapping("/student/{studentId}/slice")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<SliceResponse<AttendanceRecordResponse>> getStudentAttendanceSlice(
+            @PathVariable("studentId") Long studentId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "sortBy", required = false) String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "DESC") String sortDir) {
+        return ResponseEntity.ok(attendanceService.getStudentAttendanceSlice(studentId, page, size, sortBy, sortDir));
     }
 }

@@ -1,12 +1,13 @@
 package com.sdt.web_app.controller.institution;
 
+import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.dto.institution.CourseDtos.*;
 import com.sdt.web_app.service.institution.CourseService;
+import com.sdt.web_app.utils.SortPropertyMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,8 +41,24 @@ public class CourseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<Page<CourseResponse>> searchCourses(
             @RequestParam(required = false) String search,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "code") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDir) {
+        Pageable pageable = SortPropertyMapper.createCoursePageable(page, size, sortBy, sortDir);
         return ResponseEntity.ok(courseService.searchCourses(search, pageable));
+    }
+
+    @GetMapping("/search-slice")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<SliceResponse<CourseResponse>> searchCoursesSlice(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "code") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDir) {
+        Pageable pageable = SortPropertyMapper.createCoursePageable(page, size, sortBy, sortDir);
+        return ResponseEntity.ok(courseService.searchCoursesSlice(search, pageable));
     }
 
     @GetMapping("/active")

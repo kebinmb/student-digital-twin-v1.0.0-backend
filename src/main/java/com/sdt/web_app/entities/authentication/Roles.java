@@ -9,5 +9,6 @@ public enum Roles {
     DEAN,
     CHAIRPERSON,
     STUDENT,
-    GUIDANCE
+    GUIDANCE,
+    ACCOUNTANT
 }

@@ -33,14 +33,25 @@ public class SecurityUtils {
                 try {
                     return Long.parseLong(subject);
                 } catch (NumberFormatException ignored) {
-                    // subject was not numeric, fall back to username lookup
+                    // subject was not numeric
                 }
             }
             String username = jwt.getClaimAsString("preferred_username");
             if (username != null) {
+                org.springframework.web.context.request.RequestAttributes attributes = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+                if (attributes != null) {
+                    Object cachedId = attributes.getAttribute("SDT_CACHED_USER_ID_" + username, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+                    if (cachedId instanceof Long id) {
+                        return id;
+                    }
+                }
                 Optional<User> userOpt = userRepository.findByUsername(username);
                 if (userOpt.isPresent()) {
-                    return userOpt.get().getId();
+                    Long id = userOpt.get().getId();
+                    if (attributes != null) {
+                        attributes.setAttribute("SDT_CACHED_USER_ID_" + username, id, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+                    }
+                    return id;
                 }
             }
         }
@@ -52,7 +63,18 @@ public class SecurityUtils {
             } catch (NumberFormatException ignored) {
                 // name was not numeric
             }
-            return userRepository.findByUsername(name).map(User::getId).orElse(null);
+            org.springframework.web.context.request.RequestAttributes attributes = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                Object cachedId = attributes.getAttribute("SDT_CACHED_USER_ID_" + name, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+                if (cachedId instanceof Long id) {
+                    return id;
+                }
+            }
+            Long resolvedId = userRepository.findByUsername(name).map(User::getId).orElse(null);
+            if (attributes != null && resolvedId != null) {
+                attributes.setAttribute("SDT_CACHED_USER_ID_" + name, resolvedId, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+            }
+            return resolvedId;
         }
 
         return null;

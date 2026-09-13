@@ -33,16 +33,29 @@ public class ComplianceDtos {
             List<ClearanceSignoffDto> signoffs
     ) {}
 
-    public record InitiateClearanceRequest(
-            @NotNull(message = "Student profile ID is required")
+    public record ClearanceStudentSuggestionDto(
             Long studentProfileId,
+            String studentNumber,
+            String studentName,
+            String programCode,
+            String clearanceStatus,
+            String purpose
+    ) {}
+
+    public record InitiateClearanceRequest(
+            Long studentProfileId,
+            String studentNumber,
 
             @NotNull(message = "Term ID is required")
             Long termId,
 
             @NotBlank(message = "Purpose is required")
             String purpose
-    ) {}
+    ) {
+        public InitiateClearanceRequest(Long studentProfileId, Long termId, String purpose) {
+            this(studentProfileId, null, termId, purpose);
+        }
+    }
 
     public record ProcessSignoffRequest(
             @NotBlank(message = "Sign-off status is required")

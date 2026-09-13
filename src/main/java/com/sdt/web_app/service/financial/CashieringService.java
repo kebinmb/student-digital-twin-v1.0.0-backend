@@ -17,6 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sdt.web_app.dto.common.SliceResponse;
+import com.sdt.web_app.utils.SortPropertyMapper;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -50,7 +55,8 @@ public class CashieringService {
             throw new IllegalArgumentException("Amount tendered (" + request.amountTendered() + ") cannot be less than amount paid (" + request.amountPaid() + ")");
         }
 
-        StudentProfile student = studentProfileRepository.findById(request.studentProfileId())
+        StudentProfile student = studentProfileRepository.findByUserId(request.studentProfileId())
+                .or(() -> studentProfileRepository.findById(request.studentProfileId()))
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with ID: " + request.studentProfileId()));
 
         User cashierUser = userRepository.findById(cashierUserId)
@@ -152,6 +158,14 @@ public class CashieringService {
         return receiptRepository.findByStudentProfileId(studentProfileId).stream()
                 .map(this::mapToReceiptDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SliceResponse<CashierReceiptDto> getReceiptsByStudentProfileSlice(Long studentProfileId, int page, int size, String sortBy, String sortDir) {
+        Pageable pageable = SortPropertyMapper.createCashierReceiptPageable(page, size, sortBy, sortDir);
+        Slice<CashierReceipt> slice = receiptRepository.findByStudentProfileId(studentProfileId, pageable);
+        Slice<CashierReceiptDto> responseSlice = slice.map(this::mapToReceiptDto);
+        return SliceResponse.from(responseSlice);
     }
 
     private BigDecimal getCurrentLedgerBalance(Long studentProfileId) {

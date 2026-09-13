@@ -37,13 +37,13 @@ public class UnifastBillingService {
     private final UnifastFheClaimItemRepository claimItemRepository;
     private final StudentAssessmentInvoiceRepository invoiceRepository;
     private final TermRepository termRepository;
+    private final com.sdt.web_app.service.institution.TermService termService;
     private final CampusRepository campusRepository;
     private final UserRepository userRepository;
 
     @Transactional
     public UnifastFheClaimDto generateUnifastClaimBatch(CreateUnifastClaimRequest request, Long actorUserId) {
-        Term term = termRepository.findById(request.termId())
-                .orElseThrow(() -> new EntityNotFoundException("Term not found with ID: " + request.termId()));
+        Term term = termService.getTermById(request.termId());
 
         Campus campus = campusRepository.findById(request.campusId())
                 .orElseThrow(() -> new EntityNotFoundException("Campus not found with ID: " + request.campusId()));

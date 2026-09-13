@@ -9,6 +9,8 @@ import com.sdt.web_app.repositories.institution.TermRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class TermService {
     private final ClassSectionRepository classSectionRepository;
     private final StudentEnrollmentRepository studentEnrollmentRepository;
 
+    @CacheEvict(value = {"terms", "termsById", "activeTerms"}, allEntries = true)
     public Term createTerm(Long academicYearId, TermType termType, LocalDate startDate, LocalDate endDate) {
         AcademicYear academicYear = academicYearRepository.findById(academicYearId)
                 .orElseThrow(() -> new IllegalArgumentException("Academic year not found with ID: " + academicYearId));
@@ -49,6 +52,7 @@ public class TermService {
         return termRepository.save(term);
     }
 
+    @CacheEvict(value = {"terms", "termsById", "activeTerms"}, allEntries = true)
     public Term updateTermSchedule(Long termId, LocalDate startDate, LocalDate endDate) {
         Term term = findTermById(termId);
         validateTermDates(term.getAcademicYear(), termId, startDate, endDate);
@@ -56,6 +60,7 @@ public class TermService {
         return term;
     }
 
+    @CacheEvict(value = {"terms", "termsById", "activeTerms"}, allEntries = true)
     public void deleteTerm(Long termId) {
         Term term = findTermById(termId);
         if (term.isActive()) {
@@ -101,16 +106,28 @@ public class TermService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "terms", key = "#termId")
     public Term getTermById(Long termId) {
         return findTermById(termId);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "activeTerms", key = "'active'")
+    public Term getActiveTerm() {
+        return termRepository.findFirstByIsActiveTrueOrderByIdDesc()
+                .or(() -> termRepository.findAll().stream().filter(Term::isActive).findFirst())
+                .or(() -> termRepository.findAll().stream().findFirst())
+                .orElseThrow(() -> new EntityNotFoundException("No active term found."));
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "terms", key = "'all'")
     public List<Term> getAllTerms() {
         return termRepository.findAll();
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "terms", key = "'ay:' + #academicYearId")
     public List<Term> getTermsByAcademicYear(Long academicYearId) {
         if (!academicYearRepository.existsById(academicYearId)) {
             throw new IllegalArgumentException("Academic year not found with ID: " + academicYearId);

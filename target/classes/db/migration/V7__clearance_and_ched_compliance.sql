@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS clearance_requests (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE INDEX idx_clearance_student_term ON clearance_requests (student_profile_id, term_id);
+CREATE INDEX idx_clearance_status ON clearance_requests (overall_status);
 
 CREATE TABLE IF NOT EXISTS clearance_signoffs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS clearance_signoffs (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE INDEX idx_signoff_request ON clearance_signoffs (clearance_request_id);
+CREATE INDEX idx_signoff_dept_status ON clearance_signoffs (department_type, signoff_status);
 
 CREATE TABLE IF NOT EXISTS graduation_applications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
