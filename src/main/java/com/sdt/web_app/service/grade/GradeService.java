@@ -1,13 +1,17 @@
 package com.sdt.web_app.service.grade;
 
 import com.sdt.web_app.dto.grade.GradeDtos.*;
+import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.enrollment.EnrollmentCourseItem;
 import com.sdt.web_app.entities.enrollment.StudentCourseGrade;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
+import com.sdt.web_app.entities.grade.GradeSealingAudit;
 import com.sdt.web_app.entities.scheduling.ClassSection;
+import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.enrollment.EnrollmentCourseItemRepository;
 import com.sdt.web_app.repositories.enrollment.StudentCourseGradeRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
+import com.sdt.web_app.repositories.grade.GradeSealingAuditRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
 import com.sdt.web_app.service.security.AcademicScopeAssertionService;
 import com.sdt.web_app.service.security.AcademicScopeContext;
@@ -21,6 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +43,8 @@ public class GradeService {
     private final StudentCourseGradeRepository gradeRepository;
     private final StudentProfileRepository profileRepository;
     private final AcademicScopeAssertionService academicScopeAssertionService;
+    private final GradeSealingAuditRepository sealingAuditRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public SectionRosterResponse getSectionRoster(Long sectionId) {
@@ -102,8 +112,8 @@ public class GradeService {
             academicScopeAssertionService.validateSectionAccess(scope, section);
         }
 
-        if (section.getGradeStatus() == ClassSection.GradeStatus.SEALED) {
-            throw new IllegalStateException("Cannot update grades: section " + section.getSectionCode() + " is already SEALED.");
+        if (section.getGradeStatus() != ClassSection.GradeStatus.DRAFT) {
+            throw new IllegalStateException("Cannot update grades: section " + section.getSectionCode() + " is currently in " + section.getGradeStatus() + " status.");
         }
 
         int updatedCount = 0;
@@ -118,11 +128,20 @@ public class GradeService {
 
                 EnrollmentCourseItem.CompletionStatus status = EnrollmentCourseItem.CompletionStatus.ENROLLED;
                 if (entry.completionStatus() != null && !entry.completionStatus().isBlank()) {
-                    status = EnrollmentCourseItem.CompletionStatus.valueOf(entry.completionStatus().toUpperCase());
+                    try {
+                        status = EnrollmentCourseItem.CompletionStatus.valueOf(entry.completionStatus().toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Unknown completion status '{}' for enrollment item {}, defaulting", entry.completionStatus(), entry.enrollmentItemId());
+                        status = EnrollmentCourseItem.CompletionStatus.ENROLLED;
+                    }
                 } else if (entry.finalNumericalGrade() != null) {
-                    status = entry.finalNumericalGrade().compareTo(new BigDecimal("3.00")) <= 0
-                            ? EnrollmentCourseItem.CompletionStatus.PASSED
-                            : EnrollmentCourseItem.CompletionStatus.FAILED;
+                    if (entry.finalNumericalGrade().compareTo(new BigDecimal("3.00")) <= 0) {
+                        status = EnrollmentCourseItem.CompletionStatus.PASSED;
+                    } else if (entry.finalNumericalGrade().compareTo(new BigDecimal("4.00")) == 0) {
+                        status = EnrollmentCourseItem.CompletionStatus.INCOMPLETE;
+                    } else {
+                        status = EnrollmentCourseItem.CompletionStatus.FAILED;
+                    }
                 }
 
                 item.updateGrade(entry.finalNumericalGrade(), status);
@@ -132,6 +151,18 @@ public class GradeService {
         }
 
         if (request.submitForVerification()) {
+            List<EnrollmentCourseItem> currentItems = itemRepository.findBySectionIdWithStudentDetails(sectionId);
+            long incompleteCount = currentItems.stream()
+                    .filter(item -> item.getCompletionStatus() != EnrollmentCourseItem.CompletionStatus.DROPPED)
+                    .filter(item -> item.getFinalNumericalGrade() == null 
+                            || item.getCompletionStatus() == EnrollmentCourseItem.CompletionStatus.ENROLLED 
+                            || item.getCompletionStatus() == EnrollmentCourseItem.CompletionStatus.IN_PROGRESS)
+                    .count();
+
+            if (incompleteCount > 0) {
+                throw new IllegalStateException("Cannot submit section grades: " + incompleteCount + " student(s) do not have final numerical grades assigned.");
+            }
+
             section.updateGradeStatus(ClassSection.GradeStatus.SUBMITTED);
             sectionRepository.save(section);
             log.info("Section {} grades submitted for verification by user {}", section.getSectionCode(), actorUserId);
@@ -182,6 +213,34 @@ public class GradeService {
     }
 
     @Transactional
+    public GradeActionResponse rejectGrades(Long sectionId, String reason, Long approverUserId) {
+        ClassSection section = sectionRepository.findById(sectionId)
+                .orElseThrow(() -> new EntityNotFoundException("Class section not found with ID: " + sectionId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
+
+        if (section.getGradeStatus() != ClassSection.GradeStatus.SUBMITTED) {
+            throw new IllegalStateException("Cannot reject grades: section must be in SUBMITTED status. Current status: " + section.getGradeStatus());
+        }
+
+        section.updateGradeStatus(ClassSection.GradeStatus.DRAFT);
+        sectionRepository.save(section);
+        log.warn("Section {} grades rejected and returned to DRAFT by user {}. Reason: {}", section.getSectionCode(), approverUserId, reason);
+
+        return new GradeActionResponse(
+                section.getId(),
+                section.getSectionCode(),
+                section.getGradeStatus().name(),
+                0,
+                "Grades rejected by Dean/Chairperson and returned to Faculty for revision."
+        );
+    }
+
+    @Transactional
     public GradeActionResponse sealGrades(Long sectionId, Long registrarUserId) {
         ClassSection section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with ID: " + sectionId));
@@ -192,6 +251,7 @@ public class GradeService {
 
         List<EnrollmentCourseItem> items = itemRepository.findBySectionIdWithStudentDetails(sectionId);
         Set<StudentProfile> affectedStudents = new HashSet<>();
+        Long termId = section.getTerm() != null ? section.getTerm().getId() : null;
 
         for (EnrollmentCourseItem item : items) {
             if (item.getCompletionStatus() == EnrollmentCourseItem.CompletionStatus.DROPPED) {
@@ -200,16 +260,25 @@ public class GradeService {
 
             StudentProfile sp = item.getEnrollment().getStudent();
             if (item.getFinalNumericalGrade() != null) {
-                StudentCourseGrade historicalGrade = gradeRepository
-                        .findByStudentIdAndCourseId(sp.getId(), section.getCourse().getId())
-                        .orElseGet(() -> StudentCourseGrade.builder()
-                                .student(sp)
-                                .course(section.getCourse())
-                                .term(section.getTerm())
-                                .numericalGrade(item.getFinalNumericalGrade())
-                                .completionStatus(item.getCompletionStatus().name())
-                                .isCredited(false)
-                                .build());
+                StudentCourseGrade historicalGrade = (termId != null)
+                        ? gradeRepository.findByStudentIdAndCourseIdAndTermId(sp.getId(), section.getCourse().getId(), termId)
+                                .orElseGet(() -> StudentCourseGrade.builder()
+                                        .student(sp)
+                                        .course(section.getCourse())
+                                        .term(section.getTerm())
+                                        .numericalGrade(item.getFinalNumericalGrade())
+                                        .completionStatus(item.getCompletionStatus().name())
+                                        .isCredited(false)
+                                        .build())
+                        : gradeRepository.findByStudentIdAndCourseId(sp.getId(), section.getCourse().getId())
+                                .orElseGet(() -> StudentCourseGrade.builder()
+                                        .student(sp)
+                                        .course(section.getCourse())
+                                        .term(section.getTerm())
+                                        .numericalGrade(item.getFinalNumericalGrade())
+                                        .completionStatus(item.getCompletionStatus().name())
+                                        .isCredited(false)
+                                        .build());
 
                 historicalGrade.updateGrade(item.getFinalNumericalGrade(), item.getCompletionStatus().name());
                 gradeRepository.save(historicalGrade);
@@ -239,6 +308,26 @@ public class GradeService {
 
         section.updateGradeStatus(ClassSection.GradeStatus.SEALED);
         sectionRepository.save(section);
+
+        // Record Sealing Audit Ledger Entry
+        if (userRepository != null && sealingAuditRepository != null) {
+            User registrarUser = userRepository.findById(registrarUserId).orElse(null);
+            if (registrarUser != null) {
+                String hashSeed = section.getSectionCode() + ":" + registrarUserId + ":" + affectedStudents.size() + ":" + System.currentTimeMillis();
+                String checksumHash = computeSha256(hashSeed);
+
+                GradeSealingAudit audit = GradeSealingAudit.builder()
+                        .section(section)
+                        .registrarUser(registrarUser)
+                        .studentRecordsSealed(affectedStudents.size())
+                        .sectionCode(section.getSectionCode())
+                        .courseCode(section.getCourse().getCode())
+                        .checksumHash(checksumHash)
+                        .build();
+                sealingAuditRepository.save(audit);
+            }
+        }
+
         log.info("Section {} grades permanently SEALED into academic transcripts by registrar {}", section.getSectionCode(), registrarUserId);
 
         return new GradeActionResponse(
@@ -248,5 +337,15 @@ public class GradeService {
                 items.size(),
                 "Grades officially sealed into permanent transcripts and prerequisite records updated."
         );
+    }
+
+    private String computeSha256(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            return "HASH_ERROR";
+        }
     }
 }

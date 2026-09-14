@@ -58,4 +58,8 @@ public class GradeDtos {
             int updatedCount,
             String message
     ) {}
+
+    public record RejectGradesRequest(
+            String reason
+    ) {}
 }

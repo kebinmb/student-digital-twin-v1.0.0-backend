@@ -397,9 +397,14 @@ public class ClassRecordService {
         for (StudentScoreMatrixRowDto row : matrix.rows()) {
             EnrollmentCourseItem item = itemMap.get(row.studentId());
             if (item != null && row.transmutedGrade() != null) {
-                EnrollmentCourseItem.CompletionStatus status = row.transmutedGrade().compareTo(new BigDecimal("3.00")) <= 0
-                        ? EnrollmentCourseItem.CompletionStatus.PASSED
-                        : EnrollmentCourseItem.CompletionStatus.FAILED;
+                EnrollmentCourseItem.CompletionStatus status;
+                if (row.transmutedGrade().compareTo(new BigDecimal("3.00")) <= 0) {
+                    status = EnrollmentCourseItem.CompletionStatus.PASSED;
+                } else if (row.transmutedGrade().compareTo(new BigDecimal("4.00")) == 0) {
+                    status = EnrollmentCourseItem.CompletionStatus.INCOMPLETE;
+                } else {
+                    status = EnrollmentCourseItem.CompletionStatus.FAILED;
+                }
 
                 item.updateGrade(row.transmutedGrade(), status);
                 itemsToUpdate.add(item);

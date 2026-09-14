@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.grade.ClassRecordInProgressGradingTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.375 s -- in com.sdt.web_app.service.grade.ClassRecordInProgressGradingTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.087 s -- in com.sdt.web_app.service.grade.ClassRecordInProgressGradingTest

@@ -20,4 +20,8 @@ public interface EnrollmentCourseItemRepository extends JpaRepository<Enrollment
     List<EnrollmentCourseItem> findBySectionIdWithStudentDetails(@org.springframework.data.repository.query.Param("sectionId") Long sectionId);
 
     boolean existsByEnrollmentIdAndSectionId(Long enrollmentId, Long sectionId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT eci FROM EnrollmentCourseItem eci " +
+           "WHERE eci.enrollment.student.id = :studentId AND eci.section.course.id = :courseId")
+    List<EnrollmentCourseItem> findByStudentIdAndCourseId(@org.springframework.data.repository.query.Param("studentId") Long studentId, @org.springframework.data.repository.query.Param("courseId") Long courseId);
 }

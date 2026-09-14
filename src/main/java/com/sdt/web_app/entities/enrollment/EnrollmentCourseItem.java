@@ -17,7 +17,7 @@ import java.util.Objects;
 public class EnrollmentCourseItem {
 
     public enum CompletionStatus {
-        ENROLLED, PASSED, FAILED, INCOMPLETE, DROPPED
+        ENROLLED, IN_PROGRESS, PASSED, FAILED, INCOMPLETE, DROPPED
     }
 
     @Id

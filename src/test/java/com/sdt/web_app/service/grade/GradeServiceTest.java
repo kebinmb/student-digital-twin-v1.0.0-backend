@@ -11,9 +11,11 @@ import com.sdt.web_app.entities.institution.Curriculum;
 import com.sdt.web_app.entities.institution.Program;
 import com.sdt.web_app.entities.institution.Term;
 import com.sdt.web_app.entities.scheduling.ClassSection;
+import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.enrollment.EnrollmentCourseItemRepository;
 import com.sdt.web_app.repositories.enrollment.StudentCourseGradeRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
+import com.sdt.web_app.repositories.grade.GradeSealingAuditRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +49,10 @@ class GradeServiceTest {
     private StudentProfileRepository profileRepository;
     @Mock
     private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
+    @Mock
+    private GradeSealingAuditRepository sealingAuditRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private GradeService gradeService;
@@ -156,6 +162,7 @@ class GradeServiceTest {
 
         given(sectionRepository.findById(201L)).willReturn(Optional.of(section));
         given(itemRepository.findById(401L)).willReturn(Optional.of(item));
+        given(itemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(item));
 
         GradeActionResponse response = gradeService.saveGrades(201L, request, 5L);
 
@@ -178,6 +185,19 @@ class GradeServiceTest {
     }
 
     @Test
+    @DisplayName("Should reject grades and return status from SUBMITTED to DRAFT")
+    void rejectGrades_Success() {
+        section.updateGradeStatus(ClassSection.GradeStatus.SUBMITTED);
+        given(sectionRepository.findById(201L)).willReturn(Optional.of(section));
+
+        GradeActionResponse response = gradeService.rejectGrades(201L, "Scores inaccurate", 2L);
+
+        assertThat(response.gradeStatus()).isEqualTo("DRAFT");
+        assertThat(section.getGradeStatus()).isEqualTo(ClassSection.GradeStatus.DRAFT);
+        verify(sectionRepository).save(section);
+    }
+
+    @Test
     @DisplayName("Should permanently seal verified grades into transcripts and recalculate GPA")
     void sealGrades_Success() {
         section.updateGradeStatus(ClassSection.GradeStatus.VERIFIED);
@@ -185,11 +205,13 @@ class GradeServiceTest {
 
         given(sectionRepository.findById(201L)).willReturn(Optional.of(section));
         given(itemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(item));
-        given(gradeRepository.findByStudentIdAndCourseId(301L, 101L)).willReturn(Optional.empty());
+        org.mockito.Mockito.lenient().when(gradeRepository.findByStudentIdAndCourseIdAndTermId(301L, 101L, 10L)).thenReturn(Optional.empty());
+        org.mockito.Mockito.lenient().when(gradeRepository.findByStudentIdAndCourseId(301L, 101L)).thenReturn(Optional.empty());
 
         StudentCourseGrade sealedGrade = StudentCourseGrade.builder()
                 .student(studentProfile)
                 .course(course)
+                .term(term)
                 .numericalGrade(new BigDecimal("1.75"))
                 .completionStatus("PASSED")
                 .build();
@@ -216,6 +238,6 @@ class GradeServiceTest {
 
         assertThatThrownBy(() -> gradeService.saveGrades(201L, request, 5L))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Cannot update grades: section BSIT-2A is already SEALED");
+                .hasMessageContaining("Cannot update grades: section BSIT-2A is currently in SEALED status");
     }
 }

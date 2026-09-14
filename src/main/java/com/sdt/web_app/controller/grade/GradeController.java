@@ -43,6 +43,19 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.verifyGrades(id, approverUserId));
     }
 
+    @PostMapping("/{id}/grades/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON') and @sectionSecurity.canAccessSection(#id, authentication)")
+    public ResponseEntity<GradeActionResponse> rejectGrades(
+            @PathVariable("id") Long id,
+            @RequestBody(required = false) RejectGradesRequest request,
+            Authentication authentication) {
+        Long approverUserId = securityUtils.resolveUserId(authentication);
+        String reason = (request != null && request.reason() != null && !request.reason().isBlank())
+                ? request.reason()
+                : "Returned by Dean for revision";
+        return ResponseEntity.ok(gradeService.rejectGrades(id, reason, approverUserId));
+    }
+
     @PostMapping("/{id}/grades/seal")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<GradeActionResponse> sealGrades(

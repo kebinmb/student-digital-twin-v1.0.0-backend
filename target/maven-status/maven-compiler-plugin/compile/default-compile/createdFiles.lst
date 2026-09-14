@@ -112,6 +112,7 @@ com\sdt\web_app\dto\grade\GradeChangeDtos$GradeChangeResponse.class
 com\sdt\web_app\controller\institution\ProgramController.class
 com\sdt\web_app\entities\financial\FeeTemplate.class
 com\sdt\web_app\service\institution\CurriculumValidationService.class
+com\sdt\web_app\dto\grade\GradeDtos$RejectGradesRequest.class
 com\sdt\web_app\dto\compliance\ComplianceDtos$GraduationApplicationDto.class
 com\sdt\web_app\dto\compliance\EquityDtos$UpdateStudentEquityProfileRequest.class
 com\sdt\web_app\entities\financial\UnifastFheClaimItem.class
@@ -140,10 +141,12 @@ com\sdt\web_app\entities\institution\Curriculum.class
 com\sdt\web_app\entities\analytics\AttendanceRecord$Status.class
 com\sdt\web_app\repositories\institution\TermRepository.class
 com\sdt\web_app\dto\institution\CourseDtos.class
+com\sdt\web_app\entities\grade\GradeSealingAudit.class
 com\sdt\web_app\service\lms\LmsRosterSyncService.class
 com\sdt\web_app\dto\authentication\UserDtos.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$CreateSectionRequest.class
 com\sdt\web_app\dto\institution\CiloPiloMappingDtos$CiloPiloMappingResponse.class
+com\sdt\web_app\repositories\grade\GradeSealingAuditRepository.class
 com\sdt\web_app\entities\institution\AcademicYear.class
 com\sdt\web_app\service\enrollment\StudentService.class
 com\sdt\web_app\entities\compliance\ClearanceRequest.class
@@ -473,6 +476,7 @@ com\sdt\web_app\entities\institution\ProgramOutcome$ProgramOutcomeBuilder.class
 com\sdt\web_app\dto\institution\GradingScaleDtos$CreateGradingScaleRequest.class
 com\sdt\web_app\entities\faculty\FacultyProfile$AcademicRank.class
 com\sdt\web_app\entities\analytics\AttendanceRecord$AttendanceRecordBuilder.class
+com\sdt\web_app\entities\grade\GradeSealingAudit$GradeSealingAuditBuilder.class
 com\sdt\web_app\repositories\admission\AdmissionApplicationRepository.class
 com\sdt\web_app\dto\grade\GradeDtos$SaveSectionGradesRequest.class
 com\sdt\web_app\WebAppApplication.class

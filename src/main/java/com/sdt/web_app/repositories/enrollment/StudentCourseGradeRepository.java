@@ -16,6 +16,8 @@ public interface StudentCourseGradeRepository extends JpaRepository<StudentCours
 
     Optional<StudentCourseGrade> findByStudentIdAndCourseId(Long studentId, Long courseId);
 
+    Optional<StudentCourseGrade> findByStudentIdAndCourseIdAndTermId(Long studentId, Long courseId, Long termId);
+
     @Query("""
         SELECT scg FROM StudentCourseGrade scg
         WHERE scg.student.id = :studentId

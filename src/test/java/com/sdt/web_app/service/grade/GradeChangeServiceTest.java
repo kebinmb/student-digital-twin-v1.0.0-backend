@@ -40,6 +40,9 @@ class GradeChangeServiceTest {
     @Mock private com.sdt.web_app.service.institution.TermService termService;
     @Mock private UserRepository userRepository;
     @Mock private StudentCourseGradeRepository gradeRepository;
+    @Mock private com.sdt.web_app.repositories.enrollment.EnrollmentCourseItemRepository itemRepository;
+    @Mock private com.sdt.web_app.repositories.grade.GradeSealingAuditRepository sealingAuditRepository;
+    @Mock private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
     @InjectMocks
     private GradeChangeService gradeChangeService;
@@ -98,7 +101,8 @@ class GradeChangeServiceTest {
     void approveRequest_Success() {
         when(requestRepository.findById(500L)).thenReturn(Optional.of(mockRequest));
         when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
-        when(gradeRepository.findByStudentIdAndCourseId(10L, 100L)).thenReturn(Optional.empty());
+        lenient().when(gradeRepository.findByStudentIdAndCourseIdAndTermId(10L, 100L, 50L)).thenReturn(Optional.empty());
+        lenient().when(gradeRepository.findByStudentIdAndCourseId(10L, 100L)).thenReturn(Optional.empty());
         when(gradeRepository.findPassedGradesByStudentId(10L)).thenReturn(Collections.emptyList());
         when(requestRepository.save(any(GradeChangeRequest.class))).thenReturn(mockRequest);
 
