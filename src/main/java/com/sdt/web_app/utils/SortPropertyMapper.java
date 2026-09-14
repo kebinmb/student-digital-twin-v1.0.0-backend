@@ -26,6 +26,17 @@ public class SortPropertyMapper {
     );
 
     /**
+     * Map of safe client-facing sort fields for Admission Applications.
+     */
+    private static final Map<String, String> ADMISSION_APPLICATION_SORT_FIELDS = Map.of(
+            "examscore", "examScore",
+            "applicationnumber", "applicationNumber",
+            "applicationstatus", "applicationStatus",
+            "createdat", "createdAt",
+            "id", "id"
+    );
+
+    /**
      * Map of safe client-facing sort fields to explicit JPA Entity property paths for Courses.
      */
     private static final Map<String, String> COURSE_SORT_FIELDS = Map.of(
@@ -187,6 +198,11 @@ public class SortPropertyMapper {
 
     public static Pageable createStudentRiskScorePageable(int page, int size, String sortBy, String sortDir) {
         Sort safeSort = createSafeSort(sortBy, sortDir, "evaluatedAt", STUDENT_RISK_SCORE_SORT_FIELDS);
+        return PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, 100)), safeSort);
+    }
+
+    public static Pageable createAdmissionApplicationPageable(int page, int size, String sortBy, String sortDir) {
+        Sort safeSort = createSafeSort(sortBy, sortDir, "examScore", ADMISSION_APPLICATION_SORT_FIELDS);
         return PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, 100)), safeSort);
     }
 }

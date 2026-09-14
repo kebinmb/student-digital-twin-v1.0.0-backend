@@ -1,6 +1,7 @@
 package com.sdt.web_app.service.compliance;
 
 import com.sdt.web_app.dto.compliance.EquityDtos.*;
+import com.sdt.web_app.entities.admission.AdmissionApplication;
 import com.sdt.web_app.entities.authentication.Roles;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile;
@@ -8,8 +9,12 @@ import com.sdt.web_app.entities.compliance.StudentEquityProfile.DisabilityType;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile.EquityVerificationStatus;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile.HouseholdIncomeBracket;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
+import com.sdt.web_app.entities.institution.Program;
+import com.sdt.web_app.entities.institution.Term;
+import com.sdt.web_app.repositories.admission.AdmissionApplicationRepository;
 import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.compliance.StudentEquityProfileRepository;
+import com.sdt.web_app.service.analytics.EquityTargetService;
 import com.sdt.web_app.service.security.StudentProfileL2CacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,8 +23,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -38,6 +48,12 @@ class StudentEquityProfileServiceTest {
 
     @Mock
     private StudentProfileL2CacheService studentProfileL2CacheService;
+
+    @Mock
+    private AdmissionApplicationRepository admissionApplicationRepository;
+
+    @Mock
+    private EquityTargetService equityTargetService;
 
     @InjectMocks
     private StudentEquityProfileService equityProfileService;
@@ -247,5 +263,133 @@ class StudentEquityProfileServiceTest {
         assertThat(summary.getCountFarmerFisherfolk()).isEqualTo(22L);
         assertThat(summary.getCountBottom40IncomeBracket()).isEqualTo(45L);
         assertThat(summary.getCountVerified()).isEqualTo(35L);
+    }
+
+    @Test
+    @DisplayName("Should handle dangling or unresolvable verifiedBy proxy gracefully without throwing EntityNotFoundException")
+    void mapToDto_HandlesDanglingVerifiedByProxyGracefully() {
+        User danglingProxy = mock(User.class);
+        when(danglingProxy.getId()).thenThrow(new jakarta.persistence.EntityNotFoundException("No row with the given identifier exists for entity User with id '11'"));
+
+        equityProfile.setVerifiedBy(danglingProxy);
+        when(studentProfileL2CacheService.findByUserId(10L)).thenReturn(studentProfile);
+        when(equityRepository.findByStudentProfileId(10L)).thenReturn(Optional.of(equityProfile));
+
+        StudentEquityProfileDto dto = equityProfileService.getEquityProfileByStudentProfileId(10L);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.getVerifiedByUserId()).isNull();
+        assertThat(dto.getVerifiedByUsername()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should search post-exam admission applicants for statutory equity audit")
+    void searchPostExamApplicantsForEquityAudit_Success() {
+        Program program = Program.builder().id(1L).code("BSCS").name("Bachelor of Science in Computer Science").build();
+        Term term = Term.builder().id(10L).build();
+
+        AdmissionApplication app = AdmissionApplication.builder()
+                .id(50L)
+                .applicationNumber("ADM-2026-59384")
+                .firstName("Maria")
+                .lastName("Santos")
+                .email("maria.santos@gmail.com")
+                .targetProgram(program)
+                .term(term)
+                .applicationStatus(AdmissionApplication.ApplicationStatus.EXAM_PASSED)
+                .examScore(BigDecimal.valueOf(88.50))
+                .examRemarks("Passed with honors")
+                .is4psBeneficiary(true)
+                .household4psIdNumber("4PS-ILOILO-9912")
+                .isPersonWithDisability(true)
+                .pwdIdNumber("PWD-8812")
+                .disabilityType("VISUAL")
+                .isBottom40IncomeBracket(true)
+                .monthlyHouseholdIncomeBracket("POOR_BELOW_10K")
+                .build();
+
+        PageRequest pageable = PageRequest.of(0, 10);
+        when(admissionApplicationRepository.searchPostExamApplicationsForEquityAudit(
+                eq("ADM-2026-59384"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(app), pageable, 1));
+        when(equityTargetService.calculateApplicantSocioeconomicRiskScore(app)).thenReturn(BigDecimal.valueOf(80.00));
+
+        Page<ApplicantEquityAuditDto> result = equityProfileService.searchPostExamApplicantsForEquityAudit(
+                "ADM-2026-59384", null, null, null, null, null, null, null, null, null, pageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        ApplicantEquityAuditDto dto = result.getContent().get(0);
+        assertThat(dto.getApplicationNumber()).isEqualTo("ADM-2026-59384");
+        assertThat(dto.getApplicantName()).isEqualTo("Maria Santos");
+        assertThat(dto.getExamScore()).isEqualTo(BigDecimal.valueOf(88.50));
+        assertThat(dto.getIs4psBeneficiary()).isTrue();
+        assertThat(dto.getIsPersonWithDisability()).isTrue();
+        assertThat(dto.getSocioeconomicRiskScore()).isEqualTo(BigDecimal.valueOf(80.00));
+        assertThat(dto.getTargetProgramCode()).isEqualTo("BSCS");
+    }
+
+    @Test
+    @DisplayName("Should retrieve single applicant equity dossier by application number")
+    void getApplicantEquityDossier_Success() {
+        Program program = Program.builder().id(1L).code("BSIT").name("Bachelor of Science in Information Technology").build();
+        Term term = Term.builder().id(10L).build();
+
+        AdmissionApplication app = AdmissionApplication.builder()
+                .id(51L)
+                .applicationNumber("ADM-2026-59384")
+                .firstName("Juan")
+                .lastName("Dela Cruz")
+                .email("juan.dc@gmail.com")
+                .targetProgram(program)
+                .term(term)
+                .applicationStatus(AdmissionApplication.ApplicationStatus.ELIGIBLE_FOR_ENROLLMENT)
+                .examScore(BigDecimal.valueOf(92.00))
+                .isFarmerFisherfolk(true)
+                .rsbsaRegistrationNumber("RSBSA-998811")
+                .build();
+
+        when(admissionApplicationRepository.findByApplicationNumber("ADM-2026-59384")).thenReturn(Optional.of(app));
+        when(equityTargetService.calculateApplicantSocioeconomicRiskScore(app)).thenReturn(BigDecimal.valueOf(45.00));
+
+        ApplicantEquityAuditDto dossier = equityProfileService.getApplicantEquityDossier("ADM-2026-59384");
+
+        assertThat(dossier).isNotNull();
+        assertThat(dossier.getApplicationNumber()).isEqualTo("ADM-2026-59384");
+        assertThat(dossier.getApplicantName()).isEqualTo("Juan Dela Cruz");
+        assertThat(dossier.getExamScore()).isEqualTo(BigDecimal.valueOf(92.00));
+        assertThat(dossier.getIsFarmerFisherfolk()).isTrue();
+        assertThat(dossier.getRsbsaRegistrationNumber()).isEqualTo("RSBSA-998811");
+        assertThat(dossier.getSocioeconomicRiskScore()).isEqualTo(BigDecimal.valueOf(45.00));
+    }
+
+    @Test
+    @DisplayName("Should aggregate post-exam applicant equity statistics")
+    void getPostExamApplicantEquityStatistics_Success() {
+        AdmissionApplicationRepository.PostExamApplicantEquityStatisticsProjection projection = mock(AdmissionApplicationRepository.PostExamApplicantEquityStatisticsProjection.class);
+        when(projection.getTotalPostExamCount()).thenReturn(50L);
+        when(projection.getExamPassedCount()).thenReturn(40L);
+        when(projection.getExamFailedCount()).thenReturn(10L);
+        when(projection.getFourPsCount()).thenReturn(15L);
+        when(projection.getIpCount()).thenReturn(5L);
+        when(projection.getPwdCount()).thenReturn(3L);
+        when(projection.getSoloParentCount()).thenReturn(8L);
+        when(projection.getOrphanCount()).thenReturn(2L);
+        when(projection.getGidaCount()).thenReturn(12L);
+        when(projection.getFarmerFisherfolkCount()).thenReturn(14L);
+        when(projection.getBottom40Count()).thenReturn(25L);
+        when(projection.getFirstGenCount()).thenReturn(20L);
+
+        when(admissionApplicationRepository.getPostExamApplicantEquityStatistics()).thenReturn(projection);
+
+        ApplicantEquityStatsDto stats = equityProfileService.getPostExamApplicantEquityStatistics();
+
+        assertThat(stats).isNotNull();
+        assertThat(stats.getTotalPostExamCount()).isEqualTo(50L);
+        assertThat(stats.getExamPassedCount()).isEqualTo(40L);
+        assertThat(stats.getCount4psBeneficiaries()).isEqualTo(15L);
+        assertThat(stats.getCountIndigenousPeoples()).isEqualTo(5L);
+        assertThat(stats.getCountPersonsWithDisabilities()).isEqualTo(3L);
+        assertThat(stats.getCountBottom40IncomeBracket()).isEqualTo(25L);
     }
 }

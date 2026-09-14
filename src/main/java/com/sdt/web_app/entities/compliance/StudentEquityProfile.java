@@ -6,6 +6,8 @@ import com.sdt.web_app.entities.enrollment.StudentProfile;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import java.time.LocalDateTime;
 
@@ -152,6 +154,7 @@ public class StudentEquityProfile {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "verified_by_user_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @ToString.Exclude
     @JsonIgnore
     private User verifiedBy;

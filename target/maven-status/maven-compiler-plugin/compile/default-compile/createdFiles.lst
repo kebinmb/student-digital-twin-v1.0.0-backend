@@ -162,6 +162,7 @@ com\sdt\web_app\entities\admission\EntranceExamSlot$SlotStatus.class
 com\sdt\web_app\entities\institution\ScholarshipType.class
 com\sdt\web_app\dto\institution\TermDtos.class
 com\sdt\web_app\entities\financial\StudentAssessmentInvoice$StudentAssessmentInvoiceBuilder.class
+com\sdt\web_app\dto\compliance\EquityDtos$ApplicantEquityAuditDto$ApplicantEquityAuditDtoBuilder.class
 com\sdt\web_app\entities\scheduling\ClassSection$GradeStatus.class
 com\sdt\web_app\entities\grade\SectionGradingCategory$SectionGradingCategoryBuilder.class
 com\sdt\web_app\specifications\ProgramSpecifications.class
@@ -228,6 +229,7 @@ com\sdt\web_app\service\financial\FeeAssessmentService.class
 com\sdt\web_app\entities\scheduling\Room$RoomBuilder.class
 com\sdt\web_app\entities\admission\EntranceExamSlot.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$AddPrerequisiteRequest.class
+com\sdt\web_app\repositories\admission\AdmissionApplicationRepository$PostExamApplicantEquityStatisticsProjection.class
 com\sdt\web_app\aspect\AuditLogAspect.class
 com\sdt\web_app\dto\analytics\AnalyticsDtos$DigitalTwinRiskProfileDto.class
 com\sdt\web_app\controller\scheduling\SchedulingController.class
@@ -307,6 +309,7 @@ com\sdt\web_app\dto\enrollment\EnrollmentDtos$CourseEquivalencyDto.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$ValidationReportDto.class
 com\sdt\web_app\dto\institution\ProgramDtos$CreateProgramRequest.class
 com\sdt\web_app\dto\institution\FinancialDtos$UpdateFeeCatalogRequest.class
+com\sdt\web_app\dto\compliance\EquityDtos$ApplicantEquityAuditDto.class
 com\sdt\web_app\repositories\lms\LtiDeploymentRepository.class
 com\sdt\web_app\entities\enrollment\StudentEnrollment$Status.class
 com\sdt\web_app\dto\analytics\AnalyticsDtos$EarlyWarningRadarItemDto.class
@@ -483,6 +486,7 @@ com\sdt\web_app\dto\financial\FinancialDtos$CashierReceiptDto.class
 com\sdt\web_app\dto\admission\AdmissionDtos$EvaluateInterviewRequest.class
 com\sdt\web_app\entities\institution\TermTypeConverter.class
 com\sdt\web_app\repositories\audit\AuditLogRepository.class
+com\sdt\web_app\dto\compliance\EquityDtos$ApplicantEquityStatsDto$ApplicantEquityStatsDtoBuilder.class
 com\sdt\web_app\entities\admission\AdmissionConfig.class
 com\sdt\web_app\dto\institution\CurriculumDtos$CreateCurriculumRequest.class
 com\sdt\web_app\service\security\CachedScopeReader.class
@@ -507,6 +511,7 @@ com\sdt\web_app\controller\enrollment\EnrollmentController.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CurriculumLookupOption.class
 com\sdt\web_app\dto\financial\FinancialDtos.class
 com\sdt\web_app\controller\grade\GradeChangeRequestController.class
+com\sdt\web_app\dto\compliance\EquityDtos$ApplicantEquityStatsDto.class
 com\sdt\web_app\entities\faculty\FacultyProfile.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$UpdateFacultyLoadLimitRequest.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$DiagnosticMessage.class

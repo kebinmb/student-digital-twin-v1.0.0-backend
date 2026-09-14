@@ -2,13 +2,16 @@ package com.sdt.web_app.service.compliance;
 
 import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.dto.compliance.EquityDtos.*;
+import com.sdt.web_app.entities.admission.AdmissionApplication;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile.EquityVerificationStatus;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile.HouseholdIncomeBracket;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
+import com.sdt.web_app.repositories.admission.AdmissionApplicationRepository;
 import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.compliance.StudentEquityProfileRepository;
+import com.sdt.web_app.service.analytics.EquityTargetService;
 import com.sdt.web_app.service.security.StudentProfileL2CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -31,6 +35,8 @@ public class StudentEquityProfileService {
     private final StudentEquityProfileRepository equityRepository;
     private final UserRepository userRepository;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
+    private final AdmissionApplicationRepository admissionApplicationRepository;
+    private final EquityTargetService equityTargetService;
 
     @Transactional(readOnly = true)
     public StudentEquityProfileDto getEquityProfileByStudentProfileId(Long studentProfileId) {
@@ -258,11 +264,33 @@ public class StudentEquityProfileService {
         StudentProfile sp = entity.getStudentProfile();
         User user = sp != null ? sp.getUser() : null;
 
+        String studentName = null;
+        if (user != null) {
+            try {
+                studentName = user.getUsername();
+            } catch (Exception e) {
+                log.warn("Could not resolve student user proxy for StudentEquityProfile ID {}: {}",
+                        entity.getId(), e.getMessage());
+            }
+        }
+
+        Long verifiedByUserId = null;
+        String verifiedByUsername = null;
+        if (entity.getVerifiedBy() != null) {
+            try {
+                verifiedByUserId = entity.getVerifiedBy().getId();
+                verifiedByUsername = entity.getVerifiedBy().getUsername();
+            } catch (Exception e) {
+                log.warn("Could not resolve verifiedBy User proxy for StudentEquityProfile ID {}: {}",
+                        entity.getId(), e.getMessage());
+            }
+        }
+
         return StudentEquityProfileDto.builder()
                 .id(entity.getId())
                 .studentProfileId(sp != null ? sp.getId() : null)
                 .studentNumber(sp != null ? sp.getStudentNumber() : null)
-                .studentName(user != null ? user.getUsername() : null)
+                .studentName(studentName)
                 .programCode(sp != null && sp.getProgram() != null ? sp.getProgram().getCode() : null)
                 .programName(sp != null && sp.getProgram() != null ? sp.getProgram().getName() : null)
                 .isPersonWithDisability(entity.getIsPersonWithDisability())
@@ -290,12 +318,124 @@ public class StudentEquityProfileService {
                 .monthlyHouseholdIncomeBracket(entity.getMonthlyHouseholdIncomeBracket())
                 .isFirstGenerationCollege(entity.getIsFirstGenerationCollege())
                 .verificationStatus(entity.getVerificationStatus())
-                .verifiedByUserId(entity.getVerifiedBy() != null ? entity.getVerifiedBy().getId() : null)
-                .verifiedByUsername(entity.getVerifiedBy() != null ? entity.getVerifiedBy().getUsername() : null)
+                .verifiedByUserId(verifiedByUserId)
+                .verifiedByUsername(verifiedByUsername)
                 .verifiedAt(entity.getVerifiedAt())
                 .verificationRemarks(entity.getVerificationRemarks())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ApplicantEquityAuditDto> searchPostExamApplicantsForEquityAudit(
+            String search,
+            AdmissionApplication.ApplicationStatus status,
+            Boolean is4ps,
+            Boolean isIp,
+            Boolean isPwd,
+            Boolean isSoloParent,
+            Boolean isFarmerFisherfolk,
+            Boolean isBottom40,
+            Boolean isGida,
+            Boolean isFirstGen,
+            Pageable pageable) {
+
+        Page<AdmissionApplication> page = admissionApplicationRepository.searchPostExamApplicationsForEquityAudit(
+                search, status, is4ps, isIp, isPwd, isSoloParent, isFarmerFisherfolk, isBottom40, isGida, isFirstGen, pageable);
+
+        return page.map(this::mapApplicantToEquityDto);
+    }
+
+    @Transactional(readOnly = true)
+    public ApplicantEquityAuditDto getApplicantEquityDossier(String applicationNumber) {
+        String cleanNumber = applicationNumber != null ? applicationNumber.trim() : "";
+        AdmissionApplication app = admissionApplicationRepository.findByApplicationNumber(cleanNumber)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Admission application not found: " + cleanNumber));
+        return mapApplicantToEquityDto(app);
+    }
+
+    @Transactional(readOnly = true)
+    public ApplicantEquityStatsDto getPostExamApplicantEquityStatistics() {
+        AdmissionApplicationRepository.PostExamApplicantEquityStatisticsProjection proj =
+                admissionApplicationRepository.getPostExamApplicantEquityStatistics();
+        if (proj == null) {
+            return ApplicantEquityStatsDto.builder().build();
+        }
+        return ApplicantEquityStatsDto.builder()
+                .totalPostExamCount(proj.getTotalPostExamCount())
+                .examPassedCount(proj.getExamPassedCount())
+                .examFailedCount(proj.getExamFailedCount())
+                .count4psBeneficiaries(proj.getFourPsCount())
+                .countIndigenousPeoples(proj.getIpCount())
+                .countPersonsWithDisabilities(proj.getPwdCount())
+                .countSoloParents(proj.getSoloParentCount())
+                .countOrphans(proj.getOrphanCount())
+                .countGidaResidents(proj.getGidaCount())
+                .countFarmerFisherfolk(proj.getFarmerFisherfolkCount())
+                .countBottom40IncomeBracket(proj.getBottom40Count())
+                .countFirstGenerationCollege(proj.getFirstGenCount())
+                .build();
+    }
+
+    private ApplicantEquityAuditDto mapApplicantToEquityDto(AdmissionApplication app) {
+        BigDecimal riskScore = equityTargetService != null
+                ? equityTargetService.calculateApplicantSocioeconomicRiskScore(app)
+                : BigDecimal.ZERO;
+
+        String evaluatedByName = null;
+        if (app.getEvaluatedBy() != null) {
+            try {
+                evaluatedByName = app.getEvaluatedBy().getUsername();
+            } catch (Exception ignored) {}
+        }
+
+        return ApplicantEquityAuditDto.builder()
+                .id(app.getId())
+                .applicationNumber(app.getApplicationNumber())
+                .applicantName(app.getFullName())
+                .email(app.getEmail())
+                .mobileNumber(app.getMobileNumber())
+                .targetProgramId(app.getTargetProgram() != null ? app.getTargetProgram().getId() : null)
+                .targetProgramCode(app.getTargetProgram() != null ? app.getTargetProgram().getCode() : null)
+                .targetProgramName(app.getTargetProgram() != null ? app.getTargetProgram().getName() : null)
+                .termId(app.getTerm() != null ? app.getTerm().getId() : null)
+                .termName(app.getTerm() != null ? app.getTerm().getName() : null)
+                .highSchoolName(app.getHighSchoolName())
+                .highSchoolType(app.getHighSchoolType())
+                .highSchoolGwa(app.getHighSchoolGwa())
+                .examScore(app.getExamScore())
+                .examRemarks(app.getExamRemarks())
+                .applicationStatus(app.getApplicationStatus() != null ? app.getApplicationStatus().name() : null)
+                .evaluatedByName(evaluatedByName)
+                .interviewScore(app.getInterviewScore())
+                .interviewRemarks(app.getInterviewRemarks())
+                .is4psBeneficiary(app.is4psBeneficiary())
+                .household4psIdNumber(app.getHousehold4psIdNumber())
+                .isIndigenousPeople(app.isIndigenousPeople())
+                .ipEthnicGroup(app.getIpEthnicGroup())
+                .ncipCertificateNumber(app.getNcipCertificateNumber())
+                .isPersonWithDisability(app.isPersonWithDisability())
+                .disabilityType(app.getDisabilityType())
+                .pwdIdNumber(app.getPwdIdNumber())
+                .isSoloParent(app.isSoloParent())
+                .isRaisedBySoloParent(app.isRaisedBySoloParent())
+                .soloParentIdNumber(app.getSoloParentIdNumber())
+                .isOrphan(app.isOrphan())
+                .isGidaResident(app.isGidaResident())
+                .gidaBarangayResidence(app.getGidaBarangayResidence())
+                .isFarmerFisherfolk(app.isFarmerFisherfolk())
+                .rsbsaRegistrationNumber(app.getRsbsaRegistrationNumber())
+                .isRebelReturneeFamily(app.isRebelReturneeFamily())
+                .certificateOfSurrenderNumber(app.getCertificateOfSurrenderNumber())
+                .isBottom40IncomeBracket(app.isBottom40IncomeBracket())
+                .monthlyHouseholdIncomeBracket(app.getMonthlyHouseholdIncomeBracket())
+                .isFirstGenerationCollege(app.isFirstGenerationCollege())
+                .isUnderprivilegedHomeless(app.isUnderprivilegedHomeless())
+                .scholarshipGrantType(app.getScholarshipGrantType())
+                .socioeconomicRiskScore(riskScore)
+                .createdAt(app.getCreatedAt())
+                .isEnrolled(app.isEnrolled())
                 .build();
     }
 }

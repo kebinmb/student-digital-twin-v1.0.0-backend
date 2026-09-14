@@ -14,8 +14,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -----------------------------------------------------------------------------
 INSERT INTO users (id, username, college_id, program_id, email, password, enabled)
 VALUES 
-    (10, 'admin_sys', NULL, NULL, 'admin@chmsu.edu.ph', '$argon2id$v=19$m=16384,t=2,p=1$/abeTiesW90uK3Z8i5qJ/Q$ZBbpX5UvxC65aWXFD2E+/Evjt9cMFcDB/U8iqbvb3iE', TRUE),
-    (11, 'registrar_head', NULL, NULL, 'registrar@chmsu.edu.ph', '$argon2id$v=19$m=16384,t=2,p=1$/abeTiesW90uK3Z8i5qJ/Q$ZBbpX5UvxC65aWXFD2E+/Evjt9cMFcDB/U8iqbvb3iE', TRUE),
+    (10, 'admin_sys', NULL, NULL, 'admin.sys@chmsu.edu.ph', '$argon2id$v=19$m=16384,t=2,p=1$/abeTiesW90uK3Z8i5qJ/Q$ZBbpX5UvxC65aWXFD2E+/Evjt9cMFcDB/U8iqbvb3iE', TRUE),
+    (11, 'registrar_head', NULL, NULL, 'registrar.head@chmsu.edu.ph', '$argon2id$v=19$m=16384,t=2,p=1$/abeTiesW90uK3Z8i5qJ/Q$ZBbpX5UvxC65aWXFD2E+/Evjt9cMFcDB/U8iqbvb3iE', TRUE),
     (12, 'dean_eng', NULL, NULL, 'dean.eng@chmsu.edu.ph', '$argon2id$v=19$m=16384,t=2,p=1$/abeTiesW90uK3Z8i5qJ/Q$ZBbpX5UvxC65aWXFD2E+/Evjt9cMFcDB/U8iqbvb3iE', TRUE),
     (13, 'chair_cs', NULL, NULL, 'chair.cs@chmsu.edu.ph', '$argon2id$v=19$m=16384,t=2,p=1$/abeTiesW90uK3Z8i5qJ/Q$ZBbpX5UvxC65aWXFD2E+/Evjt9cMFcDB/U8iqbvb3iE', TRUE),
     (14, 'faculty_smith', NULL, NULL, 'faculty.smith@chmsu.edu.ph', '$argon2id$v=19$m=16384,t=2,p=1$/abeTiesW90uK3Z8i5qJ/Q$ZBbpX5UvxC65aWXFD2E+/Evjt9cMFcDB/U8iqbvb3iE', TRUE),

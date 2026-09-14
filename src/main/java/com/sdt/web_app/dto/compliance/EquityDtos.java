@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public class EquityDtos {
@@ -189,5 +191,84 @@ public class EquityDtos {
         private long countPendingVerification;
         private long countVerified;
         private long countRejected;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ApplicantEquityAuditDto {
+        private Long id;
+        private String applicationNumber;
+        private String applicantName;
+        private String email;
+        private String mobileNumber;
+        private Long targetProgramId;
+        private String targetProgramCode;
+        private String targetProgramName;
+        private Long termId;
+        private String termName;
+        private String highSchoolName;
+        private String highSchoolType;
+        private BigDecimal highSchoolGwa;
+
+        // Entrance Exam & Lifecycle
+        private BigDecimal examScore;
+        private String examRemarks;
+        private String applicationStatus;
+        private String evaluatedByName;
+        private BigDecimal interviewScore;
+        private String interviewRemarks;
+
+        // Philippine Statutory Equity Indicators
+        private Boolean is4psBeneficiary;
+        private String household4psIdNumber;
+        private Boolean isIndigenousPeople;
+        private String ipEthnicGroup;
+        private String ncipCertificateNumber;
+        private Boolean isPersonWithDisability;
+        private String disabilityType;
+        private String pwdIdNumber;
+        private Boolean isSoloParent;
+        private Boolean isRaisedBySoloParent;
+        private String soloParentIdNumber;
+        private Boolean isOrphan;
+        private Boolean isGidaResident;
+        private String gidaBarangayResidence;
+        private Boolean isFarmerFisherfolk;
+        private String rsbsaRegistrationNumber;
+        private Boolean isRebelReturneeFamily;
+        private String certificateOfSurrenderNumber;
+        private Boolean isBottom40IncomeBracket;
+        private String monthlyHouseholdIncomeBracket;
+        private Boolean isFirstGenerationCollege;
+        private Boolean isUnderprivilegedHomeless;
+        private String scholarshipGrantType;
+
+        // Calculated Affirmative Action & Risk Score
+        private BigDecimal socioeconomicRiskScore;
+
+        // Provenance metadata
+        private Instant createdAt;
+        private Boolean isEnrolled;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ApplicantEquityStatsDto {
+        private long totalPostExamCount;
+        private long examPassedCount;
+        private long examFailedCount;
+        private long count4psBeneficiaries;
+        private long countIndigenousPeoples;
+        private long countPersonsWithDisabilities;
+        private long countSoloParents;
+        private long countOrphans;
+        private long countGidaResidents;
+        private long countFarmerFisherfolk;
+        private long countBottom40IncomeBracket;
+        private long countFirstGenerationCollege;
     }
 }

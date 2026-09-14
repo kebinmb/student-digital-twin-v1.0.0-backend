@@ -1,6 +1,8 @@
 package com.sdt.web_app.repositories.admission;
 
 import com.sdt.web_app.entities.admission.AdmissionApplication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -54,4 +56,117 @@ public interface AdmissionApplicationRepository extends JpaRepository<AdmissionA
            "  OR s.studentNumber = a.applicationNumber) " +
            "ORDER BY a.createdAt DESC")
     List<AdmissionApplication> findUnclaimedApprovedApplications(@Param("termId") Long termId);
+    
+    @Query(value = """
+        SELECT a FROM AdmissionApplication a
+        JOIN a.targetProgram p
+        JOIN a.term t
+        WHERE a.isEnrolled = false
+          AND a.applicationStatus != com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ENROLLED
+          AND (a.examScore IS NOT NULL OR a.applicationStatus IN (
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_PASSED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_FAILED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.INTERVIEW_ACCEPTED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ELIGIBLE_FOR_ENROLLMENT,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.APPROVED
+          ))
+          AND (:search IS NULL OR :search = ''
+               OR LOWER(a.applicationNumber) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(a.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(a.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(CONCAT(a.firstName, ' ', a.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:status IS NULL OR a.applicationStatus = :status)
+          AND (:is4ps IS NULL OR a.is4psBeneficiary = :is4ps)
+          AND (:isIp IS NULL OR a.isIndigenousPeople = :isIp)
+          AND (:isPwd IS NULL OR a.isPersonWithDisability = :isPwd)
+          AND (:isSoloParent IS NULL OR (a.isSoloParent = :isSoloParent OR a.isRaisedBySoloParent = :isSoloParent))
+          AND (:isFarmerFisherfolk IS NULL OR a.isFarmerFisherfolk = :isFarmerFisherfolk)
+          AND (:isBottom40 IS NULL OR a.isBottom40IncomeBracket = :isBottom40)
+          AND (:isGida IS NULL OR a.isGidaResident = :isGida)
+          AND (:isFirstGen IS NULL OR a.isFirstGenerationCollege = :isFirstGen)
+    """,
+    countQuery = """
+        SELECT COUNT(a) FROM AdmissionApplication a
+        WHERE a.isEnrolled = false
+          AND a.applicationStatus != com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ENROLLED
+          AND (a.examScore IS NOT NULL OR a.applicationStatus IN (
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_PASSED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_FAILED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.INTERVIEW_ACCEPTED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ELIGIBLE_FOR_ENROLLMENT,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.APPROVED
+          ))
+          AND (:search IS NULL OR :search = ''
+               OR LOWER(a.applicationNumber) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(a.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(a.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(CONCAT(a.firstName, ' ', a.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:status IS NULL OR a.applicationStatus = :status)
+          AND (:is4ps IS NULL OR a.is4psBeneficiary = :is4ps)
+          AND (:isIp IS NULL OR a.isIndigenousPeople = :isIp)
+          AND (:isPwd IS NULL OR a.isPersonWithDisability = :isPwd)
+          AND (:isSoloParent IS NULL OR (a.isSoloParent = :isSoloParent OR a.isRaisedBySoloParent = :isSoloParent))
+          AND (:isFarmerFisherfolk IS NULL OR a.isFarmerFisherfolk = :isFarmerFisherfolk)
+          AND (:isBottom40 IS NULL OR a.isBottom40IncomeBracket = :isBottom40)
+          AND (:isGida IS NULL OR a.isGidaResident = :isGida)
+          AND (:isFirstGen IS NULL OR a.isFirstGenerationCollege = :isFirstGen)
+    """)
+    Page<AdmissionApplication> searchPostExamApplicationsForEquityAudit(
+        @Param("search") String search,
+        @Param("status") AdmissionApplication.ApplicationStatus status,
+        @Param("is4ps") Boolean is4ps,
+        @Param("isIp") Boolean isIp,
+        @Param("isPwd") Boolean isPwd,
+        @Param("isSoloParent") Boolean isSoloParent,
+        @Param("isFarmerFisherfolk") Boolean isFarmerFisherfolk,
+        @Param("isBottom40") Boolean isBottom40,
+        @Param("isGida") Boolean isGida,
+        @Param("isFirstGen") Boolean isFirstGen,
+        Pageable pageable
+    );
+
+    interface PostExamApplicantEquityStatisticsProjection {
+        long getTotalPostExamCount();
+        long getExamPassedCount();
+        long getExamFailedCount();
+        long getFourPsCount();
+        long getIpCount();
+        long getPwdCount();
+        long getSoloParentCount();
+        long getOrphanCount();
+        long getGidaCount();
+        long getFarmerFisherfolkCount();
+        long getBottom40Count();
+        long getFirstGenCount();
+    }
+
+    @Query("""
+        SELECT 
+            COUNT(a.id) AS totalPostExamCount,
+            SUM(CASE WHEN a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_PASSED 
+                          OR a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.INTERVIEW_ACCEPTED
+                          OR a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ELIGIBLE_FOR_ENROLLMENT
+                          OR a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.APPROVED THEN 1 ELSE 0 END) AS examPassedCount,
+            SUM(CASE WHEN a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_FAILED THEN 1 ELSE 0 END) AS examFailedCount,
+            SUM(CASE WHEN a.is4psBeneficiary = true THEN 1 ELSE 0 END) AS fourPsCount,
+            SUM(CASE WHEN a.isIndigenousPeople = true THEN 1 ELSE 0 END) AS ipCount,
+            SUM(CASE WHEN a.isPersonWithDisability = true THEN 1 ELSE 0 END) AS pwdCount,
+            SUM(CASE WHEN a.isSoloParent = true OR a.isRaisedBySoloParent = true THEN 1 ELSE 0 END) AS soloParentCount,
+            SUM(CASE WHEN a.isOrphan = true THEN 1 ELSE 0 END) AS orphanCount,
+            SUM(CASE WHEN a.isGidaResident = true THEN 1 ELSE 0 END) AS gidaCount,
+            SUM(CASE WHEN a.isFarmerFisherfolk = true THEN 1 ELSE 0 END) AS farmerFisherfolkCount,
+            SUM(CASE WHEN a.isBottom40IncomeBracket = true THEN 1 ELSE 0 END) AS bottom40Count,
+            SUM(CASE WHEN a.isFirstGenerationCollege = true THEN 1 ELSE 0 END) AS firstGenCount
+        FROM AdmissionApplication a
+        WHERE a.isEnrolled = false
+          AND a.applicationStatus != com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ENROLLED
+          AND (a.examScore IS NOT NULL OR a.applicationStatus IN (
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_PASSED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_FAILED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.INTERVIEW_ACCEPTED,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ELIGIBLE_FOR_ENROLLMENT,
+              com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.APPROVED
+          ))
+    """)
+    PostExamApplicantEquityStatisticsProjection getPostExamApplicantEquityStatistics();
 }

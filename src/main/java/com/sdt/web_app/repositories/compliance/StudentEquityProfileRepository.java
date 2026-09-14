@@ -5,6 +5,7 @@ import com.sdt.web_app.entities.compliance.StudentEquityProfile.EquityVerificati
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,11 +16,13 @@ import java.util.Optional;
 @Repository
 public interface StudentEquityProfileRepository extends JpaRepository<StudentEquityProfile, Long> {
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"studentProfile", "studentProfile.user", "studentProfile.program"})
+    @EntityGraph(attributePaths = {"studentProfile", "studentProfile.user", "studentProfile.program", "verifiedBy"})
     Optional<StudentEquityProfile> findByStudentProfileId(Long studentProfileId);
 
+    @EntityGraph(attributePaths = {"studentProfile", "studentProfile.user", "studentProfile.program", "verifiedBy"})
     Optional<StudentEquityProfile> findByStudentProfileUserUsername(String username);
 
+    @EntityGraph(attributePaths = {"studentProfile", "studentProfile.user", "studentProfile.program", "verifiedBy"})
     @Query("""
         SELECT e FROM StudentEquityProfile e
         JOIN e.studentProfile sp
@@ -50,6 +53,7 @@ public interface StudentEquityProfileRepository extends JpaRepository<StudentEqu
         Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"studentProfile", "studentProfile.user", "studentProfile.program", "verifiedBy"})
     @Query("""
         SELECT e FROM StudentEquityProfile e
         JOIN e.studentProfile sp
