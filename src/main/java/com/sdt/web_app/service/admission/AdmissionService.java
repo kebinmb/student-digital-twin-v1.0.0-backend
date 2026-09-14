@@ -15,8 +15,11 @@ import com.sdt.web_app.repositories.institution.TermRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.sdt.web_app.exceptions.QueueSessionExpiredException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
@@ -210,9 +213,20 @@ public class AdmissionService {
 
         // 2. Queue Token Validation
         if (request.queueToken() != null && !request.queueToken().isBlank()) {
-            boolean valid = admissionQueueService.validateAndConsumeToken(request.queueToken());
+            final String token = request.queueToken().trim();
+            boolean valid = admissionQueueService.validateToken(token);
             if (!valid) {
-                throw new IllegalStateException("Your queuing session has expired or is invalid. Please rejoin the queue to submit your application.");
+                throw new QueueSessionExpiredException("QUEUE_SESSION_EXPIRED: Your queuing session has expired or is invalid. Please rejoin the queue to submit your application.");
+            }
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        admissionQueueService.consumeToken(token);
+                    }
+                });
+            } else {
+                admissionQueueService.consumeToken(token);
             }
         }
 
@@ -221,8 +235,8 @@ public class AdmissionService {
                 .orElseThrow(() -> new EntityNotFoundException("Target Academic Program not found with ID: " + request.targetProgramId()));
 
         // 4. Duplicate Application Check
-        String email = request.email().trim().toLowerCase();
-        if (admissionApplicationRepository.existsByEmailAndTermId(email, term.getId())) {
+        String email = request.email().trim();
+        if (admissionApplicationRepository.existsByEmailIgnoreCaseAndTermId(email, term.getId())) {
             throw new IllegalStateException("An admission application with email '" + email + "' has already been submitted for " + term.getName() + ".");
         }
 
@@ -333,11 +347,21 @@ public class AdmissionService {
         Long resolvedTermId = termId != null ? termId : getActiveTermId();
         List<AdmissionApplication> apps;
         if (status != null && !status.isBlank()) {
+            if ("UNCLAIMED".equalsIgnoreCase(status.trim())) {
+                return getUnclaimedApprovedApplications(resolvedTermId);
+            }
             AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
             apps = admissionApplicationRepository.findByTermIdAndApplicationStatus(resolvedTermId, appStatus);
         } else {
             apps = admissionApplicationRepository.findByTermId(resolvedTermId);
         }
+        return apps.stream().map(this::mapToApplicationResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdmissionApplicationResponse> getUnclaimedApprovedApplications(Long termId) {
+        Long resolvedTermId = termId != null ? termId : getActiveTermId();
+        List<AdmissionApplication> apps = admissionApplicationRepository.findUnclaimedApprovedApplications(resolvedTermId);
         return apps.stream().map(this::mapToApplicationResponse).toList();
     }
 
@@ -411,6 +435,15 @@ public class AdmissionService {
         AdmissionApplication updated = admissionApplicationRepository.save(app);
         log.info("Updated admission application {} status to {}", updated.getApplicationNumber(), newStatus);
         return mapToApplicationResponse(updated);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isEmailAvailable(String email, Long termId) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        Long resolvedTermId = termId != null ? termId : getActiveTermId();
+        return !admissionApplicationRepository.existsByEmailIgnoreCaseAndTermId(email.trim(), resolvedTermId);
     }
 
     private Long getActiveTermId() {
@@ -543,7 +576,10 @@ public class AdmissionService {
                 app.getInterviewRemarks(),
                 app.getEvaluatedBy() != null ? app.getEvaluatedBy().getUsername() : null,
                 app.getInterviewedBy() != null ? app.getInterviewedBy().getUsername() : null,
-                app.getCreatedAt() != null ? app.getCreatedAt().toString() : null
+                app.getCreatedAt() != null ? app.getCreatedAt().toString() : null,
+                app.isEnrolled(),
+                app.getStudentProfileId(),
+                app.getEnrolledAt() != null ? app.getEnrolledAt().toString() : null
         );
     }
 }

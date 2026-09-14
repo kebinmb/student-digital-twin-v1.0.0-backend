@@ -151,8 +151,23 @@ public class EnrollmentDtos {
             @NotNull(message = "Student classification is required")
             String classification,
 
-            Integer yearLevel
-    ) {}
+            Integer yearLevel,
+
+            Long admissionApplicationId
+    ) {
+        public CreateStudentRequest(
+                String studentNumber,
+                String username,
+                String email,
+                String password,
+                Long programId,
+                Long curriculumId,
+                String classification,
+                Integer yearLevel
+        ) {
+            this(studentNumber, username, email, password, programId, curriculumId, classification, yearLevel, null);
+        }
+    }
 
     public record StudentProfileResponse(
             Long id,

@@ -28,6 +28,7 @@ public class AdmissionQueueService {
         public QueueStatus status;
         public final Instant createdAt;
         public Instant lastAccessedAt;
+        public Instant expiresAt;
 
         public TokenEntry(String token, String clientIdentifier, QueueStatus status) {
             this.token = token;
@@ -35,6 +36,9 @@ public class AdmissionQueueService {
             this.status = status;
             this.createdAt = Instant.now();
             this.lastAccessedAt = Instant.now();
+            if (status == QueueStatus.ACTIVE) {
+                this.expiresAt = Instant.now().plusSeconds(TOKEN_TTL_SECONDS);
+            }
         }
     }
 
@@ -53,7 +57,7 @@ public class AdmissionQueueService {
                 TokenEntry entry = new TokenEntry(token, clientId, QueueStatus.ACTIVE);
                 tokenStore.put(token, entry);
                 log.info("Issued ACTIVE queue token {} for client {}", token, clientId);
-                return new QueueTokenResponse(token, QueueStatus.ACTIVE.name(), 0, 0, true);
+                return new QueueTokenResponse(token, QueueStatus.ACTIVE.name(), 0, 0, true, entry.expiresAt.toString(), TOKEN_TTL_SECONDS);
             } else {
                 waitingQueue.add(token);
                 TokenEntry entry = new TokenEntry(token, clientId, QueueStatus.QUEUED);
@@ -61,19 +65,19 @@ public class AdmissionQueueService {
                 int pos = calculateQueuePosition(token);
                 long estWait = pos * 15L;
                 log.info("Issued QUEUED token {} at position {} for client {}", token, pos, clientId);
-                return new QueueTokenResponse(token, QueueStatus.QUEUED.name(), pos, estWait, false);
+                return new QueueTokenResponse(token, QueueStatus.QUEUED.name(), pos, estWait, false, null, null);
             }
         }
     }
 
     public QueueTokenResponse checkTokenStatus(String token) {
         if (token == null || token.isBlank()) {
-            return new QueueTokenResponse(null, QueueStatus.EXPIRED.name(), -1, 0, false);
+            return new QueueTokenResponse(null, QueueStatus.EXPIRED.name(), -1, 0, false, null, 0L);
         }
 
         TokenEntry entry = tokenStore.get(token);
         if (entry == null) {
-            return new QueueTokenResponse(token, QueueStatus.EXPIRED.name(), -1, 0, false);
+            return new QueueTokenResponse(token, QueueStatus.EXPIRED.name(), -1, 0, false, null, 0L);
         }
 
         synchronized (this) {
@@ -83,20 +87,30 @@ public class AdmissionQueueService {
             promoteQueueIfPossible();
 
             if (entry.status == QueueStatus.ACTIVE) {
-                return new QueueTokenResponse(token, QueueStatus.ACTIVE.name(), 0, 0, true);
+                if (entry.expiresAt != null && entry.expiresAt.isBefore(Instant.now())) {
+                    entry.status = QueueStatus.EXPIRED;
+                    activeTokens.remove(token);
+                    tokenStore.remove(token);
+                    promoteQueueIfPossible();
+                    return new QueueTokenResponse(token, QueueStatus.EXPIRED.name(), -1, 0, false, null, 0L);
+                }
+                long remainingTtl = entry.expiresAt != null
+                        ? Math.max(0, java.time.Duration.between(Instant.now(), entry.expiresAt).getSeconds())
+                        : TOKEN_TTL_SECONDS;
+                String expStr = entry.expiresAt != null ? entry.expiresAt.toString() : null;
+                return new QueueTokenResponse(token, QueueStatus.ACTIVE.name(), 0, 0, true, expStr, remainingTtl);
             } else if (entry.status == QueueStatus.QUEUED) {
                 int pos = calculateQueuePosition(token);
                 long estWait = pos * 15L;
-                return new QueueTokenResponse(token, QueueStatus.QUEUED.name(), pos, estWait, false);
+                return new QueueTokenResponse(token, QueueStatus.QUEUED.name(), pos, estWait, false, null, null);
             } else {
-                return new QueueTokenResponse(token, entry.status.name(), -1, 0, false);
+                return new QueueTokenResponse(token, entry.status.name(), -1, 0, false, null, 0L);
             }
         }
     }
 
-    public boolean validateAndConsumeToken(String token) {
+    public boolean validateToken(String token) {
         if (token == null || token.isBlank()) {
-            // If token is omitted, we allow graceful fallback for testing/direct submissions
             return true;
         }
 
@@ -107,10 +121,44 @@ public class AdmissionQueueService {
 
         synchronized (this) {
             if (entry.status == QueueStatus.ACTIVE) {
+                if (entry.expiresAt != null && entry.expiresAt.isBefore(Instant.now())) {
+                    entry.status = QueueStatus.EXPIRED;
+                    activeTokens.remove(token);
+                    tokenStore.remove(token);
+                    promoteQueueIfPossible();
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public void consumeToken(String token) {
+        if (token == null || token.isBlank()) {
+            return;
+        }
+
+        synchronized (this) {
+            TokenEntry entry = tokenStore.remove(token);
+            if (entry != null) {
                 entry.status = QueueStatus.CONSUMED;
                 activeTokens.remove(token);
-                tokenStore.remove(token);
                 promoteQueueIfPossible();
+                log.info("Successfully consumed queue token {}", token);
+            }
+        }
+    }
+
+    public boolean validateAndConsumeToken(String token) {
+        if (token == null || token.isBlank()) {
+            // If token is omitted, we allow graceful fallback for testing/direct submissions
+            return true;
+        }
+
+        synchronized (this) {
+            if (validateToken(token)) {
+                consumeToken(token);
                 return true;
             }
             return false;
@@ -135,6 +183,7 @@ public class AdmissionQueueService {
                 TokenEntry entry = tokenStore.get(nextToken);
                 if (entry != null && entry.status == QueueStatus.QUEUED) {
                     entry.status = QueueStatus.ACTIVE;
+                    entry.expiresAt = Instant.now().plusSeconds(TOKEN_TTL_SECONDS);
                     activeTokens.add(nextToken);
                     log.info("Promoted token {} from QUEUED to ACTIVE", nextToken);
                 }
@@ -148,13 +197,19 @@ public class AdmissionQueueService {
             Instant now = Instant.now();
             List<String> toRemove = new ArrayList<>();
             for (Map.Entry<String, TokenEntry> e : tokenStore.entrySet()) {
-                if (e.getValue().lastAccessedAt.plusSeconds(TOKEN_TTL_SECONDS).isBefore(now)) {
+                TokenEntry entry = e.getValue();
+                if (entry.status == QueueStatus.ACTIVE && entry.expiresAt != null) {
+                    if (entry.expiresAt.isBefore(now)) {
+                        toRemove.add(e.getKey());
+                    }
+                } else if (entry.lastAccessedAt.plusSeconds(TOKEN_TTL_SECONDS).isBefore(now)) {
                     toRemove.add(e.getKey());
                 }
             }
             for (String t : toRemove) {
                 TokenEntry entry = tokenStore.remove(t);
                 if (entry != null) {
+                    entry.status = QueueStatus.EXPIRED;
                     activeTokens.remove(t);
                     waitingQueue.remove(t);
                 }

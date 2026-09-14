@@ -15,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface StudentEquityProfileRepository extends JpaRepository<StudentEquityProfile, Long> {
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"studentProfile", "studentProfile.user", "studentProfile.program"})
     Optional<StudentEquityProfile> findByStudentProfileId(Long studentProfileId);
 
     Optional<StudentEquityProfile> findByStudentProfileUserUsername(String username);

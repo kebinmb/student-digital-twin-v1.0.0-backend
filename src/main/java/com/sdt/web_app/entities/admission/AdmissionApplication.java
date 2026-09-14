@@ -267,6 +267,16 @@ public class AdmissionApplication {
     @Builder.Default
     private ApplicationStatus applicationStatus = ApplicationStatus.SUBMITTED;
 
+    @Column(name = "is_enrolled", nullable = false)
+    @Builder.Default
+    private boolean isEnrolled = false;
+
+    @Column(name = "enrolled_at")
+    private Instant enrolledAt;
+
+    @Column(name = "student_profile_id")
+    private Long studentProfileId;
+
     @Column(name = "exam_score", precision = 5, scale = 2)
     private BigDecimal examScore;
 
@@ -310,6 +320,13 @@ public class AdmissionApplication {
         if (lastName != null) sb.append(" ").append(lastName);
         if (suffix != null && !suffix.isBlank()) sb.append(" ").append(suffix);
         return sb.toString().trim();
+    }
+
+    public void markAsEnrolled(Long studentProfileId) {
+        this.applicationStatus = ApplicationStatus.ENROLLED;
+        this.isEnrolled = true;
+        this.enrolledAt = Instant.now();
+        this.studentProfileId = studentProfileId;
     }
 
     @Override

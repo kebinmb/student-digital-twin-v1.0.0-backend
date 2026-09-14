@@ -74,6 +74,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(QueueSessionExpiredException.class)
+    public ProblemDetail handleQueueSessionExpiredException(QueueSessionExpiredException ex) {
+        log.warn("Queue session expired: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Queue Session Expired");
+        problem.setType(URI.create("https://api.example.com/errors/queue-session-expired"));
+        problem.setProperty("errorCode", "QUEUE_SESSION_EXPIRED");
+        problem.setProperty("code", "QUEUE_SESSION_EXPIRED");
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ProblemDetail handleIllegalStateException(IllegalStateException ex) {
         log.warn("State conflict rule violation: {}", ex.getMessage());

@@ -24,6 +24,14 @@ public class PublicAdmissionController {
         return ResponseEntity.ok(admissionService.getAdmissionConfig(termId));
     }
 
+    @GetMapping("/check-email")
+    public ResponseEntity<EmailAvailabilityResponse> checkEmail(
+            @RequestParam("email") String email,
+            @RequestParam(value = "termId", required = false) Long termId) {
+        boolean available = admissionService.isEmailAvailable(email, termId);
+        return ResponseEntity.ok(new EmailAvailabilityResponse(available));
+    }
+
     @PostMapping("/queue/token")
     public ResponseEntity<QueueTokenResponse> requestQueueToken(@RequestBody(required = false) QueueTokenRequest request) {
         String clientId = request != null ? request.clientIdentifier() : null;

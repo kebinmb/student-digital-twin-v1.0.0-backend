@@ -1,6 +1,8 @@
 package com.sdt.web_app.controller.enrollment;
 
+import com.sdt.web_app.dto.admission.AdmissionDtos.AdmissionApplicationResponse;
 import com.sdt.web_app.dto.enrollment.EnrollmentDtos.*;
+import com.sdt.web_app.service.admission.AdmissionService;
 import com.sdt.web_app.service.enrollment.EnrollmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/enrollment")
 @RequiredArgsConstructor
@@ -16,6 +20,14 @@ import org.springframework.web.bind.annotation.*;
 public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
+    private final AdmissionService admissionService;
+
+    @GetMapping("/admissions/approved")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
+    public ResponseEntity<List<AdmissionApplicationResponse>> getApprovedAdmissions(
+            @RequestParam(value = "termId", required = false) Long termId) {
+        return ResponseEntity.ok(admissionService.getUnclaimedApprovedApplications(termId));
+    }
 
     // -------------------------------------------------------------------------
     // Gate 3: Student Advising & Eligibility

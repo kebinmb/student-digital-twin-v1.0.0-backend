@@ -20,10 +20,10 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
 
     Optional<StudentProfile> findByStudentNumber(String studentNumber);
 
-    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.program JOIN FETCH sp.curriculum WHERE sp.id = :id")
+    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.user JOIN FETCH sp.program JOIN FETCH sp.curriculum WHERE sp.id = :id")
     Optional<StudentProfile> findByIdWithProgramAndCurriculum(@Param("id") Long id);
 
-    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.program JOIN FETCH sp.curriculum WHERE sp.user.id = :userId")
+    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.user JOIN FETCH sp.program JOIN FETCH sp.curriculum WHERE sp.user.id = :userId")
     Optional<StudentProfile> findByUserIdWithProgramAndCurriculum(@Param("userId") Long userId);
 
     boolean existsByStudentNumber(String studentNumber);

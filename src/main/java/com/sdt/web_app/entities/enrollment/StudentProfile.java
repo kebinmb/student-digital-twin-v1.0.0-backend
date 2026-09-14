@@ -45,6 +45,9 @@ public class StudentProfile {
     @JsonIgnore
     private User user;
 
+    @Column(name = "admission_application_id")
+    private Long admissionApplicationId;
+
     @Column(name = "student_number", nullable = false, unique = true, length = 30)
     private String studentNumber;
 
@@ -143,6 +146,10 @@ public class StudentProfile {
         if (classification != null) {
             this.classification = classification;
         }
+    }
+
+    public void setAdmissionApplicationId(Long admissionApplicationId) {
+        this.admissionApplicationId = admissionApplicationId;
     }
 
     public void updateClassification(StudentClassification classification) {

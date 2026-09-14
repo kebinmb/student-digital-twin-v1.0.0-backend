@@ -110,7 +110,23 @@ public class AdmissionDtos {
             String status,
             int queuePosition,
             long estimatedWaitSeconds,
-            boolean allowedToProceed
+            boolean allowedToProceed,
+            String expiresAt,
+            Long ttlSeconds
+    ) {
+        public QueueTokenResponse(
+                String queueToken,
+                String status,
+                int queuePosition,
+                long estimatedWaitSeconds,
+                boolean allowedToProceed
+        ) {
+            this(queueToken, status, queuePosition, estimatedWaitSeconds, allowedToProceed, null, null);
+        }
+    }
+
+    public record EmailAvailabilityResponse(
+            boolean available
     ) {}
 
     public record SubmitAdmissionRequest(
@@ -249,7 +265,17 @@ public class AdmissionDtos {
             Boolean isFirstGenerationCollege,
             Boolean isUnderprivilegedHomeless,
             String scholarshipGrantType
-    ) {}
+    ) {
+        public SubmitAdmissionRequest(String queueToken, Long targetProgramId, Long termId, String email) {
+            this(queueToken, targetProgramId, termId, null, "Juan", null, "Dela Cruz", null,
+                 LocalDate.of(2005, 1, 1), null, "MALE", null, "SINGLE", "FILIPINO", "09171234567",
+                 email, null, "High School", null, "PUBLIC", null, BigDecimal.valueOf(90), 2024,
+                 "Street", "Barangay", "City", "Province", "1234", null, null, null, null, null, null,
+                 "Emergency Contact", "Parent", "09171234567", null, false, null, false, null, null,
+                 false, null, null, false, false, null, false, false, null, false, null, false, null,
+                 false, "POOR_BELOW_10K", false, false, null);
+        }
+    }
 
     public record AdmissionApplicationResponse(
             Long id,
@@ -330,8 +356,15 @@ public class AdmissionDtos {
             String interviewRemarks,
             String evaluatedByName,
             String interviewedByName,
-            String createdAt
-    ) {}
+            String createdAt,
+            Boolean isEnrolled,
+            Long studentId,
+            String enrolledAt
+    ) {
+        public String status() {
+            return applicationStatus;
+        }
+    }
 
     public record UpdateAdmissionStatusRequest(
             @NotBlank(message = "Status is required")

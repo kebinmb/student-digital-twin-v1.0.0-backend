@@ -5,6 +5,7 @@ import com.sdt.web_app.dto.compliance.EquityDtos.*;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile.EquityVerificationStatus;
+import com.sdt.web_app.entities.compliance.StudentEquityProfile.HouseholdIncomeBracket;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.compliance.StudentEquityProfileRepository;
@@ -37,7 +38,7 @@ public class StudentEquityProfileService {
                 .or(() -> Optional.ofNullable(studentProfileL2CacheService.findById(studentProfileId)))
                 .orElseThrow(() -> new IllegalArgumentException("Student profile not found: " + studentProfileId));
         StudentEquityProfile equity = equityRepository.findByStudentProfileId(sp.getId())
-                .orElseGet(() -> createDefaultProfileForStudentId(sp.getId()));
+                .orElseGet(() -> buildDefaultProfileForStudent(sp));
         return mapToDto(equity);
     }
 
@@ -225,15 +226,32 @@ public class StudentEquityProfileService {
                 .build();
     }
 
+    private StudentEquityProfile buildDefaultProfileForStudent(StudentProfile sp) {
+        return StudentEquityProfile.builder()
+                .studentProfile(sp)
+                .verificationStatus(EquityVerificationStatus.SELF_DECLARED)
+                .isPersonWithDisability(false)
+                .isSoloParent(false)
+                .isRaisedBySoloParent(false)
+                .is4psBeneficiary(false)
+                .isListahananNhts(false)
+                .unifastTesAwardee(false)
+                .isIndigenousPeople(false)
+                .isOrphan(false)
+                .isGidaResident(false)
+                .isFarmerFisherfolk(false)
+                .isRebelReturneeFamily(false)
+                .isBottom40IncomeBracket(false)
+                .monthlyHouseholdIncomeBracket(HouseholdIncomeBracket.POOR_BELOW_10K)
+                .isFirstGenerationCollege(false)
+                .build();
+    }
+
     private StudentEquityProfile createDefaultProfileForStudentId(Long studentProfileId) {
         StudentProfile sp = Optional.ofNullable(studentProfileL2CacheService.findByUserId(studentProfileId))
                 .or(() -> Optional.ofNullable(studentProfileL2CacheService.findById(studentProfileId)))
                 .orElseThrow(() -> new IllegalArgumentException("Student profile not found: " + studentProfileId));
-        StudentEquityProfile defaultProfile = StudentEquityProfile.builder()
-                .studentProfile(sp)
-                .verificationStatus(EquityVerificationStatus.SELF_DECLARED)
-                .build();
-        return equityRepository.save(defaultProfile);
+        return buildDefaultProfileForStudent(sp);
     }
 
     private StudentEquityProfileDto mapToDto(StudentEquityProfile entity) {

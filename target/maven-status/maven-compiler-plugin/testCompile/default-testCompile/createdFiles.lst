@@ -55,6 +55,7 @@ com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTe
 com\sdt\web_app\service\analytics\QrAttendanceServiceTest.class
 com\sdt\web_app\service\enrollment\StudentServiceTest.class
 com\sdt\web_app\service\institution\TermLifecycleServiceTest.class
+com\sdt\web_app\service\admission\AdmissionQueueAndApplicationServiceTest.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class
 com\sdt\web_app\service\analytics\EquityTargetServiceTest.class
 com\sdt\web_app\service\grade\ClassRecordMatrixIntegrationTest.class

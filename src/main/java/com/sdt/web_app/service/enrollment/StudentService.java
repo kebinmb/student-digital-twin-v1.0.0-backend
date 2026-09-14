@@ -105,6 +105,16 @@ public class StudentService {
 
         int yearLevel = (request.yearLevel() != null && request.yearLevel() > 0) ? request.yearLevel() : 1;
 
+        AdmissionApplication app = null;
+        if (request.admissionApplicationId() != null) {
+            app = admissionApplicationRepository.findById(request.admissionApplicationId()).orElse(null);
+        }
+        if (app == null) {
+            app = admissionApplicationRepository.findFirstByEmailIgnoreCase(trimmedEmail)
+                    .or(() -> admissionApplicationRepository.findFirstByApplicationNumber(trimmedStudentNumber))
+                    .orElse(null);
+        }
+
         StudentProfile profile = StudentProfile.builder()
                 .user(savedUser)
                 .studentNumber(trimmedStudentNumber)
@@ -115,9 +125,15 @@ public class StudentService {
                 .enrollmentStatus(StudentProfile.EnrollmentStatus.REGULAR)
                 .isGraduating(false)
                 .totalUnitsEarned(BigDecimal.ZERO)
+                .admissionApplicationId(app != null ? app.getId() : null)
                 .build();
 
         StudentProfile savedProfile = studentProfileRepository.save(profile);
+        if (app != null) {
+            app.markAsEnrolled(savedProfile.getId());
+            admissionApplicationRepository.save(app);
+            copyEquityProfileIfPresent(app, savedProfile);
+        }
         log.info("Registered new student: {} ({}) under curriculum {}", savedProfile.getStudentNumber(), classification, curriculum.getCode());
 
         return mapToProfileResponse(savedProfile);
@@ -133,7 +149,16 @@ public class StudentService {
         if (existingUser.isPresent()) {
             Optional<StudentProfile> existingProfile = studentProfileRepository.findByUserIdWithProgramAndCurriculum(existingUser.get().getId());
             if (existingProfile.isPresent()) {
-                return mapToProfileResponse(existingProfile.get());
+                StudentProfile ep = existingProfile.get();
+                if (ep.getAdmissionApplicationId() == null) {
+                    ep.setAdmissionApplicationId(app.getId());
+                    studentProfileRepository.save(ep);
+                }
+                if (!Boolean.TRUE.equals(app.isEnrolled())) {
+                    app.markAsEnrolled(ep.getId());
+                    admissionApplicationRepository.save(app);
+                }
+                return mapToProfileResponse(ep);
             }
         }
 
@@ -179,12 +204,20 @@ public class StudentService {
                 .enrollmentStatus(StudentProfile.EnrollmentStatus.REGULAR)
                 .isGraduating(false)
                 .totalUnitsEarned(BigDecimal.ZERO)
+                .admissionApplicationId(app.getId())
                 .build();
 
         StudentProfile savedProfile = studentProfileRepository.save(profile);
-        app.setApplicationStatus(AdmissionApplication.ApplicationStatus.ENROLLED);
+        app.markAsEnrolled(savedProfile.getId());
         admissionApplicationRepository.save(app);
 
+        copyEquityProfileIfPresent(app, savedProfile);
+
+        log.info("Auto-provisioned student profile {} for incoming first year admission application {}", savedProfile.getStudentNumber(), app.getApplicationNumber());
+        return mapToProfileResponse(savedProfile);
+    }
+
+    private void copyEquityProfileIfPresent(AdmissionApplication app, StudentProfile savedProfile) {
         if (studentEquityProfileRepository != null && (app.is4psBeneficiary() || app.isIndigenousPeople() 
                 || app.isPersonWithDisability() || app.isSoloParent() || app.isRaisedBySoloParent()
                 || app.isOrphan() || app.isGidaResident() || app.isFarmerFisherfolk()
@@ -237,9 +270,6 @@ public class StudentService {
                 studentEquityProfileRepository.save(equityProfile);
             }
         }
-
-        log.info("Auto-provisioned student profile {} for incoming first year admission application {}", savedProfile.getStudentNumber(), app.getApplicationNumber());
-        return mapToProfileResponse(savedProfile);
     }
 
     private String generateStudentNumberForAdmission() {
@@ -344,8 +374,12 @@ public class StudentService {
         if (canSearchAdmissions) {
             List<AdmissionApplication> matchingApps = admissionApplicationRepository.searchKeyword(cleanQuery);
             for (AdmissionApplication app : matchingApps) {
+                if (Boolean.TRUE.equals(app.isEnrolled()) || app.getApplicationStatus() == AdmissionApplication.ApplicationStatus.ENROLLED || app.getStudentProfileId() != null) {
+                    continue;
+                }
                 String appEmail = app.getEmail() != null ? app.getEmail().trim().toLowerCase() : "";
                 boolean alreadyExists = profiles.stream().anyMatch(p ->
+                        (p.getAdmissionApplicationId() != null && p.getAdmissionApplicationId().equals(app.getId())) ||
                         p.getStudentNumber().equalsIgnoreCase(app.getApplicationNumber()) ||
                         (p.getUser() != null && p.getUser().getEmail() != null && p.getUser().getEmail().equalsIgnoreCase(appEmail))
                 );

@@ -192,6 +192,7 @@ com\sdt\web_app\entities\grade\ClassRecordItem$ClassRecordItemBuilder.class
 com\sdt\web_app\dto\compliance\EquityDtos$StudentEquityProfileDto$StudentEquityProfileDtoBuilder.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$UpdateClearanceRequest.class
 com\sdt\web_app\dto\institution\CourseDtos$CreateCourseRequest.class
+com\sdt\web_app\exceptions\QueueSessionExpiredException.class
 com\sdt\web_app\entities\compliance\StudentEquityProfile$DisabilityType.class
 com\sdt\web_app\entities\compliance\ClearanceSignoff$ClearanceSignoffBuilder.class
 com\sdt\web_app\service\security\AcademicScopeContext.class
@@ -219,6 +220,7 @@ com\sdt\web_app\repositories\enrollment\CourseEquivalencyRepository.class
 com\sdt\web_app\entities\financial\CashierReceipt.class
 com\sdt\web_app\service\authentication\PasswordResetService$PasswordResetResult.class
 com\sdt\web_app\dto\analytics\AnalyticsDtos.class
+com\sdt\web_app\service\admission\AdmissionService$1.class
 com\sdt\web_app\entities\institution\FeeCatalog.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$FacultyLoadSummaryResponse.class
 com\sdt\web_app\entities\institution\Campus$CampusBuilder.class
@@ -514,6 +516,7 @@ com\sdt\web_app\entities\admission\AdmissionApplication$ApplicationStatus.class
 com\sdt\web_app\repositories\analytics\StudentRiskScoreRepository.class
 com\sdt\web_app\dto\institution\FinancialDtos$CreateScholarshipDiscountRequest.class
 com\sdt\web_app\entities\scheduling\FacultyWorkload$FacultyWorkloadBuilder.class
+com\sdt\web_app\dto\admission\AdmissionDtos$EmailAvailabilityResponse.class
 com\sdt\web_app\service\compliance\ClearanceWorkflowService.class
 com\sdt\web_app\dto\institution\ProgramDtos$ProgramResponse.class
 com\sdt\web_app\repositories\institution\AcademicYearRepository.class

@@ -112,6 +112,42 @@ class StudentEquityProfileServiceTest {
     }
 
     @Test
+    @DisplayName("Should return default in-memory equity profile when none exists, without executing repository save")
+    void getEquityProfileByStudentProfileId_ReturnsDefaultWithoutSaving() {
+        when(studentProfileL2CacheService.findByUserId(10L)).thenReturn(studentProfile);
+        when(equityRepository.findByStudentProfileId(10L)).thenReturn(Optional.empty());
+
+        StudentEquityProfileDto dto = equityProfileService.getEquityProfileByStudentProfileId(10L);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.getStudentProfileId()).isEqualTo(10L);
+        assertThat(dto.getStudentNumber()).isEqualTo("2026-0001");
+        assertThat(dto.getVerificationStatus()).isEqualTo(EquityVerificationStatus.SELF_DECLARED);
+        assertThat(dto.getIsPersonWithDisability()).isFalse();
+        assertThat(dto.getIsSoloParent()).isFalse();
+        assertThat(dto.getIs4psBeneficiary()).isFalse();
+        assertThat(dto.getMonthlyHouseholdIncomeBracket()).isEqualTo(HouseholdIncomeBracket.POOR_BELOW_10K);
+
+        // Crucial guard: verify that NO database save was called during read operation
+        verify(equityRepository, never()).save(any(StudentEquityProfile.class));
+    }
+
+    @Test
+    @DisplayName("Should return default profile for user ID without saving to database")
+    void getEquityProfileForUser_ReturnsDefaultWithoutSaving() {
+        when(studentProfileL2CacheService.findByUserId(18L)).thenReturn(studentProfile);
+        when(studentProfileL2CacheService.findByUserId(10L)).thenReturn(studentProfile);
+        when(equityRepository.findByStudentProfileId(10L)).thenReturn(Optional.empty());
+
+        StudentEquityProfileDto dto = equityProfileService.getEquityProfileForUser(18L);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.getStudentProfileId()).isEqualTo(10L);
+        assertThat(dto.getVerificationStatus()).isEqualTo(EquityVerificationStatus.SELF_DECLARED);
+        verify(equityRepository, never()).save(any(StudentEquityProfile.class));
+    }
+
+    @Test
     @DisplayName("Upserting profile with valid certificates transitions status to PENDING_VERIFICATION")
     void upsertEquityProfileForUser_SetsPendingVerification() {
         when(studentProfileL2CacheService.findByUserId(18L)).thenReturn(studentProfile);

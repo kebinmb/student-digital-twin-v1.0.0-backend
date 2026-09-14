@@ -16,7 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/equity-profiles")
+@RequestMapping({"/api/v1/compliance/equity-profiles", "/api/v1/equity-profiles"})
 @RequiredArgsConstructor
 public class StudentEquityProfileController {
 

@@ -78,6 +78,14 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(apps);
     }
 
+    @GetMapping("/applications/unclaimed")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
+    public ResponseEntity<List<AdmissionApplicationResponse>> getUnclaimedApplications(
+            @RequestParam(value = "termId", required = false) Long termId) {
+        List<AdmissionApplicationResponse> apps = admissionService.getUnclaimedApprovedApplications(termId);
+        return ResponseEntity.ok(apps);
+    }
+
     @GetMapping("/applications/program/{programId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<List<AdmissionApplicationResponse>> getApplicationsForProgram(
