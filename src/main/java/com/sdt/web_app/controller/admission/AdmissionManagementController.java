@@ -105,7 +105,7 @@ public class AdmissionManagementController {
             @Valid @RequestBody EvaluateExamRequest request,
             Authentication authentication) {
         Long userId = securityUtils.resolveUserId(authentication);
-        User currentUser = userId != null ? userRepository.getReferenceById(userId) : null;
+        User currentUser = userId != null ? userRepository.findById(userId).orElse(null) : null;
         AdmissionApplicationResponse updated = admissionService.evaluateExam(id, request, currentUser);
         return ResponseEntity.ok(updated);
     }
@@ -117,7 +117,7 @@ public class AdmissionManagementController {
             @Valid @RequestBody EvaluateInterviewRequest request,
             Authentication authentication) {
         Long userId = securityUtils.resolveUserId(authentication);
-        User currentUser = userId != null ? userRepository.getReferenceById(userId) : null;
+        User currentUser = userId != null ? userRepository.findById(userId).orElse(null) : null;
         AdmissionApplicationResponse updated = admissionService.evaluateInterview(id, request, currentUser);
         return ResponseEntity.ok(updated);
     }

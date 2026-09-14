@@ -24,7 +24,7 @@ public class StudentEquityProfileController {
     private final SecurityUtils securityUtils;
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN', 'REGISTRAR')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('STUDENT', 'ADMIN', 'REGISTRAR')")
     public ResponseEntity<StudentEquityProfileDto> getMyEquityProfile(Authentication authentication) {
         Long userId = securityUtils.resolveUserId(authentication);
         StudentEquityProfileDto result = equityProfileService.getEquityProfileForUser(userId);
@@ -32,7 +32,7 @@ public class StudentEquityProfileController {
     }
 
     @PutMapping("/me")
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN', 'REGISTRAR')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('STUDENT', 'ADMIN', 'REGISTRAR')")
     public ResponseEntity<StudentEquityProfileDto> updateMyEquityProfile(
             @Valid @RequestBody UpdateStudentEquityProfileRequest request,
             Authentication authentication) {
@@ -42,14 +42,14 @@ public class StudentEquityProfileController {
     }
 
     @GetMapping("/student/{studentProfileId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<StudentEquityProfileDto> getEquityProfileByStudentProfileId(@PathVariable Long studentProfileId) {
         StudentEquityProfileDto result = equityProfileService.getEquityProfileByStudentProfileId(studentProfileId);
         return ResponseEntity.ok(result);
     }
 
     @PutMapping("/{profileId}/verify")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<StudentEquityProfileDto> verifyEquityProfile(
             @PathVariable Long profileId,
             @Valid @RequestBody VerifyEquityProfileRequest request,
@@ -60,7 +60,7 @@ public class StudentEquityProfileController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<Page<StudentEquityProfileDto>> searchEquityProfiles(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) EquityVerificationStatus status,
@@ -69,6 +69,9 @@ public class StudentEquityProfileController {
             @RequestParam(required = false) Boolean isPwd,
             @RequestParam(required = false) Boolean isGida,
             @RequestParam(required = false) Boolean isFirstGen,
+            @RequestParam(required = false) Boolean isSoloParent,
+            @RequestParam(required = false) Boolean isFarmerFisherfolk,
+            @RequestParam(required = false) Boolean isBottom40,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
@@ -76,12 +79,12 @@ public class StudentEquityProfileController {
 
         Pageable pageable = SortPropertyMapper.createEquityProfilePageable(page, size, sortBy, sortDir);
         Page<StudentEquityProfileDto> result = equityProfileService.searchEquityProfiles(
-                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
+                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/search-slice")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<SliceResponse<StudentEquityProfileDto>> searchEquityProfilesSlice(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) EquityVerificationStatus status,
@@ -90,6 +93,9 @@ public class StudentEquityProfileController {
             @RequestParam(required = false) Boolean isPwd,
             @RequestParam(required = false) Boolean isGida,
             @RequestParam(required = false) Boolean isFirstGen,
+            @RequestParam(required = false) Boolean isSoloParent,
+            @RequestParam(required = false) Boolean isFarmerFisherfolk,
+            @RequestParam(required = false) Boolean isBottom40,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
@@ -97,12 +103,12 @@ public class StudentEquityProfileController {
 
         Pageable pageable = SortPropertyMapper.createEquityProfilePageable(page, size, sortBy, sortDir);
         SliceResponse<StudentEquityProfileDto> result = equityProfileService.searchEquityProfilesSlice(
-                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
+                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/statistics")
-    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'ACCOUNTANT')")
     public ResponseEntity<EquityStatisticsSummaryDto> getEquityStatisticsSummary() {
         EquityStatisticsSummaryDto result = equityProfileService.getEquityStatisticsSummary();
         return ResponseEntity.ok(result);

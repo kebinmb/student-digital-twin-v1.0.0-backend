@@ -397,7 +397,36 @@ public class EnrollmentService {
 
     @Transactional(readOnly = true)
     public StudentEnrollmentResponse getEnrollment(Long studentId, Long termId) {
-        final Long resolvedStudentId = studentId != null && studentId < 0 ? studentService.createStudentFromAdmissionAppId(-studentId).id() : studentId;
+        if (studentId == null) {
+            return new StudentEnrollmentResponse(
+                    null, null, null, termId, "UNENROLLED", null, "NOT_ENROLLED",
+                    BigDecimal.ZERO, false, Collections.emptyList()
+            );
+        }
+
+        final Long resolvedStudentId;
+        if (studentId < 0) {
+            Optional<Long> existingIdOpt = studentService.findExistingStudentProfileIdFromAdmissionAppId(-studentId);
+            if (existingIdOpt.isPresent()) {
+                resolvedStudentId = existingIdOpt.get();
+            } else {
+                return new StudentEnrollmentResponse(
+                        null,
+                        studentId,
+                        null,
+                        termId,
+                        "UNENROLLED",
+                        null,
+                        "NOT_ENROLLED",
+                        BigDecimal.ZERO,
+                        false,
+                        Collections.emptyList()
+                );
+            }
+        } else {
+            resolvedStudentId = studentId;
+        }
+
         return studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, termId)
                 .map(this::mapToEnrollmentResponse)
                 .orElseGet(() -> new StudentEnrollmentResponse(

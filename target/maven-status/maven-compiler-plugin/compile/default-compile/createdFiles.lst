@@ -360,6 +360,7 @@ com\sdt\web_app\dto\enrollment\EnrollmentDtos$EnlistSectionRequest.class
 com\sdt\web_app\exceptions\InvalidTokenException.class
 com\sdt\web_app\repositories\enrollment\StudentProfileRepository.class
 com\sdt\web_app\dto\institution\CiloPiloMappingDtos$UpdateCiloPiloMappingRequest.class
+com\sdt\web_app\repositories\compliance\StudentEquityProfileRepository$AffirmativeActionStatisticsProjection.class
 com\sdt\web_app\entities\enrollment\StudentEnrollment$StudentEnrollmentBuilder.class
 com\sdt\web_app\entities\enrollment\StudentProfile$EnrollmentStatus.class
 com\sdt\web_app\dto\grade\ClassRecordDtos$SectionGradingCategoryDto.class

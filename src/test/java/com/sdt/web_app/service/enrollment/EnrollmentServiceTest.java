@@ -46,6 +46,8 @@ class EnrollmentServiceTest {
     @Mock
     private StudentProfileRepository studentProfileRepository;
     @Mock
+    private StudentService studentService;
+    @Mock
     private StudentCourseGradeRepository studentCourseGradeRepository;
     @Mock
     private StudentEnrollmentRepository studentEnrollmentRepository;
@@ -468,5 +470,55 @@ class EnrollmentServiceTest {
         assertThatThrownBy(() -> enrollmentService.confirmEnrollment(50L, request))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Clearance Violation");
+    }
+
+    @Test
+    @DisplayName("getEnrollment: Returns UNENROLLED response for unprovisioned negative student ID without creating entities")
+    void getEnrollment_NegativeId_Unprovisioned_ReturnsUnenrolledWithoutWrites() {
+        given(studentService.findExistingStudentProfileIdFromAdmissionAppId(1L)).willReturn(Optional.empty());
+
+        StudentEnrollmentResponse response = enrollmentService.getEnrollment(-1L, 10L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.studentId()).isEqualTo(-1L);
+        assertThat(response.termName()).isEqualTo("UNENROLLED");
+        assertThat(response.status()).isEqualTo("NOT_ENROLLED");
+        assertThat(response.items()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getEnrollment: Resolves provisioned student profile for negative student ID without writes")
+    void getEnrollment_NegativeId_Provisioned_ReturnsEnrollment() {
+        given(studentService.findExistingStudentProfileIdFromAdmissionAppId(1L)).willReturn(Optional.of(50L));
+        given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 10L)).willReturn(Optional.empty());
+
+        StudentEnrollmentResponse response = enrollmentService.getEnrollment(-1L, 10L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.studentId()).isEqualTo(50L);
+        assertThat(response.status()).isEqualTo("NOT_ENROLLED");
+    }
+
+    @Test
+    @DisplayName("getEnrollment: Positive student ID with existing enrollment returns mapped items")
+    void getEnrollment_PositiveId_ReturnsEnrollment() {
+        StudentEnrollment mockEnrollment = StudentEnrollment.builder()
+                .student(student)
+                .term(term)
+                .status(StudentEnrollment.Status.ENROLLED)
+                .totalCreditUnits(new BigDecimal("3.00"))
+                .isOverloadApproved(false)
+                .build();
+        ReflectionTestUtils.setField(mockEnrollment, "id", 200L);
+        ReflectionTestUtils.setField(mockEnrollment, "items", new HashSet<>());
+
+        given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.of(mockEnrollment));
+
+        StudentEnrollmentResponse response = enrollmentService.getEnrollment(50L, 20L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.enrollmentId()).isEqualTo(200L);
+        assertThat(response.status()).isEqualTo("ENROLLED");
+        assertThat(response.totalCreditUnits()).isEqualByComparingTo(new BigDecimal("3.00"));
     }
 }

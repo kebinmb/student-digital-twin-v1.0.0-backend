@@ -1,5 +1,6 @@
 package com.sdt.web_app.service.compliance;
 
+import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.dto.compliance.EquityDtos.*;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile;
@@ -7,21 +8,18 @@ import com.sdt.web_app.entities.compliance.StudentEquityProfile.EquityVerificati
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.compliance.StudentEquityProfileRepository;
-import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
+import com.sdt.web_app.service.security.StudentProfileL2CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.sdt.web_app.dto.common.SliceResponse;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-
-import com.sdt.web_app.service.security.StudentProfileL2CacheService;
 import java.util.Optional;
 
 @Service
@@ -30,7 +28,6 @@ import java.util.Optional;
 public class StudentEquityProfileService {
 
     private final StudentEquityProfileRepository equityRepository;
-    private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
 
@@ -64,35 +61,61 @@ public class StudentEquityProfileService {
                         .verificationStatus(EquityVerificationStatus.SELF_DECLARED)
                         .build());
 
+        // 1. Person with Disability
+        profile.setIsPersonWithDisability(request.getIsPersonWithDisability());
+        profile.setPwdIdNumber(request.getPwdIdNumber());
+        profile.setDisabilityType(request.getDisabilityType());
+
+        // 2. Solo Parent Status (Explicit Separation)
+        profile.setIsSoloParent(request.getIsSoloParent());
+        profile.setIsRaisedBySoloParent(request.getIsRaisedBySoloParent());
+        profile.setSoloParentIdNumber(request.getSoloParentIdNumber());
+
+        // 3. 4Ps Beneficiary & UniFAST TES
         profile.setIs4psBeneficiary(request.getIs4psBeneficiary());
         profile.setHousehold4psIdNumber(request.getHousehold4psIdNumber());
         profile.setIsListahananNhts(request.getIsListahananNhts());
         profile.setUnifastTesAwardee(request.getUnifastTesAwardee());
         profile.setUnifastTesAwardNumber(request.getUnifastTesAwardNumber());
 
+        // 4. Indigenous Peoples
         profile.setIsIndigenousPeople(request.getIsIndigenousPeople());
         profile.setIpEthnicGroup(request.getIpEthnicGroup());
         profile.setNcipCertificateNumber(request.getNcipCertificateNumber());
 
-        profile.setIsPersonWithDisability(request.getIsPersonWithDisability());
-        profile.setPwdIdNumber(request.getPwdIdNumber());
-        profile.setDisabilityType(request.getDisabilityType());
+        // 5. Orphan Status
+        profile.setIsOrphan(request.getIsOrphan());
 
-        profile.setIsSoloParentOrDependent(request.getIsSoloParentOrDependent());
-        profile.setSoloParentIdNumber(request.getSoloParentIdNumber());
-
-        profile.setIsFirstGenerationCollege(request.getIsFirstGenerationCollege());
+        // 6. GIDA Resident
         profile.setIsGidaResident(request.getIsGidaResident());
+        profile.setGidaBarangayResidence(request.getGidaBarangayResidence());
+
+        // 7. Subsistence Farmer or Fisherfolk Family
+        profile.setIsFarmerFisherfolk(request.getIsFarmerFisherfolk());
+        profile.setRsbsaRegistrationNumber(request.getRsbsaRegistrationNumber());
+
+        // 8. Rebel Returnees / E-CLIP
+        profile.setIsRebelReturneeFamily(request.getIsRebelReturneeFamily());
+        profile.setCertificateOfSurrenderNumber(request.getCertificateOfSurrenderNumber());
+
+        // 9. Bottom 40% Household Income Bracket
+        profile.setIsBottom40IncomeBracket(request.getIsBottom40IncomeBracket());
         profile.setMonthlyHouseholdIncomeBracket(request.getMonthlyHouseholdIncomeBracket());
 
-        // If updated by student, status returns to DOCUMENTED if IDs present, else SELF_DECLARED unless already VERIFIED
+        // 10. First Generation College Student
+        profile.setIsFirstGenerationCollege(request.getIsFirstGenerationCollege());
+
+        // Verification Status Transition:
+        // If not already verified, set to PENDING_VERIFICATION if supporting IDs provided, else SELF_DECLARED
         if (profile.getVerificationStatus() != EquityVerificationStatus.VERIFIED) {
             boolean hasSupportingIds = (request.getHousehold4psIdNumber() != null && !request.getHousehold4psIdNumber().isBlank())
                     || (request.getNcipCertificateNumber() != null && !request.getNcipCertificateNumber().isBlank())
                     || (request.getPwdIdNumber() != null && !request.getPwdIdNumber().isBlank())
                     || (request.getSoloParentIdNumber() != null && !request.getSoloParentIdNumber().isBlank())
-                    || (request.getUnifastTesAwardNumber() != null && !request.getUnifastTesAwardNumber().isBlank());
-            profile.setVerificationStatus(hasSupportingIds ? EquityVerificationStatus.DOCUMENTED : EquityVerificationStatus.SELF_DECLARED);
+                    || (request.getUnifastTesAwardNumber() != null && !request.getUnifastTesAwardNumber().isBlank())
+                    || (request.getRsbsaRegistrationNumber() != null && !request.getRsbsaRegistrationNumber().isBlank())
+                    || (request.getCertificateOfSurrenderNumber() != null && !request.getCertificateOfSurrenderNumber().isBlank());
+            profile.setVerificationStatus(hasSupportingIds ? EquityVerificationStatus.PENDING_VERIFICATION : EquityVerificationStatus.SELF_DECLARED);
         }
 
         StudentEquityProfile saved = equityRepository.save(profile);
@@ -128,10 +151,13 @@ public class StudentEquityProfileService {
             Boolean isPwd,
             Boolean isGida,
             Boolean isFirstGen,
+            Boolean isSoloParent,
+            Boolean isFarmerFisherfolk,
+            Boolean isBottom40,
             Pageable pageable) {
 
         Page<StudentEquityProfile> page = equityRepository.searchProfiles(
-                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
+                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
         return page.map(this::mapToDto);
     }
 
@@ -144,10 +170,13 @@ public class StudentEquityProfileService {
             Boolean isPwd,
             Boolean isGida,
             Boolean isFirstGen,
+            Boolean isSoloParent,
+            Boolean isFarmerFisherfolk,
+            Boolean isBottom40,
             Pageable pageable) {
 
         Slice<StudentEquityProfile> slice = equityRepository.searchProfilesSlice(
-                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, pageable);
+                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
         Slice<StudentEquityProfileDto> dtoSlice = slice.map(this::mapToDto);
         return SliceResponse.from(dtoSlice);
     }
@@ -155,32 +184,42 @@ public class StudentEquityProfileService {
     @Transactional(readOnly = true)
     public EquityStatisticsSummaryDto getEquityStatisticsSummary() {
         long total = equityRepository.count();
+        long countPwd = equityRepository.countByIsPersonWithDisabilityTrue();
+        long countSolo = equityRepository.countByIsSoloParentTrue();
+        long countRaisedBySolo = equityRepository.countByIsRaisedBySoloParentTrue();
         long count4ps = equityRepository.countByIs4psBeneficiaryTrue();
         long countNhts = equityRepository.countByIsListahananNhtsTrue();
         long countTes = equityRepository.countByUnifastTesAwardeeTrue();
         long countIp = equityRepository.countByIsIndigenousPeopleTrue();
-        long countPwd = equityRepository.countByIsPersonWithDisabilityTrue();
-        long countSolo = equityRepository.countByIsSoloParentOrDependentTrue();
-        long countFirstGen = equityRepository.countByIsFirstGenerationCollegeTrue();
+        long countOrphan = equityRepository.countByIsOrphanTrue();
         long countGida = equityRepository.countByIsGidaResidentTrue();
+        long countFarmer = equityRepository.countByIsFarmerFisherfolkTrue();
+        long countRebel = equityRepository.countByIsRebelReturneeFamilyTrue();
+        long countBottom40 = equityRepository.countByIsBottom40IncomeBracketTrue();
+        long countFirstGen = equityRepository.countByIsFirstGenerationCollegeTrue();
 
         long countSelfDeclared = equityRepository.countByVerificationStatus(EquityVerificationStatus.SELF_DECLARED);
-        long countDocumented = equityRepository.countByVerificationStatus(EquityVerificationStatus.DOCUMENTED);
+        long countPendingVerification = equityRepository.countByVerificationStatus(EquityVerificationStatus.PENDING_VERIFICATION);
         long countVerified = equityRepository.countByVerificationStatus(EquityVerificationStatus.VERIFIED);
         long countRejected = equityRepository.countByVerificationStatus(EquityVerificationStatus.REJECTED);
 
         return EquityStatisticsSummaryDto.builder()
                 .totalProfilesCount(total)
+                .countPersonsWithDisabilities(countPwd)
+                .countSoloParents(countSolo)
+                .countRaisedBySoloParents(countRaisedBySolo)
                 .count4psBeneficiaries(count4ps)
                 .countListahananNhts(countNhts)
                 .countUnifastTesAwardees(countTes)
                 .countIndigenousPeoples(countIp)
-                .countPersonsWithDisabilities(countPwd)
-                .countSoloParents(countSolo)
-                .countFirstGenerationCollege(countFirstGen)
+                .countOrphans(countOrphan)
                 .countGidaResidents(countGida)
+                .countFarmerFisherfolk(countFarmer)
+                .countRebelReturneeFamilies(countRebel)
+                .countBottom40IncomeBracket(countBottom40)
+                .countFirstGenerationCollege(countFirstGen)
                 .countSelfDeclared(countSelfDeclared)
-                .countDocumented(countDocumented)
+                .countPendingVerification(countPendingVerification)
                 .countVerified(countVerified)
                 .countRejected(countRejected)
                 .build();
@@ -208,6 +247,12 @@ public class StudentEquityProfileService {
                 .studentName(user != null ? user.getUsername() : null)
                 .programCode(sp != null && sp.getProgram() != null ? sp.getProgram().getCode() : null)
                 .programName(sp != null && sp.getProgram() != null ? sp.getProgram().getName() : null)
+                .isPersonWithDisability(entity.getIsPersonWithDisability())
+                .pwdIdNumber(entity.getPwdIdNumber())
+                .disabilityType(entity.getDisabilityType())
+                .isSoloParent(entity.getIsSoloParent())
+                .isRaisedBySoloParent(entity.getIsRaisedBySoloParent())
+                .soloParentIdNumber(entity.getSoloParentIdNumber())
                 .is4psBeneficiary(entity.getIs4psBeneficiary())
                 .household4psIdNumber(entity.getHousehold4psIdNumber())
                 .isListahananNhts(entity.getIsListahananNhts())
@@ -216,14 +261,16 @@ public class StudentEquityProfileService {
                 .isIndigenousPeople(entity.getIsIndigenousPeople())
                 .ipEthnicGroup(entity.getIpEthnicGroup())
                 .ncipCertificateNumber(entity.getNcipCertificateNumber())
-                .isPersonWithDisability(entity.getIsPersonWithDisability())
-                .pwdIdNumber(entity.getPwdIdNumber())
-                .disabilityType(entity.getDisabilityType())
-                .isSoloParentOrDependent(entity.getIsSoloParentOrDependent())
-                .soloParentIdNumber(entity.getSoloParentIdNumber())
-                .isFirstGenerationCollege(entity.getIsFirstGenerationCollege())
+                .isOrphan(entity.getIsOrphan())
                 .isGidaResident(entity.getIsGidaResident())
+                .gidaBarangayResidence(entity.getGidaBarangayResidence())
+                .isFarmerFisherfolk(entity.getIsFarmerFisherfolk())
+                .rsbsaRegistrationNumber(entity.getRsbsaRegistrationNumber())
+                .isRebelReturneeFamily(entity.getIsRebelReturneeFamily())
+                .certificateOfSurrenderNumber(entity.getCertificateOfSurrenderNumber())
+                .isBottom40IncomeBracket(entity.getIsBottom40IncomeBracket())
                 .monthlyHouseholdIncomeBracket(entity.getMonthlyHouseholdIncomeBracket())
+                .isFirstGenerationCollege(entity.getIsFirstGenerationCollege())
                 .verificationStatus(entity.getVerificationStatus())
                 .verifiedByUserId(entity.getVerifiedBy() != null ? entity.getVerifiedBy().getId() : null)
                 .verifiedByUsername(entity.getVerifiedBy() != null ? entity.getVerifiedBy().getUsername() : null)

@@ -295,11 +295,20 @@ public class AdmissionService {
                 .isPersonWithDisability(Boolean.TRUE.equals(request.isPersonWithDisability()))
                 .disabilityType(request.disabilityType() != null ? request.disabilityType().trim() : null)
                 .pwdIdNumber(request.pwdIdNumber() != null ? request.pwdIdNumber().trim() : null)
-                .isSoloParentOrDependent(Boolean.TRUE.equals(request.isSoloParentOrDependent()))
+                .isSoloParent(Boolean.TRUE.equals(request.isSoloParent()))
+                .isRaisedBySoloParent(Boolean.TRUE.equals(request.isRaisedBySoloParent()))
                 .soloParentIdNumber(request.soloParentIdNumber() != null ? request.soloParentIdNumber().trim() : null)
-                .isUnderprivilegedHomeless(Boolean.TRUE.equals(request.isUnderprivilegedHomeless()))
-                .isDisplacedOrRebelReturnee(Boolean.TRUE.equals(request.isDisplacedOrRebelReturnee()))
+                .isOrphan(Boolean.TRUE.equals(request.isOrphan()))
+                .isGidaResident(Boolean.TRUE.equals(request.isGidaResident()))
+                .gidaBarangayResidence(request.gidaBarangayResidence() != null ? request.gidaBarangayResidence().trim() : null)
+                .isFarmerFisherfolk(Boolean.TRUE.equals(request.isFarmerFisherfolk()))
+                .rsbsaRegistrationNumber(request.rsbsaRegistrationNumber() != null ? request.rsbsaRegistrationNumber().trim() : null)
+                .isRebelReturneeFamily(Boolean.TRUE.equals(request.isRebelReturneeFamily()))
+                .certificateOfSurrenderNumber(request.certificateOfSurrenderNumber() != null ? request.certificateOfSurrenderNumber().trim() : null)
+                .isBottom40IncomeBracket(Boolean.TRUE.equals(request.isBottom40IncomeBracket()))
                 .monthlyHouseholdIncomeBracket(request.monthlyHouseholdIncomeBracket() != null ? request.monthlyHouseholdIncomeBracket().trim() : "POOR_BELOW_10K")
+                .isFirstGenerationCollege(Boolean.TRUE.equals(request.isFirstGenerationCollege()))
+                .isUnderprivilegedHomeless(Boolean.TRUE.equals(request.isUnderprivilegedHomeless()))
                 .scholarshipGrantType(request.scholarshipGrantType() != null ? request.scholarshipGrantType().trim() : null)
                 .queueToken(request.queueToken())
                 .applicationStatus(AdmissionApplication.ApplicationStatus.SUBMITTED)
@@ -511,11 +520,20 @@ public class AdmissionService {
                 app.isPersonWithDisability(),
                 app.getDisabilityType(),
                 app.getPwdIdNumber(),
-                app.isSoloParentOrDependent(),
+                app.isSoloParent(),
+                app.isRaisedBySoloParent(),
                 app.getSoloParentIdNumber(),
-                app.isUnderprivilegedHomeless(),
-                app.isDisplacedOrRebelReturnee(),
+                app.isOrphan(),
+                app.isGidaResident(),
+                app.getGidaBarangayResidence(),
+                app.isFarmerFisherfolk(),
+                app.getRsbsaRegistrationNumber(),
+                app.isRebelReturneeFamily(),
+                app.getCertificateOfSurrenderNumber(),
+                app.isBottom40IncomeBracket(),
                 app.getMonthlyHouseholdIncomeBracket(),
+                app.isFirstGenerationCollege(),
+                app.isUnderprivilegedHomeless(),
                 app.getScholarshipGrantType(),
                 app.getQueueToken(),
                 app.getApplicationStatus().name(),

@@ -23,6 +23,7 @@ com\sdt\web_app\service\financial\FeeAssessmentServiceTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$StringMarshaller.class
 com\sdt\web_app\service\scheduling\SchedulingServiceTest.class
 com\sdt\web_app\service\institution\GradeTransmutationServiceTest.class
+com\sdt\web_app\service\compliance\StudentEquityProfileServiceTest.class
 com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.class
 com\sdt\web_app\SsrfProtectionTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$CourseCatalogAndOutcomesTests.class
@@ -55,5 +56,6 @@ com\sdt\web_app\service\analytics\QrAttendanceServiceTest.class
 com\sdt\web_app\service\enrollment\StudentServiceTest.class
 com\sdt\web_app\service\institution\TermLifecycleServiceTest.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class
+com\sdt\web_app\service\analytics\EquityTargetServiceTest.class
 com\sdt\web_app\service\grade\ClassRecordMatrixIntegrationTest.class
 com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.class

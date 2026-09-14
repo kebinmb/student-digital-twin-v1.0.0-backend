@@ -37,6 +37,9 @@ class EnrollmentSecurityTest {
     @Mock
     private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
+    @Mock
+    private com.sdt.web_app.repositories.admission.AdmissionApplicationRepository admissionApplicationRepository;
+
     @InjectMocks
     private EnrollmentSecurity enrollmentSecurity;
 
@@ -112,5 +115,27 @@ class EnrollmentSecurityTest {
         boolean result = enrollmentSecurity.canAccessStudentEnrollment(auth, 999L);
 
         assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("canAccessStudentEnrollment: Admin allowed to access negative student ID (admission application)")
+    void canAccessStudentEnrollment_NegativeId_AdminAllowed() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "admin", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        boolean result = enrollmentSecurity.canAccessStudentEnrollment(auth, -1L);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessStudentAdvising: Admin allowed to access negative student ID (admission application)")
+    void canAccessStudentAdvising_NegativeId_AdminAllowed() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "admin", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        boolean result = enrollmentSecurity.canAccessStudentAdvising(auth, -1L);
+
+        assertThat(result).isTrue();
     }
 }

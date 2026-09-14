@@ -199,24 +199,57 @@ public class AdmissionApplication {
     @Column(name = "pwd_id_number", length = 60)
     private String pwdIdNumber;
 
-    @Column(name = "is_solo_parent_or_dependent", nullable = false)
+    @Column(name = "is_solo_parent", nullable = false)
     @Builder.Default
-    private boolean isSoloParentOrDependent = false;
+    private boolean isSoloParent = false;
+
+    @Column(name = "is_raised_by_solo_parent", nullable = false)
+    @Builder.Default
+    private boolean isRaisedBySoloParent = false;
 
     @Column(name = "solo_parent_id_number", length = 60)
     private String soloParentIdNumber;
 
-    @Column(name = "is_underprivileged_homeless", nullable = false)
+    @Column(name = "is_orphan", nullable = false)
     @Builder.Default
-    private boolean isUnderprivilegedHomeless = false;
+    private boolean isOrphan = false;
 
-    @Column(name = "is_displaced_or_rebel_returnee", nullable = false)
+    @Column(name = "is_gida_resident", nullable = false)
     @Builder.Default
-    private boolean isDisplacedOrRebelReturnee = false;
+    private boolean isGidaResident = false;
+
+    @Column(name = "gida_barangay_residence", length = 150)
+    private String gidaBarangayResidence;
+
+    @Column(name = "is_farmer_fisherfolk", nullable = false)
+    @Builder.Default
+    private boolean isFarmerFisherfolk = false;
+
+    @Column(name = "rsbsa_registration_number", length = 60)
+    private String rsbsaRegistrationNumber;
+
+    @Column(name = "is_rebel_returnee_family", nullable = false)
+    @Builder.Default
+    private boolean isRebelReturneeFamily = false;
+
+    @Column(name = "certificate_of_surrender_number", length = 60)
+    private String certificateOfSurrenderNumber;
+
+    @Column(name = "is_bottom_40_income_bracket", nullable = false)
+    @Builder.Default
+    private boolean isBottom40IncomeBracket = false;
 
     @Column(name = "monthly_household_income_bracket", nullable = false, length = 50)
     @Builder.Default
     private String monthlyHouseholdIncomeBracket = "POOR_BELOW_10K";
+
+    @Column(name = "is_first_generation_college", nullable = false)
+    @Builder.Default
+    private boolean isFirstGenerationCollege = false;
+
+    @Column(name = "is_underprivileged_homeless", nullable = false)
+    @Builder.Default
+    private boolean isUnderprivilegedHomeless = false;
 
     @Column(name = "scholarship_grant_type", length = 60)
     private String scholarshipGrantType;

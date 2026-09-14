@@ -44,6 +44,8 @@ class StudentServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
+    @Mock
+    private com.sdt.web_app.repositories.admission.AdmissionApplicationRepository admissionApplicationRepository;
 
     @InjectMocks
     private StudentService studentService;
@@ -210,5 +212,44 @@ class StudentServiceTest {
         assertThatThrownBy(() -> studentService.createStudent(req))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Invalid student classification");
+    }
+
+    @Test
+    @DisplayName("findExistingStudentProfileIdFromAdmissionAppId: Returns empty when admission app does not exist")
+    void findExistingStudentProfileId_NotFound_ReturnsEmpty() {
+        given(admissionApplicationRepository.findById(99L)).willReturn(Optional.empty());
+
+        Optional<Long> result = studentService.findExistingStudentProfileIdFromAdmissionAppId(99L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findExistingStudentProfileIdFromAdmissionAppId: Returns student profile ID when matching by user email")
+    void findExistingStudentProfileId_MatchByEmail_ReturnsId() {
+        com.sdt.web_app.entities.admission.AdmissionApplication app = com.sdt.web_app.entities.admission.AdmissionApplication.builder()
+                .applicationNumber("APP-2026-001")
+                .email("freshman@example.com")
+                .firstName("Juan")
+                .lastName("Dela Cruz")
+                .build();
+        ReflectionTestUtils.setField(app, "id", 1L);
+
+        User existingUser = User.builder().username("juan").email("freshman@example.com").build();
+        ReflectionTestUtils.setField(existingUser, "id", 100L);
+
+        StudentProfile existingProfile = StudentProfile.builder()
+                .user(existingUser)
+                .studentNumber("2026-0001")
+                .build();
+        ReflectionTestUtils.setField(existingProfile, "id", 500L);
+
+        given(admissionApplicationRepository.findById(1L)).willReturn(Optional.of(app));
+        given(userRepository.findByEmail("freshman@example.com")).willReturn(Optional.of(existingUser));
+        given(studentProfileRepository.findByUserId(100L)).willReturn(Optional.of(existingProfile));
+
+        Optional<Long> result = studentService.findExistingStudentProfileIdFromAdmissionAppId(1L);
+
+        assertThat(result).isPresent().contains(500L);
     }
 }

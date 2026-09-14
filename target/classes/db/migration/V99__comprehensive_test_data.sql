@@ -261,16 +261,56 @@ INSERT INTO student_equity_profiles (
     is_4ps_beneficiary, household_4ps_id_number, is_listahanan_nhts, unifast_tes_awardee, unifast_tes_award_number,
     is_indigenous_people, ip_ethnic_group, ncip_certificate_number,
     is_person_with_disability, pwd_id_number, disability_type,
-    is_solo_parent_or_dependent, solo_parent_id_number,
-    is_first_generation_college, is_gida_resident, monthly_household_income_bracket,
+    is_solo_parent, is_raised_by_solo_parent, solo_parent_id_number,
+    is_orphan,
+    is_gida_resident, gida_barangay_residence,
+    is_farmer_fisherfolk, rsbsa_registration_number,
+    is_rebel_returnee_family, certificate_of_surrender_number,
+    is_bottom_40_income_bracket, monthly_household_income_bracket,
+    is_first_generation_college,
     verification_status, verified_by_user_id, verified_at, verification_remarks
 ) VALUES 
-    -- Student A: 4Ps / UniFAST TES Awardee / Listahanan / Poor
-    (10, 10, TRUE, '4PS-VI-109283-2020', TRUE, TRUE, 'TES-2026-09812', FALSE, NULL, NULL, FALSE, NULL, NULL, FALSE, NULL, TRUE, FALSE, 'POOR_BELOW_10K', 'VERIFIED', 11, '2026-08-15 09:00:00', 'Verified against DSWD Listahanan database'),
-    -- Student B: Solo Parent Dependent
-    (11, 11, FALSE, NULL, FALSE, FALSE, NULL, FALSE, NULL, NULL, FALSE, NULL, NULL, TRUE, 'SP-2024-5512', FALSE, FALSE, 'LOW_INCOME_10K_TO_20K', 'VERIFIED', 11, '2026-08-15 09:30:00', 'Verified via LGU Social Welfare Office ID'),
-    -- Student C: PWD / First-Generation / GIDA Resident
-    (12, 12, FALSE, NULL, FALSE, FALSE, NULL, FALSE, NULL, NULL, TRUE, 'PWD-NEGROS-8821', 'VISUAL', FALSE, NULL, TRUE, TRUE, 'LOW_INCOME_10K_TO_20K', 'VERIFIED', 11, '2026-08-15 10:00:00', 'Verified via PWD ID & Barangay Certificate of Residency')
+    -- Student A: 4Ps / UniFAST TES Awardee / Listahanan / Poor / Bottom 40% / First-Gen
+    (10, 10, 
+     TRUE, '4PS-VI-109283-2020', TRUE, TRUE, 'TES-2026-09812', 
+     FALSE, NULL, NULL, 
+     FALSE, NULL, NULL, 
+     FALSE, FALSE, NULL, 
+     FALSE, 
+     FALSE, NULL, 
+     FALSE, NULL, 
+     FALSE, NULL, 
+     TRUE, 'POOR_BELOW_10K', 
+     TRUE, 
+     'VERIFIED', 11, '2026-08-15 09:00:00', 'Verified against DSWD Listahanan database'),
+
+    -- Student B: Raised by Solo Parent / Low Income / Bottom 40%
+    (11, 11, 
+     FALSE, NULL, FALSE, FALSE, NULL, 
+     FALSE, NULL, NULL, 
+     FALSE, NULL, NULL, 
+     FALSE, TRUE, 'SP-2024-5512', 
+     FALSE, 
+     FALSE, NULL, 
+     FALSE, NULL, 
+     FALSE, NULL, 
+     TRUE, 'LOW_INCOME_10K_TO_20K', 
+     FALSE, 
+     'VERIFIED', 11, '2026-08-15 09:30:00', 'Verified via LGU Social Welfare Office ID'),
+
+    -- Student C: PWD / First-Gen / GIDA Resident / Farmer-Fisherfolk
+    (12, 12, 
+     FALSE, NULL, FALSE, FALSE, NULL, 
+     FALSE, NULL, NULL, 
+     TRUE, 'PWD-NEGROS-8821', 'VISUAL', 
+     FALSE, FALSE, NULL, 
+     FALSE, 
+     TRUE, 'Barangay Katilingban', 
+     TRUE, 'RSBSA-06-45-0912', 
+     FALSE, NULL, 
+     TRUE, 'LOW_INCOME_10K_TO_20K', 
+     TRUE, 
+     'VERIFIED', 11, '2026-08-15 10:00:00', 'Verified via PWD ID, RSBSA & Barangay Certificate of Residency')
 AS new_eq ON DUPLICATE KEY UPDATE verification_status = new_eq.verification_status;
 
 -- -----------------------------------------------------------------------------

@@ -185,7 +185,10 @@ public class StudentService {
         app.setApplicationStatus(AdmissionApplication.ApplicationStatus.ENROLLED);
         admissionApplicationRepository.save(app);
 
-        if (studentEquityProfileRepository != null && (app.is4psBeneficiary() || app.isIndigenousPeople() || app.isPersonWithDisability() || app.isSoloParentOrDependent())) {
+        if (studentEquityProfileRepository != null && (app.is4psBeneficiary() || app.isIndigenousPeople() 
+                || app.isPersonWithDisability() || app.isSoloParent() || app.isRaisedBySoloParent()
+                || app.isOrphan() || app.isGidaResident() || app.isFarmerFisherfolk()
+                || app.isRebelReturneeFamily() || app.isBottom40IncomeBracket() || app.isFirstGenerationCollege())) {
             if (studentEquityProfileRepository.findByStudentProfileId(savedProfile.getId()).isEmpty()) {
                 StudentEquityProfile.DisabilityType mappedDisabilityType = null;
                 if (app.getDisabilityType() != null && !app.getDisabilityType().isBlank()) {
@@ -196,15 +199,38 @@ public class StudentService {
                     }
                 }
 
+                StudentEquityProfile.HouseholdIncomeBracket mappedIncomeBracket = StudentEquityProfile.HouseholdIncomeBracket.POOR_BELOW_10K;
+                if (app.getMonthlyHouseholdIncomeBracket() != null && !app.getMonthlyHouseholdIncomeBracket().isBlank()) {
+                    try {
+                        mappedIncomeBracket = StudentEquityProfile.HouseholdIncomeBracket.valueOf(app.getMonthlyHouseholdIncomeBracket().trim().toUpperCase());
+                    } catch (Exception ignored) {
+                        mappedIncomeBracket = StudentEquityProfile.HouseholdIncomeBracket.POOR_BELOW_10K;
+                    }
+                }
+
                 StudentEquityProfile equityProfile = StudentEquityProfile.builder()
                         .studentProfile(savedProfile)
                         .is4psBeneficiary(app.is4psBeneficiary())
                         .household4psIdNumber(app.getHousehold4psIdNumber())
                         .isIndigenousPeople(app.isIndigenousPeople())
                         .ipEthnicGroup(app.getIpEthnicGroup())
+                        .ncipCertificateNumber(app.getNcipCertificateNumber())
                         .isPersonWithDisability(app.isPersonWithDisability())
                         .disabilityType(mappedDisabilityType)
-                        .isSoloParentOrDependent(app.isSoloParentOrDependent())
+                        .pwdIdNumber(app.getPwdIdNumber())
+                        .isSoloParent(app.isSoloParent())
+                        .isRaisedBySoloParent(app.isRaisedBySoloParent())
+                        .soloParentIdNumber(app.getSoloParentIdNumber())
+                        .isOrphan(app.isOrphan())
+                        .isGidaResident(app.isGidaResident())
+                        .gidaBarangayResidence(app.getGidaBarangayResidence())
+                        .isFarmerFisherfolk(app.isFarmerFisherfolk())
+                        .rsbsaRegistrationNumber(app.getRsbsaRegistrationNumber())
+                        .isRebelReturneeFamily(app.isRebelReturneeFamily())
+                        .certificateOfSurrenderNumber(app.getCertificateOfSurrenderNumber())
+                        .isBottom40IncomeBracket(app.isBottom40IncomeBracket())
+                        .monthlyHouseholdIncomeBracket(mappedIncomeBracket)
+                        .isFirstGenerationCollege(app.isFirstGenerationCollege())
                         .verificationStatus(StudentEquityProfile.EquityVerificationStatus.SELF_DECLARED)
                         .build();
 
@@ -243,6 +269,29 @@ public class StudentService {
         }
 
         return mapToProfileResponse(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Long> findExistingStudentProfileIdFromAdmissionAppId(Long appId) {
+        if (appId == null) {
+            return Optional.empty();
+        }
+        Optional<AdmissionApplication> appOpt = admissionApplicationRepository.findById(appId);
+        if (appOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        AdmissionApplication app = appOpt.get();
+        if (app.getEmail() != null && !app.getEmail().isBlank()) {
+            Optional<User> userOpt = userRepository.findByEmail(app.getEmail().trim().toLowerCase());
+            if (userOpt.isPresent()) {
+                Optional<StudentProfile> profileOpt = studentProfileRepository.findByUserId(userOpt.get().getId());
+                if (profileOpt.isPresent()) {
+                    return Optional.of(profileOpt.get().getId());
+                }
+            }
+        }
+        Optional<StudentProfile> profileByNumber = studentProfileRepository.findByStudentNumber(app.getApplicationNumber());
+        return profileByNumber.map(StudentProfile::getId);
     }
 
     @Transactional(readOnly = true)

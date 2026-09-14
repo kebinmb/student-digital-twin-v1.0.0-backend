@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS admission_configs (
     CONSTRAINT fk_adm_cfg_term FOREIGN KEY (term_id) REFERENCES terms (id) ON DELETE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
--- 2. Extend admission_applications table with full CHED CMO / Statutory Equity fields and Evaluation Workflow columns
+-- 2. Extend admission_applications table with full CHED CMO / Enhanced Admissions Workflow columns
 ALTER TABLE admission_applications
     ADD COLUMN gender_identity VARCHAR(30) NULL AFTER gender,
     ADD COLUMN birth_place VARCHAR(150) NULL AFTER birth_date,
@@ -30,13 +30,8 @@ ALTER TABLE admission_applications
     ADD COLUMN perm_street_address VARCHAR(255) NULL AFTER perm_zip_code,
     ADD COLUMN deped_school_id VARCHAR(30) NULL AFTER high_school_name,
     ADD COLUMN shs_year_graduated INT NULL AFTER high_school_gwa,
-    ADD COLUMN is_underprivileged_homeless BOOLEAN NOT NULL DEFAULT FALSE AFTER is_solo_parent_or_dependent,
-    ADD COLUMN is_displaced_or_rebel_returnee BOOLEAN NOT NULL DEFAULT FALSE AFTER is_underprivileged_homeless,
-    ADD COLUMN pwd_id_number VARCHAR(60) NULL AFTER disability_type,
-    ADD COLUMN solo_parent_id_number VARCHAR(60) NULL AFTER is_solo_parent_or_dependent,
-    ADD COLUMN ncip_certificate_number VARCHAR(100) NULL AFTER ip_ethnic_group,
-    ADD COLUMN monthly_household_income_bracket VARCHAR(50) NOT NULL DEFAULT 'POOR_BELOW_10K' AFTER is_displaced_or_rebel_returnee,
-    ADD COLUMN scholarship_grant_type VARCHAR(60) NULL AFTER monthly_household_income_bracket,
+    ADD COLUMN is_underprivileged_homeless BOOLEAN NOT NULL DEFAULT FALSE AFTER is_first_generation_college,
+    ADD COLUMN scholarship_grant_type VARCHAR(60) NULL AFTER is_underprivileged_homeless,
     ADD COLUMN exam_score DECIMAL(5, 2) NULL AFTER application_status,
     ADD COLUMN exam_remarks VARCHAR(255) NULL AFTER exam_score,
     ADD COLUMN interview_score DECIMAL(5, 2) NULL AFTER exam_remarks,

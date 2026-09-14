@@ -23,6 +23,7 @@ public class EnrollmentSecurity {
     private final SecurityProfileCache securityProfileCache;
     private final SecurityUtils securityUtils;
     private final com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
+    private final com.sdt.web_app.repositories.admission.AdmissionApplicationRepository admissionApplicationRepository;
 
     private static final Set<String> ADVISING_STAFF_ROLES = Set.of(
             "ROLE_ADMIN", "ROLE_REGISTRAR", "ROLE_DEAN", "ROLE_CHAIRPERSON", "ROLE_FACULTY"
@@ -57,7 +58,16 @@ public class EnrollmentSecurity {
             try {
                 com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
                 Optional<StudentProfile> studentOpt = securityProfileCache.getStudentProfileById(studentId);
-                if (studentOpt.isEmpty()) return false;
+                if (studentOpt.isEmpty()) {
+                    if (studentId < 0 && admissionApplicationRepository != null) {
+                        Optional<com.sdt.web_app.entities.admission.AdmissionApplication> appOpt = admissionApplicationRepository.findById(-studentId);
+                        if (appOpt.isPresent() && appOpt.get().getTargetProgram() != null) {
+                            academicScopeAssertionService.validateProgramMutation(scope, appOpt.get().getTargetProgram().getId());
+                            return true;
+                        }
+                    }
+                    return false;
+                }
                 academicScopeAssertionService.validateStudentAccess(scope, studentOpt.get());
                 return true;
             } catch (Exception e) {
@@ -94,7 +104,16 @@ public class EnrollmentSecurity {
             try {
                 com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
                 Optional<StudentProfile> studentOpt = securityProfileCache.getStudentProfileById(studentId);
-                if (studentOpt.isEmpty()) return false;
+                if (studentOpt.isEmpty()) {
+                    if (studentId < 0 && admissionApplicationRepository != null) {
+                        Optional<com.sdt.web_app.entities.admission.AdmissionApplication> appOpt = admissionApplicationRepository.findById(-studentId);
+                        if (appOpt.isPresent() && appOpt.get().getTargetProgram() != null) {
+                            academicScopeAssertionService.validateProgramMutation(scope, appOpt.get().getTargetProgram().getId());
+                            return true;
+                        }
+                    }
+                    return false;
+                }
                 academicScopeAssertionService.validateStudentAccess(scope, studentOpt.get());
                 return true;
             } catch (Exception e) {
