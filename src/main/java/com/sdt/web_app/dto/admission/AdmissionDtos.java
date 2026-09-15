@@ -348,6 +348,7 @@ public class AdmissionDtos {
             boolean isFirstGenerationCollege,
             boolean isUnderprivilegedHomeless,
             String scholarshipGrantType,
+            BigDecimal socioeconomicRiskScore,
             String queueToken,
             String applicationStatus,
             BigDecimal examScore,

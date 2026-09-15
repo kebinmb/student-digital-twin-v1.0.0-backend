@@ -21,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import com.sdt.web_app.service.analytics.EquityTargetService;
+
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDate;
@@ -41,6 +44,9 @@ public class AdmissionService {
     private final TermRepository termRepository;
     private final com.sdt.web_app.service.institution.TermService termService;
     private final AdmissionQueueService admissionQueueService;
+
+    @Autowired(required = false)
+    private EquityTargetService equityTargetService;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -497,6 +503,9 @@ public class AdmissionService {
     private AdmissionApplicationResponse mapToApplicationResponse(AdmissionApplication app) {
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm a");
         EntranceExamSlot slot = app.getExamSlot();
+        BigDecimal riskScore = equityTargetService != null
+                ? equityTargetService.calculateApplicantSocioeconomicRiskScore(app)
+                : null;
         return new AdmissionApplicationResponse(
                 app.getId(),
                 app.getApplicationNumber(),
@@ -568,6 +577,7 @@ public class AdmissionService {
                 app.isFirstGenerationCollege(),
                 app.isUnderprivilegedHomeless(),
                 app.getScholarshipGrantType(),
+                riskScore,
                 app.getQueueToken(),
                 app.getApplicationStatus().name(),
                 app.getExamScore(),
