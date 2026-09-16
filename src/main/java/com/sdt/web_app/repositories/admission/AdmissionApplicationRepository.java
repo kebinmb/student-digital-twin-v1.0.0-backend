@@ -29,6 +29,8 @@ public interface AdmissionApplicationRepository extends JpaRepository<AdmissionA
 
     List<AdmissionApplication> findByTermIdAndApplicationStatus(Long termId, AdmissionApplication.ApplicationStatus status);
 
+    List<AdmissionApplication> findByApplicationStatus(AdmissionApplication.ApplicationStatus status);
+
     @Query("SELECT COUNT(a) FROM AdmissionApplication a WHERE a.term.id = :termId")
     long countByTermId(@Param("termId") Long termId);
 

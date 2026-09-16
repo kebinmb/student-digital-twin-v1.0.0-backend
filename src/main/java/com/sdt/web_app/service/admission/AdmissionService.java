@@ -349,17 +349,35 @@ public class AdmissionService {
     }
 
     @Transactional(readOnly = true)
+    public AdmissionApplicationResponse getApplicationById(Long id) {
+        AdmissionApplication app = admissionApplicationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Admission Application not found with ID: " + id));
+        return mapToApplicationResponse(app);
+    }
+
+    @Transactional(readOnly = true)
     public List<AdmissionApplicationResponse> getAllApplications(Long termId, String status) {
-        Long resolvedTermId = termId != null ? termId : getActiveTermId();
         List<AdmissionApplication> apps;
-        if (status != null && !status.isBlank()) {
-            if ("UNCLAIMED".equalsIgnoreCase(status.trim())) {
-                return getUnclaimedApprovedApplications(resolvedTermId);
+        if (termId != null) {
+            if (status != null && !status.isBlank()) {
+                if ("UNCLAIMED".equalsIgnoreCase(status.trim())) {
+                    return getUnclaimedApprovedApplications(termId);
+                }
+                AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
+                apps = admissionApplicationRepository.findByTermIdAndApplicationStatus(termId, appStatus);
+            } else {
+                apps = admissionApplicationRepository.findByTermId(termId);
             }
-            AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
-            apps = admissionApplicationRepository.findByTermIdAndApplicationStatus(resolvedTermId, appStatus);
         } else {
-            apps = admissionApplicationRepository.findByTermId(resolvedTermId);
+            if (status != null && !status.isBlank()) {
+                if ("UNCLAIMED".equalsIgnoreCase(status.trim())) {
+                    return getUnclaimedApprovedApplications(null);
+                }
+                AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
+                apps = admissionApplicationRepository.findByApplicationStatus(appStatus);
+            } else {
+                apps = admissionApplicationRepository.findAll();
+            }
         }
         return apps.stream().map(this::mapToApplicationResponse).toList();
     }
@@ -455,7 +473,8 @@ public class AdmissionService {
     private Long getActiveTermId() {
         return termRepository.findByIsActiveTrue()
                 .map(Term::getId)
-                .orElse(4L);
+                .or(() -> termRepository.findAll().stream().findFirst().map(Term::getId))
+                .orElse(1L);
     }
 
     private String generateUniqueApplicationNumber(Term term) {

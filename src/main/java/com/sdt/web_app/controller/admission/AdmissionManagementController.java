@@ -98,12 +98,7 @@ public class AdmissionManagementController {
     @GetMapping("/applications/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<AdmissionApplicationResponse> getApplicationById(@PathVariable("id") Long id) {
-        List<AdmissionApplicationResponse> apps = admissionService.getAllApplications(null, null);
-        AdmissionApplicationResponse app = apps.stream()
-                .filter(a -> a.id().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Admission Application not found with ID: " + id));
-        return ResponseEntity.ok(app);
+        return ResponseEntity.ok(admissionService.getApplicationById(id));
     }
 
     @PostMapping("/applications/{id}/evaluate-exam")
