@@ -357,28 +357,43 @@ public class AdmissionService {
 
     @Transactional(readOnly = true)
     public List<AdmissionApplicationResponse> getAllApplications(Long termId, String status) {
+        return getAllApplications(termId, status, java.util.Optional.empty());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdmissionApplicationResponse> getAllApplications(Long termId, String status, java.util.Optional<List<Long>> scopedPrograms) {
         List<AdmissionApplication> apps;
         if (termId != null) {
             if (status != null && !status.isBlank()) {
                 if ("UNCLAIMED".equalsIgnoreCase(status.trim())) {
-                    return getUnclaimedApprovedApplications(termId);
+                    apps = admissionApplicationRepository.findUnclaimedApprovedApplications(termId);
+                } else {
+                    AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
+                    apps = admissionApplicationRepository.findByTermIdAndApplicationStatus(termId, appStatus);
                 }
-                AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
-                apps = admissionApplicationRepository.findByTermIdAndApplicationStatus(termId, appStatus);
             } else {
                 apps = admissionApplicationRepository.findByTermId(termId);
             }
         } else {
             if (status != null && !status.isBlank()) {
                 if ("UNCLAIMED".equalsIgnoreCase(status.trim())) {
-                    return getUnclaimedApprovedApplications(null);
+                    apps = admissionApplicationRepository.findUnclaimedApprovedApplications(null);
+                } else {
+                    AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
+                    apps = admissionApplicationRepository.findByApplicationStatus(appStatus);
                 }
-                AdmissionApplication.ApplicationStatus appStatus = AdmissionApplication.ApplicationStatus.valueOf(status.trim().toUpperCase());
-                apps = admissionApplicationRepository.findByApplicationStatus(appStatus);
             } else {
                 apps = admissionApplicationRepository.findAll();
             }
         }
+
+        if (scopedPrograms != null && scopedPrograms.isPresent()) {
+            List<Long> allowedIds = scopedPrograms.get();
+            apps = apps.stream()
+                    .filter(a -> a.getTargetProgram() != null && allowedIds.contains(a.getTargetProgram().getId()))
+                    .toList();
+        }
+
         return apps.stream().map(this::mapToApplicationResponse).toList();
     }
 

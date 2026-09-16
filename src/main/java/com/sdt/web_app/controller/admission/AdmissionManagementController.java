@@ -23,6 +23,7 @@ public class AdmissionManagementController {
     private final AdmissionService admissionService;
     private final UserRepository userRepository;
     private final SecurityUtils securityUtils;
+    private final com.sdt.web_app.service.security.DataScopingService dataScopingService;
 
     @GetMapping("/config")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
@@ -73,8 +74,10 @@ public class AdmissionManagementController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<List<AdmissionApplicationResponse>> getAllApplications(
             @RequestParam(value = "termId", required = false) Long termId,
-            @RequestParam(value = "status", required = false) String status) {
-        List<AdmissionApplicationResponse> apps = admissionService.getAllApplications(termId, status);
+            @RequestParam(value = "status", required = false) String status,
+            Authentication authentication) {
+        java.util.Optional<List<Long>> scopedPrograms = dataScopingService.getScopedProgramIds(authentication);
+        List<AdmissionApplicationResponse> apps = admissionService.getAllApplications(termId, status, scopedPrograms);
         return ResponseEntity.ok(apps);
     }
 
@@ -90,7 +93,12 @@ public class AdmissionManagementController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<List<AdmissionApplicationResponse>> getApplicationsForProgram(
             @PathVariable("programId") Long programId,
-            @RequestParam(value = "status", required = false) String status) {
+            @RequestParam(value = "status", required = false) String status,
+            Authentication authentication) {
+        java.util.Optional<List<Long>> scopedPrograms = dataScopingService.getScopedProgramIds(authentication);
+        if (scopedPrograms.isPresent() && !scopedPrograms.get().contains(programId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to applications for program ID: " + programId);
+        }
         List<AdmissionApplicationResponse> apps = admissionService.getApplicationsForProgram(programId, status);
         return ResponseEntity.ok(apps);
     }
@@ -119,6 +127,13 @@ public class AdmissionManagementController {
             @PathVariable("id") Long id,
             @Valid @RequestBody EvaluateInterviewRequest request,
             Authentication authentication) {
+        java.util.Optional<List<Long>> scopedPrograms = dataScopingService.getScopedProgramIds(authentication);
+        if (scopedPrograms.isPresent()) {
+            AdmissionApplicationResponse existingApp = admissionService.getApplicationById(id);
+            if (existingApp.targetProgramId() != null && !scopedPrograms.get().contains(existingApp.targetProgramId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Chairperson cannot evaluate interview for an applicant outside assigned program scope.");
+            }
+        }
         Long userId = securityUtils.resolveUserId(authentication);
         User currentUser = userId != null ? userRepository.findById(userId).orElse(null) : null;
         AdmissionApplicationResponse updated = admissionService.evaluateInterview(id, request, currentUser);

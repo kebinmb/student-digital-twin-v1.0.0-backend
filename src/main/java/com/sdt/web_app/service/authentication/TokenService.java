@@ -1,6 +1,7 @@
 package com.sdt.web_app.service.authentication;
 
 import com.sdt.web_app.entities.authentication.User;
+import com.sdt.web_app.repositories.institution.ProgramRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -22,8 +23,11 @@ public class TokenService {
     @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://sdt-webapp}")
     private List<String> audiences;
 
-    public TokenService(JwtEncoder jwtEncoder) {
+    private final ProgramRepository programRepository;
+
+    public TokenService(JwtEncoder jwtEncoder, ProgramRepository programRepository) {
         this.jwtEncoder = jwtEncoder;
+        this.programRepository = programRepository;
     }
 
     public String generateAccessToken(User user) {
@@ -45,8 +49,14 @@ public class TokenService {
         if (user.getCollege() != null) {
             claimsBuilder.claim("college_id", user.getCollege().getId());
         }
-        if (user.getProgram() != null) {
-            claimsBuilder.claim("program_id", user.getProgram().getId());
+        Long programId = user.getProgram() != null ? user.getProgram().getId() : null;
+        if (programId == null && programRepository != null && user.getId() != null) {
+            programId = programRepository.findFirstByChairpersonUserId(user.getId())
+                    .map(com.sdt.web_app.entities.institution.Program::getId)
+                    .orElse(null);
+        }
+        if (programId != null) {
+            claimsBuilder.claim("program_id", programId);
         }
 
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claimsBuilder.build())).getTokenValue();

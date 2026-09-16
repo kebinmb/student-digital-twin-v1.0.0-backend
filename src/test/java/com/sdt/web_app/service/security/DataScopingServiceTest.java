@@ -33,6 +33,9 @@ class DataScopingServiceTest {
     @Mock
     private ProgramRepository programRepository;
 
+    @Mock
+    private com.sdt.web_app.repositories.authentication.UserRepository userRepository;
+
     @InjectMocks
     private DataScopingService dataScopingService;
 

@@ -24,6 +24,7 @@ public class DataScopingService {
     private final SecurityUtils securityUtils;
     private final DepartmentRepository departmentRepository;
     private final ProgramRepository programRepository;
+    private final com.sdt.web_app.repositories.authentication.UserRepository userRepository;
     private final SecurityProfileCache securityProfileCache;
     private final CachedScopeReader cachedScopeReader;
 
@@ -82,7 +83,14 @@ public class DataScopingService {
 
         // CHAIRPERSON: Scoped to assigned Program
         if (roles.contains("ROLE_CHAIRPERSON")) {
-            List<Program> programs = programRepository.findByChairpersonUserId(userId);
+            List<Program> programs = new ArrayList<>(programRepository.findByChairpersonUserId(userId));
+            if (userRepository != null) {
+                userRepository.findById(userId).ifPresent(u -> {
+                    if (u.getProgram() != null && programs.stream().noneMatch(p -> p.getId().equals(u.getProgram().getId()))) {
+                        programs.add(u.getProgram());
+                    }
+                });
+            }
             List<Long> programIds = programs.stream().map(Program::getId).toList();
             log.debug("CHAIRPERSON user {} scoped to program IDs: {}", userId, programIds);
             return Optional.of(programIds);
