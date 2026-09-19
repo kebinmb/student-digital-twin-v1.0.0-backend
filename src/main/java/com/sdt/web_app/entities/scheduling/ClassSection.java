@@ -104,6 +104,14 @@ public class ClassSection {
         this.primaryInstructor = instructor;
     }
 
+    public void updateSectionCode(String sectionCode) {
+        this.sectionCode = sectionCode;
+    }
+
+    public void updateMaxCapacity(int maxCapacity) {
+        this.maxCapacity = maxCapacity;
+    }
+
     public void addSchedule(ClassSchedule schedule) {
         schedules.add(schedule);
         schedule.setSection(this);
@@ -112,6 +120,12 @@ public class ClassSection {
     public void removeSchedule(ClassSchedule schedule) {
         schedules.remove(schedule);
         schedule.setSection(null);
+    }
+
+    public void clearSchedules() {
+        for (ClassSchedule schedule : new ArrayList<>(schedules)) {
+            removeSchedule(schedule);
+        }
     }
 
     public void incrementEnrolledCount() {

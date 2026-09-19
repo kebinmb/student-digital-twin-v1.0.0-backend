@@ -53,6 +53,25 @@ public interface ClassScheduleRepository extends JpaRepository<ClassSchedule, Lo
     @Query("""
         SELECT COUNT(s) > 0 FROM ClassSchedule s
         WHERE s.section.term.id = :termId
+          AND s.section.id <> :excludeSectionId
+          AND :roomId IS NOT NULL
+          AND s.room IS NOT NULL
+          AND s.room.id = :roomId
+          AND s.dayOfWeek = :dayOfWeek
+          AND s.startTime < :endTime
+          AND s.endTime > :startTime
+    """)
+    boolean existsOverlappingRoomScheduleExcludingSection(
+            @Param("termId") Long termId,
+            @Param("excludeSectionId") Long excludeSectionId,
+            @Param("roomId") Long roomId,
+            @Param("dayOfWeek") String dayOfWeek,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime);
+
+    @Query("""
+        SELECT COUNT(s) > 0 FROM ClassSchedule s
+        WHERE s.section.term.id = :termId
           AND :instructorUserId IS NOT NULL
           AND s.instructor IS NOT NULL
           AND s.instructor.id = :instructorUserId
@@ -62,6 +81,25 @@ public interface ClassScheduleRepository extends JpaRepository<ClassSchedule, Lo
     """)
     boolean existsOverlappingFacultySchedule(
             @Param("termId") Long termId,
+            @Param("instructorUserId") Long instructorUserId,
+            @Param("dayOfWeek") String dayOfWeek,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime);
+
+    @Query("""
+        SELECT COUNT(s) > 0 FROM ClassSchedule s
+        WHERE s.section.term.id = :termId
+          AND s.section.id <> :excludeSectionId
+          AND :instructorUserId IS NOT NULL
+          AND s.instructor IS NOT NULL
+          AND s.instructor.id = :instructorUserId
+          AND s.dayOfWeek = :dayOfWeek
+          AND s.startTime < :endTime
+          AND s.endTime > :startTime
+    """)
+    boolean existsOverlappingFacultyScheduleExcludingSection(
+            @Param("termId") Long termId,
+            @Param("excludeSectionId") Long excludeSectionId,
             @Param("instructorUserId") Long instructorUserId,
             @Param("dayOfWeek") String dayOfWeek,
             @Param("startTime") LocalTime startTime,

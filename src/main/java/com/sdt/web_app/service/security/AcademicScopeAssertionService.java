@@ -97,8 +97,16 @@ public class AcademicScopeAssertionService {
                     deptIds.add(child.getId());
                 }
 
-                List<Program> programs = programRepository.findByDepartmentIdIn(deptIds);
-                List<Long> allowedProgramIds = programs.stream().map(Program::getId).toList();
+                Set<Long> allowedProgramIdSet = new java.util.LinkedHashSet<>();
+                List<Program> programsByDept = programRepository.findByDepartmentIdIn(deptIds);
+                for (Program p : programsByDept) {
+                    allowedProgramIdSet.add(p.getId());
+                }
+                List<Program> programsByCollege = programRepository.findByCollegeId(collegeId);
+                for (Program p : programsByCollege) {
+                    allowedProgramIdSet.add(p.getId());
+                }
+                List<Long> allowedProgramIds = new ArrayList<>(allowedProgramIdSet);
 
                 log.debug("Resolved DEAN scope for user {}: collegeId={}, allowedPrograms={}", userId, collegeId, allowedProgramIds);
                 resolvedScope = AcademicScopeContext.dean(userId, collegeId, allowedProgramIds);
@@ -214,13 +222,29 @@ public class AcademicScopeAssertionService {
         }
 
         if (scope.isDean()) {
-            Long secCollegeId = resolveProgramCollegeId(section.getCurriculum().getProgram());
-            if (secCollegeId == null || !scope.collegeId().equals(secCollegeId)) {
-                throw new AccessDeniedException("Access Denied: Section does not belong to your assigned College.");
+            boolean isInstructor = (section.getPrimaryInstructor() != null && scope.userId().equals(section.getPrimaryInstructor().getId()))
+                    || (section.getSchedules() != null && section.getSchedules().stream()
+                        .anyMatch(s -> s.getInstructor() != null && scope.userId().equals(s.getInstructor().getId())));
+            if (!isInstructor) {
+                Program program = (section.getCurriculum() != null) ? section.getCurriculum().getProgram() : null;
+                Long secCollegeId = resolveProgramCollegeId(program);
+                Long programCollegeId = (program != null && program.getCollege() != null) ? program.getCollege().getId() : null;
+                Long programId = (program != null) ? program.getId() : null;
+
+                boolean belongsToCollege = (secCollegeId != null && scope.collegeId().equals(secCollegeId))
+                        || (programCollegeId != null && scope.collegeId().equals(programCollegeId))
+                        || (programId != null && scope.allowedProgramIds() != null && scope.allowedProgramIds().contains(programId));
+
+                if (!belongsToCollege) {
+                    throw new AccessDeniedException("Access Denied: Section does not belong to your assigned College.");
+                }
             }
         } else if (scope.isChairperson()) {
             Long secProgramId = section.getCurriculum().getProgram().getId();
-            if (!scope.programId().equals(secProgramId)) {
+            boolean isInstructor = (section.getPrimaryInstructor() != null && scope.userId().equals(section.getPrimaryInstructor().getId()))
+                    || (section.getSchedules() != null && section.getSchedules().stream()
+                        .anyMatch(s -> s.getInstructor() != null && scope.userId().equals(s.getInstructor().getId())));
+            if (!isInstructor && !scope.programId().equals(secProgramId)) {
                 throw new AccessDeniedException("Access Denied: Section does not belong to your assigned Program.");
             }
         } else if (scope.isFaculty()) {
@@ -240,8 +264,16 @@ public class AcademicScopeAssertionService {
         }
 
         if (scope.isDean()) {
-            Long progCollegeId = resolveProgramCollegeId(student.getProgram());
-            if (progCollegeId == null || !scope.collegeId().equals(progCollegeId)) {
+            Program program = student.getProgram();
+            Long progCollegeId = resolveProgramCollegeId(program);
+            Long programCollegeId = (program != null && program.getCollege() != null) ? program.getCollege().getId() : null;
+            Long programId = (program != null) ? program.getId() : null;
+
+            boolean belongsToCollege = (progCollegeId != null && scope.collegeId().equals(progCollegeId))
+                    || (programCollegeId != null && scope.collegeId().equals(programCollegeId))
+                    || (programId != null && scope.allowedProgramIds() != null && scope.allowedProgramIds().contains(programId));
+
+            if (!belongsToCollege) {
                 throw new AccessDeniedException("Access Denied: Student does not belong to your assigned College.");
             }
         } else if (scope.isChairperson()) {

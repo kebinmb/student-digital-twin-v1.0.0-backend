@@ -11,8 +11,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Component("sectionSecurity")
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Slf4j
 public class SectionSecurity {
 

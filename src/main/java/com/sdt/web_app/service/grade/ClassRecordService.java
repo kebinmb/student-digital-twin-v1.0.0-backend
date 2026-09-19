@@ -256,8 +256,16 @@ public class ClassRecordService {
                     if (scale != null) {
                         transmutedGrade = scale.getNumericGrade();
                         if (transmutedGrade != null) {
-                            if (finalPct != null && section.getGradeStatus() != ClassSection.GradeStatus.DRAFT) {
-                                status = transmutedGrade.compareTo(new BigDecimal("3.00")) <= 0 ? "PASSED" : "FAILED";
+                            if (item.getCompletionStatus() == EnrollmentCourseItem.CompletionStatus.DROPPED) {
+                                status = "DROPPED";
+                            } else if (finalPct != null) {
+                                if (transmutedGrade.compareTo(new BigDecimal("3.00")) <= 0) {
+                                    status = "PASSED";
+                                } else if (transmutedGrade.compareTo(new BigDecimal("4.00")) == 0) {
+                                    status = "INCOMPLETE";
+                                } else {
+                                    status = "FAILED";
+                                }
                             } else {
                                 status = "IN_PROGRESS";
                             }
@@ -398,7 +406,15 @@ public class ClassRecordService {
             EnrollmentCourseItem item = itemMap.get(row.studentId());
             if (item != null && row.transmutedGrade() != null) {
                 EnrollmentCourseItem.CompletionStatus status;
-                if (row.transmutedGrade().compareTo(new BigDecimal("3.00")) <= 0) {
+                if ("PASSED".equalsIgnoreCase(row.completionStatus())) {
+                    status = EnrollmentCourseItem.CompletionStatus.PASSED;
+                } else if ("INCOMPLETE".equalsIgnoreCase(row.completionStatus())) {
+                    status = EnrollmentCourseItem.CompletionStatus.INCOMPLETE;
+                } else if ("FAILED".equalsIgnoreCase(row.completionStatus())) {
+                    status = EnrollmentCourseItem.CompletionStatus.FAILED;
+                } else if ("DROPPED".equalsIgnoreCase(row.completionStatus())) {
+                    status = EnrollmentCourseItem.CompletionStatus.DROPPED;
+                } else if (row.transmutedGrade().compareTo(new BigDecimal("3.00")) <= 0) {
                     status = EnrollmentCourseItem.CompletionStatus.PASSED;
                 } else if (row.transmutedGrade().compareTo(new BigDecimal("4.00")) == 0) {
                     status = EnrollmentCourseItem.CompletionStatus.INCOMPLETE;

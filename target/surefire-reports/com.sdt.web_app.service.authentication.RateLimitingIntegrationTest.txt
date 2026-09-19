@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.authentication.RateLimitingIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.043 s -- in com.sdt.web_app.service.authentication.RateLimitingIntegrationTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.687 s -- in com.sdt.web_app.service.authentication.RateLimitingIntegrationTest

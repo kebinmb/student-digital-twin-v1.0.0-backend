@@ -66,9 +66,9 @@ public class SchedulingController {
         if (authentication != null && academicScopeAssertionService != null) {
             com.sdt.web_app.service.security.AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
             if (scope.isDean()) {
-                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(scope.allowedProgramIds()), null));
+                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(scope.allowedProgramIds()), scope.userId()));
             } else if (scope.isChairperson()) {
-                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(List.of(scope.programId())), null));
+                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(List.of(scope.programId())), scope.userId()));
             } else if (scope.isFaculty()) {
                 return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.empty(), scope.userId()));
             }
@@ -80,6 +80,22 @@ public class SchedulingController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<SectionDetailResponse> getSectionById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(schedulingService.getSectionById(id));
+    }
+
+    @PutMapping("/sections/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    public ResponseEntity<SectionDetailResponse> updateSection(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody UpdateSectionRequest request) {
+        SectionDetailResponse response = schedulingService.updateSection(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/sections/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    public ResponseEntity<Void> deleteSection(@PathVariable("id") Long id) {
+        schedulingService.deleteSection(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/sections/{sectionId}/slots")

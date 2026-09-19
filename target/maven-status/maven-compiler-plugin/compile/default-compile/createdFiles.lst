@@ -197,6 +197,7 @@ com\sdt\web_app\dto\compliance\EquityDtos$StudentEquityProfileDto$StudentEquityP
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$UpdateClearanceRequest.class
 com\sdt\web_app\dto\institution\CourseDtos$CreateCourseRequest.class
 com\sdt\web_app\exceptions\QueueSessionExpiredException.class
+com\sdt\web_app\dto\scheduling\SchedulingDtos$UpdateSectionRequest.class
 com\sdt\web_app\entities\compliance\StudentEquityProfile$DisabilityType.class
 com\sdt\web_app\entities\compliance\ClearanceSignoff$ClearanceSignoffBuilder.class
 com\sdt\web_app\service\security\AcademicScopeContext.class

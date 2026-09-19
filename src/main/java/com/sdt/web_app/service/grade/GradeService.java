@@ -83,6 +83,13 @@ public class GradeService {
                         .map(s -> s.getInstructor().getUsername())
                         .findFirst().orElse("Unassigned"));
 
+        Long primaryInstructorId = section.getPrimaryInstructor() != null
+                ? section.getPrimaryInstructor().getId()
+                : (section.getSchedules().stream()
+                        .filter(s -> s.getInstructor() != null)
+                        .map(s -> s.getInstructor().getId())
+                        .findFirst().orElse(null));
+
         return new SectionRosterResponse(
                 section.getId(),
                 section.getSectionCode(),
@@ -93,7 +100,7 @@ public class GradeService {
                 section.getTerm().getId(),
                 section.getTerm().getTermType().name(),
                 section.getGradeStatus().name(),
-                section.getPrimaryInstructor() != null ? section.getPrimaryInstructor().getId() : null,
+                primaryInstructorId,
                 instructorName,
                 section.getEnrolledCount(),
                 section.getMaxCapacity(),

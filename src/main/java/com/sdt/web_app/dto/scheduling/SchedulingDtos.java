@@ -72,6 +72,19 @@ public class SchedulingDtos {
             List<@Valid ScheduleSlotDto> scheduleSlots
     ) {}
 
+    public record UpdateSectionRequest(
+            @NotBlank(message = "Section code is required")
+            @Size(max = 30, message = "Section code cannot exceed 30 characters")
+            String sectionCode,
+
+            @Min(value = 1, message = "Capacity must be at least 1")
+            @Max(value = 100, message = "Capacity cannot exceed 100")
+            int maxCapacity,
+
+            @NotEmpty(message = "At least one schedule slot is required")
+            List<@Valid ScheduleSlotDto> scheduleSlots
+    ) {}
+
     public record ScheduleSlotDto(
             @NotNull(message = "Room ID is required")
             Long roomId,

@@ -37,7 +37,12 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
     @Query("SELECT s FROM ClassSection s JOIN FETCH s.term JOIN FETCH s.course JOIN FETCH s.curriculum cur JOIN FETCH cur.program LEFT JOIN FETCH s.primaryInstructor inst LEFT JOIN FETCH inst.facultyProfile WHERE s.id = :id")
     Optional<ClassSection> findByIdWithDetails(@Param("id") Long id);
 
-    @Query("SELECT DISTINCT s FROM ClassSection s LEFT JOIN FETCH s.schedules sched LEFT JOIN FETCH sched.room WHERE s.id = :id")
+    @EntityGraph(attributePaths = {
+        "term", "course", "curriculum", "curriculum.program", "curriculum.program.department", "curriculum.program.college",
+        "primaryInstructor", "primaryInstructor.facultyProfile",
+        "schedules", "schedules.room", "schedules.instructor"
+    })
+    @Query("SELECT DISTINCT s FROM ClassSection s WHERE s.id = :id")
     Optional<ClassSection> findByIdWithSchedules(@Param("id") Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

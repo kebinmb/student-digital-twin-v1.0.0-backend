@@ -35,7 +35,7 @@ public class GradeController {
     }
 
     @PostMapping("/{id}/grades/verify")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON') and @sectionSecurity.canAccessSection(#id, authentication)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN') and @sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<GradeActionResponse> verifyGrades(
             @PathVariable("id") Long id,
             Authentication authentication) {
@@ -44,7 +44,7 @@ public class GradeController {
     }
 
     @PostMapping("/{id}/grades/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON') and @sectionSecurity.canAccessSection(#id, authentication)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN') and @sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<GradeActionResponse> rejectGrades(
             @PathVariable("id") Long id,
             @RequestBody(required = false) RejectGradesRequest request,

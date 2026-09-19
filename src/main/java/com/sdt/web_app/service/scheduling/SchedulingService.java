@@ -267,6 +267,236 @@ public class SchedulingService {
         return mapToSectionDetail(saved);
     }
 
+    @Transactional
+    public SectionDetailResponse updateSection(Long sectionId, UpdateSectionRequest request) {
+        ClassSection section = sectionRepository.findByIdWithSchedules(sectionId)
+                .or(() -> sectionRepository.findById(sectionId))
+                .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + sectionId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
+
+        Term term = section.getTerm();
+        Course course = section.getCourse();
+
+        String newSectionCode = request.sectionCode().trim();
+        if (!newSectionCode.equalsIgnoreCase(section.getSectionCode())) {
+            if (sectionRepository.existsByTermIdAndCourseIdAndSectionCode(term.getId(), course.getId(), newSectionCode)) {
+                throw new IllegalStateException(String.format(
+                        "Section '%s' already exists for course '%s' in term '%s'.",
+                        newSectionCode, course.getCode(), term.getTermType().name()));
+            }
+            section.updateSectionCode(newSectionCode);
+        }
+        section.updateMaxCapacity(request.maxCapacity());
+
+        // CHED CMO No. 25 Contact Hour & Schedule Overlap Check
+        int requiredLecMinutes = (int) (course.getLectureUnits().doubleValue() * 60);
+        int requiredLabMinutes = (int) (course.getLabUnits().doubleValue() * 180);
+        int scheduledLecMinutes = 0;
+        int scheduledLabMinutes = 0;
+
+        BigDecimal maxHours = term.getMaxHoursPerClass() != null ? term.getMaxHoursPerClass() : new BigDecimal("3.0");
+        long maxSessionMinutes = maxHours.multiply(BigDecimal.valueOf(60)).longValue();
+
+        List<ScheduleSlotDto> slots = request.scheduleSlots();
+        for (ScheduleSlotDto slot : slots) {
+            if (!slot.endTime().isAfter(slot.startTime())) {
+                throw new IllegalArgumentException("Schedule slot end time must be strictly after start time.");
+            }
+
+            int durationMinutes = (int) Duration.between(slot.startTime(), slot.endTime()).toMinutes();
+            if (durationMinutes > maxSessionMinutes) {
+                throw new IllegalArgumentException(String.format(
+                        "Schedule slot duration (%d minutes) exceeds the maximum allowed class duration of %.1f hours (%d minutes) for term '%s'.",
+                        durationMinutes, maxHours.doubleValue(), maxSessionMinutes, term.getTermType().name()));
+            }
+
+            List<String> effectiveDays = slot.getEffectiveDays();
+            if (effectiveDays.isEmpty()) {
+                throw new IllegalArgumentException("Schedule slot must have at least one day specified.");
+            }
+
+            for (String day : effectiveDays) {
+                String dayUpper = day.toUpperCase();
+                if ("LABORATORY".equalsIgnoreCase(slot.scheduleType())) {
+                    scheduledLabMinutes += durationMinutes;
+                } else {
+                    scheduledLecMinutes += durationMinutes;
+                }
+
+                // Room collision check excluding current section
+                boolean roomOverlap = scheduleRepository.existsOverlappingRoomScheduleExcludingSection(
+                        term.getId(), sectionId, slot.roomId(), dayUpper, slot.startTime(), slot.endTime());
+                if (roomOverlap) {
+                    Room room = roomRepository.findById(slot.roomId()).orElse(null);
+                    String roomCode = room != null ? room.getCode() : String.valueOf(slot.roomId());
+                    throw new IllegalStateException(String.format(
+                            "Gate 2 Violation: Room collision detected. Room '%s' is already occupied on %s between %s and %s.",
+                            roomCode, dayUpper, slot.startTime(), slot.endTime()));
+                }
+
+                // Faculty collision check excluding current section
+                if (slot.instructorUserId() != null) {
+                    boolean facultyOverlap = scheduleRepository.existsOverlappingFacultyScheduleExcludingSection(
+                            term.getId(), sectionId, slot.instructorUserId(), dayUpper, slot.startTime(), slot.endTime());
+                    if (facultyOverlap) {
+                        User instructor = userRepository.findById(slot.instructorUserId()).orElse(null);
+                        String facultyName = instructor != null ? instructor.getUsername() : String.valueOf(slot.instructorUserId());
+                        throw new IllegalStateException(String.format(
+                                "Gate 2 Violation: Faculty collision detected. Instructor '%s' is already scheduled on %s between %s and %s.",
+                                facultyName, dayUpper, slot.startTime(), slot.endTime()));
+                    }
+                }
+            }
+        }
+
+        if (scheduledLecMinutes != requiredLecMinutes || scheduledLabMinutes != requiredLabMinutes) {
+            throw new IllegalArgumentException(String.format(
+                    "Gate 2 Violation: Scheduled minutes mismatch for course '%s'. Required: Lecture=%dm, Lab=%dm. Scheduled: Lecture=%dm, Lab=%dm.",
+                    course.getCode(), requiredLecMinutes, requiredLabMinutes, scheduledLecMinutes, scheduledLabMinutes));
+        }
+
+        Set<User> instructorsToUpdate = new LinkedHashSet<>();
+        if (section.getPrimaryInstructor() != null) {
+            instructorsToUpdate.add(section.getPrimaryInstructor());
+        }
+        if (section.getSchedules() != null) {
+            section.getSchedules().stream()
+                    .filter(s -> s.getInstructor() != null)
+                    .forEach(s -> instructorsToUpdate.add(s.getInstructor()));
+        }
+
+        section.clearSchedules();
+        scheduleRepository.deleteAll(scheduleRepository.findBySectionId(sectionId));
+
+        for (ScheduleSlotDto slot : slots) {
+            Room room = roomRepository.findById(slot.roomId())
+                    .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + slot.roomId()));
+
+            if (room.getCapacity() < request.maxCapacity()) {
+                throw new IllegalStateException(String.format(
+                        "Gate 2 Violation: Room physical capacity insufficient. Room '%s' capacity is %d, but section '%s' max capacity is configured to %d.",
+                        room.getCode(), room.getCapacity(), request.sectionCode(), request.maxCapacity()));
+            }
+
+            User instructor = null;
+            if (slot.instructorUserId() != null) {
+                instructor = userRepository.findById(slot.instructorUserId())
+                        .orElseThrow(() -> new EntityNotFoundException("Instructor not found with id: " + slot.instructorUserId()));
+                instructorsToUpdate.add(instructor);
+            }
+
+            for (String day : slot.getEffectiveDays()) {
+                ClassSchedule schedule = ClassSchedule.builder()
+                        .room(room)
+                        .instructor(instructor)
+                        .dayOfWeek(day.toUpperCase())
+                        .startTime(slot.startTime())
+                        .endTime(slot.endTime())
+                        .scheduleType(slot.scheduleType().toUpperCase())
+                        .build();
+
+                section.addSchedule(schedule);
+            }
+        }
+
+        ClassSection saved = sectionRepository.save(section);
+
+        for (User instructor : instructorsToUpdate) {
+            recalculateFacultyWorkload(term, instructor);
+        }
+
+        return mapToSectionDetail(saved);
+    }
+
+    @Transactional
+    public void deleteSection(Long sectionId) {
+        ClassSection section = sectionRepository.findByIdWithSchedules(sectionId)
+                .or(() -> sectionRepository.findById(sectionId))
+                .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + sectionId));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            academicScopeAssertionService.validateSectionAccess(scope, section);
+        }
+
+        if (section.getEnrolledCount() > 0) {
+            throw new IllegalStateException(String.format(
+                    "Cannot delete section '%s': %d student(s) are currently enrolled.",
+                    section.getSectionCode(), section.getEnrolledCount()));
+        }
+
+        Term term = section.getTerm();
+        Set<User> instructorsToUpdate = new LinkedHashSet<>();
+        if (section.getPrimaryInstructor() != null) {
+            instructorsToUpdate.add(section.getPrimaryInstructor());
+        }
+        if (section.getSchedules() != null) {
+            section.getSchedules().stream()
+                    .filter(s -> s.getInstructor() != null)
+                    .forEach(s -> instructorsToUpdate.add(s.getInstructor()));
+        }
+
+        scheduleRepository.deleteAll(scheduleRepository.findBySectionId(sectionId));
+        sectionRepository.delete(section);
+
+        for (User instructor : instructorsToUpdate) {
+            recalculateFacultyWorkload(term, instructor);
+        }
+    }
+
+    private void recalculateFacultyWorkload(Term term, User instructor) {
+        if (instructor == null || term == null) return;
+        List<ClassSchedule> schedules = scheduleRepository.findByInstructorIdAndSectionTermId(instructor.getId(), term.getId());
+
+        Set<Long> distinctCourseIds = schedules.stream()
+                .map(s -> s.getSection().getCourse().getId())
+                .collect(Collectors.toSet());
+        int preps = Math.max(0, distinctCourseIds.size());
+
+        Set<Long> distinctSectionIds = schedules.stream()
+                .map(s -> s.getSection().getId())
+                .collect(Collectors.toSet());
+
+        BigDecimal totalHours = BigDecimal.ZERO;
+        if (!distinctSectionIds.isEmpty()) {
+            List<ClassSection> assignedSections = sectionRepository.findAllById(distinctSectionIds);
+            for (ClassSection sec : assignedSections) {
+                Course c = sec.getCourse();
+                BigDecimal hours = c.getLectureUnits().add(c.getLabUnits().multiply(new BigDecimal("3.00")));
+                totalHours = totalHours.add(hours);
+            }
+        }
+
+        FacultyWorkload workload = workloadRepository.findByTermIdAndFacultyId(term.getId(), instructor.getId())
+                .orElseGet(() -> FacultyWorkload.builder()
+                        .term(term)
+                        .faculty(instructor)
+                        .regularUnits(BigDecimal.ZERO)
+                        .overloadUnits(BigDecimal.ZERO)
+                        .totalContactHours(BigDecimal.ZERO)
+                        .isOverloadApproved(false)
+                        .numberOfPreparations(0)
+                        .build());
+
+        workload.updatePreparations(preps);
+        BigDecimal effectiveCap = workload.getEffectiveMaxLoad();
+
+        if (totalHours.compareTo(effectiveCap) > 0) {
+            BigDecimal overload = totalHours.subtract(effectiveCap);
+            workload.updateWorkload(effectiveCap, overload, totalHours);
+        } else {
+            workload.updateWorkload(totalHours, BigDecimal.ZERO, totalHours);
+        }
+
+        workloadRepository.save(workload);
+    }
+
     private void updateFacultyWorkload(Term term, User instructor, Course course) {
         FacultyWorkload workload = workloadRepository.findByTermIdAndFacultyId(term.getId(), instructor.getId())
                 .orElseGet(() -> FacultyWorkload.builder()
@@ -335,11 +565,13 @@ public class SchedulingService {
             Long termId, Optional<List<Long>> scopedProgramIds, Long facultyInstructorId) {
         Specification<ClassSection> spec = ClassSectionSpecifications.inTerm(termId);
 
-        if (scopedProgramIds != null && scopedProgramIds.isPresent()) {
+        if (scopedProgramIds != null && scopedProgramIds.isPresent() && facultyInstructorId != null) {
+            Specification<ClassSection> scopeOrInstructor = ClassSectionSpecifications.inPrograms(scopedProgramIds.get())
+                    .or(ClassSectionSpecifications.assignedToInstructor(facultyInstructorId));
+            spec = spec.and(scopeOrInstructor);
+        } else if (scopedProgramIds != null && scopedProgramIds.isPresent()) {
             spec = spec.and(ClassSectionSpecifications.inPrograms(scopedProgramIds.get()));
-        }
-
-        if (facultyInstructorId != null) {
+        } else if (facultyInstructorId != null) {
             spec = spec.and(ClassSectionSpecifications.assignedToInstructor(facultyInstructorId));
         }
 
