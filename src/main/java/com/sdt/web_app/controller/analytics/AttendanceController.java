@@ -40,4 +40,12 @@ public class AttendanceController {
             @RequestParam(name = "sortDir", defaultValue = "DESC") String sortDir) {
         return ResponseEntity.ok(attendanceService.getStudentAttendanceSlice(studentId, page, size, sortBy, sortDir));
     }
+
+    @GetMapping("/daily")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON')")
+    public ResponseEntity<java.util.List<AttendanceRecordResponse>> getDailyAttendance(
+            @RequestParam(name = "date", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date,
+            @RequestParam(name = "sectionId", required = false) Long sectionId) {
+        return ResponseEntity.ok(attendanceService.getDailyAttendance(date, sectionId));
+    }
 }

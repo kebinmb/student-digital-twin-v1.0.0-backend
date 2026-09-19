@@ -114,16 +114,24 @@ public class QrAttendanceService {
         AttendanceRecord saved = recordRepository.save(record);
         log.info("Attendance scanned and verified for student {} in session #{}", student.getStudentNumber(), session.getId());
 
+        String sectionCode = session.getSchedule() != null && session.getSchedule().getSection() != null
+                ? session.getSchedule().getSection().getSectionCode() : "N/A";
+        String courseCode = session.getSchedule() != null && session.getSchedule().getSection() != null && session.getSchedule().getSection().getCourse() != null
+                ? session.getSchedule().getSection().getCourse().getCode() : "N/A";
+
         String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
         return new AttendanceRecordResponse(
                 saved.getId(),
                 session.getId(),
+                sectionCode,
+                courseCode,
                 student.getId(),
                 student.getStudentNumber(),
                 studentName,
                 saved.getStatus().name(),
                 isGeofenceValid,
-                saved.getScannedAt()
+                saved.getScannedAt(),
+                saved.getDeviceFingerprint()
         );
     }
 
@@ -145,17 +153,55 @@ public class QrAttendanceService {
         Slice<AttendanceRecordResponse> responseSlice = slice.map(saved -> {
             StudentProfile student = saved.getStudent();
             String studentName = student != null && student.getUser() != null ? student.getUser().getUsername() : "Student #" + (student != null ? student.getStudentNumber() : saved.getId());
+            String secCode = saved.getSession() != null && saved.getSession().getSchedule() != null && saved.getSession().getSchedule().getSection() != null
+                    ? saved.getSession().getSchedule().getSection().getSectionCode() : "N/A";
+            String crsCode = saved.getSession() != null && saved.getSession().getSchedule() != null && saved.getSession().getSchedule().getSection() != null && saved.getSession().getSchedule().getSection().getCourse() != null
+                    ? saved.getSession().getSchedule().getSection().getCourse().getCode() : "N/A";
+
             return new AttendanceRecordResponse(
                     saved.getId(),
                     saved.getSession() != null ? saved.getSession().getId() : null,
+                    secCode,
+                    crsCode,
                     student != null ? student.getId() : null,
                     student != null ? student.getStudentNumber() : "N/A",
                     studentName,
                     saved.getStatus() != null ? saved.getStatus().name() : "PRESENT",
                     true,
-                    saved.getScannedAt()
+                    saved.getScannedAt(),
+                    saved.getDeviceFingerprint()
             );
         });
         return SliceResponse.from(responseSlice);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<AttendanceRecordResponse> getDailyAttendance(LocalDate date, Long sectionId) {
+        LocalDate queryDate = date != null ? date : LocalDate.now();
+        java.util.List<AttendanceRecord> records = recordRepository.findDailyAttendanceRecords(queryDate, sectionId);
+        return records.stream().map(saved -> {
+            AttendanceSession session = saved.getSession();
+            ClassSchedule schedule = session != null ? session.getSchedule() : null;
+            com.sdt.web_app.entities.scheduling.ClassSection section = schedule != null ? schedule.getSection() : null;
+            StudentProfile student = saved.getStudent();
+
+            String secCode = section != null ? section.getSectionCode() : "N/A";
+            String crsCode = (section != null && section.getCourse() != null) ? section.getCourse().getCode() : "N/A";
+            String studentName = (student != null && student.getUser() != null) ? student.getUser().getUsername() : "Student #" + (student != null ? student.getStudentNumber() : saved.getId());
+
+            return new AttendanceRecordResponse(
+                    saved.getId(),
+                    session != null ? session.getId() : null,
+                    secCode,
+                    crsCode,
+                    student != null ? student.getId() : null,
+                    student != null ? student.getStudentNumber() : "N/A",
+                    studentName,
+                    saved.getStatus() != null ? saved.getStatus().name() : "PRESENT",
+                    true,
+                    saved.getScannedAt(),
+                    saved.getDeviceFingerprint()
+            );
+        }).toList();
     }
 }

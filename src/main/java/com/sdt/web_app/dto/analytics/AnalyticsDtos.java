@@ -36,12 +36,15 @@ public class AnalyticsDtos {
     public record AttendanceRecordResponse(
             Long recordId,
             Long sessionId,
+            String sectionCode,
+            String courseCode,
             Long studentId,
             String studentNumber,
             String studentName,
             String attendanceStatus,
             boolean isGeofenceValid,
-            Instant scannedAt
+            Instant scannedAt,
+            String deviceFingerprint
     ) {}
 
     public record DigitalTwinRiskProfileDto(

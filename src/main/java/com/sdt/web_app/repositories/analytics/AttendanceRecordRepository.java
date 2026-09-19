@@ -22,4 +22,19 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
 
     @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId")
     long countTotalByStudentId(@Param("studentId") Long studentId);
+
+    @Query("""
+        SELECT DISTINCT ar FROM AttendanceRecord ar
+        JOIN FETCH ar.session s
+        JOIN FETCH s.schedule sched
+        JOIN FETCH sched.section sec
+        JOIN FETCH ar.student sp
+        LEFT JOIN FETCH sp.user u
+        WHERE (:sessionDate IS NULL OR s.sessionDate = :sessionDate)
+          AND (:sectionId IS NULL OR sec.id = :sectionId)
+        ORDER BY ar.scannedAt DESC
+    """)
+    List<AttendanceRecord> findDailyAttendanceRecords(
+            @Param("sessionDate") java.time.LocalDate sessionDate,
+            @Param("sectionId") Long sectionId);
 }
