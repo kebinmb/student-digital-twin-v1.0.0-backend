@@ -10,7 +10,10 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
-@Table(name = "attendance_sessions")
+@Table(name = "attendance_sessions", indexes = {
+    @Index(name = "idx_att_sess_date_sched", columnList = "session_date, section_schedule_id"),
+    @Index(name = "idx_att_sess_seed", columnList = "qr_seed")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

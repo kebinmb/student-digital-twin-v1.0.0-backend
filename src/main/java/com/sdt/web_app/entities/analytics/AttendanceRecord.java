@@ -9,7 +9,10 @@ import java.time.Instant;
 import java.util.Objects;
 
 @Entity
-@Table(name = "attendance_records")
+@Table(name = "attendance_records", indexes = {
+    @Index(name = "idx_att_rec_sess_student", columnList = "attendance_session_id, student_profile_id"),
+    @Index(name = "idx_att_rec_scanned_at", columnList = "scanned_at")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
