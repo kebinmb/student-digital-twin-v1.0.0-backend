@@ -48,4 +48,10 @@ public class AttendanceController {
             @RequestParam(name = "sectionId", required = false) Long sectionId) {
         return ResponseEntity.ok(attendanceService.getDailyAttendance(date, sectionId));
     }
+
+    @GetMapping(value = "/stream/{sessionId}", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON', 'STUDENT')")
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter streamSessionAttendance(@PathVariable("sessionId") Long sessionId) {
+        return attendanceService.subscribeToSessionStream(sessionId);
+    }
 }

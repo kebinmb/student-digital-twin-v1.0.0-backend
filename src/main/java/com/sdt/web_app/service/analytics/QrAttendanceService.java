@@ -120,7 +120,7 @@ public class QrAttendanceService {
                 ? session.getSchedule().getSection().getCourse().getCode() : "N/A";
 
         String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
-        return new AttendanceRecordResponse(
+        AttendanceRecordResponse response = new AttendanceRecordResponse(
                 saved.getId(),
                 session.getId(),
                 sectionCode,
@@ -133,6 +133,46 @@ public class QrAttendanceService {
                 saved.getScannedAt(),
                 saved.getDeviceFingerprint()
         );
+
+        notifySessionEmitters(session.getId(), response);
+        return response;
+    }
+
+    private final java.util.Map<Long, java.util.List<org.springframework.web.servlet.mvc.method.annotation.SseEmitter>> sessionEmitters = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter subscribeToSessionStream(Long sessionId) {
+        org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(30 * 60 * 1000L);
+        sessionEmitters.computeIfAbsent(sessionId, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(emitter);
+
+        emitter.onCompletion(() -> removeEmitter(sessionId, emitter));
+        emitter.onTimeout(() -> removeEmitter(sessionId, emitter));
+        emitter.onError(e -> removeEmitter(sessionId, emitter));
+
+        return emitter;
+    }
+
+    private void removeEmitter(Long sessionId, org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter) {
+        java.util.List<org.springframework.web.servlet.mvc.method.annotation.SseEmitter> list = sessionEmitters.get(sessionId);
+        if (list != null) {
+            list.remove(emitter);
+        }
+    }
+
+    private void notifySessionEmitters(Long sessionId, AttendanceRecordResponse response) {
+        java.util.List<org.springframework.web.servlet.mvc.method.annotation.SseEmitter> list = sessionEmitters.get(sessionId);
+        if (list != null && !list.isEmpty()) {
+            java.util.List<org.springframework.web.servlet.mvc.method.annotation.SseEmitter> deadEmitters = new java.util.ArrayList<>();
+            for (org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter : list) {
+                try {
+                    emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event()
+                            .name("attendance-scan")
+                            .data(response));
+                } catch (Exception e) {
+                    deadEmitters.add(emitter);
+                }
+            }
+            list.removeAll(deadEmitters);
+        }
     }
 
     public static double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {

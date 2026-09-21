@@ -64,4 +64,22 @@ public class GradeController {
         Long registrarUserId = securityUtils.resolveUserId(authentication);
         return ResponseEntity.ok(gradeService.sealGrades(id, registrarUserId));
     }
+
+    @PostMapping("/batch/verify")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    public ResponseEntity<java.util.List<GradeActionResponse>> batchVerifyGrades(
+            @RequestBody java.util.List<Long> sectionIds,
+            Authentication authentication) {
+        Long approverUserId = securityUtils.resolveUserId(authentication);
+        return ResponseEntity.ok(gradeService.batchVerifyGrades(sectionIds, approverUserId));
+    }
+
+    @PostMapping("/batch/seal")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
+    public ResponseEntity<java.util.List<GradeActionResponse>> batchSealGrades(
+            @RequestBody java.util.List<Long> sectionIds,
+            Authentication authentication) {
+        Long registrarUserId = securityUtils.resolveUserId(authentication);
+        return ResponseEntity.ok(gradeService.batchSealGrades(sectionIds, registrarUserId));
+    }
 }

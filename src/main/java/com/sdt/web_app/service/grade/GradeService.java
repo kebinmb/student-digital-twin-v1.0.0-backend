@@ -346,6 +346,36 @@ public class GradeService {
         );
     }
 
+    @Transactional
+    public List<GradeActionResponse> batchVerifyGrades(List<Long> sectionIds, Long approverUserId) {
+        if (sectionIds == null || sectionIds.isEmpty()) return List.of();
+        return sectionIds.stream()
+                .map(id -> {
+                    try {
+                        return verifyGrades(id, approverUserId);
+                    } catch (Exception e) {
+                        log.warn("Batch verify failed for section {}: {}", id, e.getMessage());
+                        return new GradeActionResponse(id, "SECTION-" + id, "ERROR", 0, "Batch verify error: " + e.getMessage());
+                    }
+                })
+                .toList();
+    }
+
+    @Transactional
+    public List<GradeActionResponse> batchSealGrades(List<Long> sectionIds, Long registrarUserId) {
+        if (sectionIds == null || sectionIds.isEmpty()) return List.of();
+        return sectionIds.stream()
+                .map(id -> {
+                    try {
+                        return sealGrades(id, registrarUserId);
+                    } catch (Exception e) {
+                        log.warn("Batch seal failed for section {}: {}", id, e.getMessage());
+                        return new GradeActionResponse(id, "SECTION-" + id, "ERROR", 0, "Batch seal error: " + e.getMessage());
+                    }
+                })
+                .toList();
+    }
+
     private String computeSha256(String input) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
