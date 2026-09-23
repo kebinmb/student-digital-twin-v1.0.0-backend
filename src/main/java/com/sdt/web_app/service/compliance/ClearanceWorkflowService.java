@@ -81,6 +81,7 @@ public class ClearanceWorkflowService {
                 .orElseThrow(() -> new ResourceNotFoundException("Actor user not found: " + actorUserId));
 
         validateUserDepartmentRole(actor, signoff.getDepartmentType());
+        validateSequentialClearanceOrder(signoff.getClearanceRequest(), signoff.getDepartmentType());
 
         signoff.setSignoffStatus(request.signoffStatus().toUpperCase());
         signoff.setRemarks(request.remarks());
@@ -288,6 +289,30 @@ public class ClearanceWorkflowService {
 
         if (!isAuthorized) {
             throw new AccessDeniedException("Your assigned role " + roleNames + " is not authorized to sign off for department: " + departmentType);
+        }
+    }
+
+    private static final List<String> CLEARANCE_SEQUENCE = List.of(
+            "LIBRARY", "ACCOUNTING", "LABORATORY", "STUDENT_AFFAIRS", "DEAN"
+    );
+
+    private void validateSequentialClearanceOrder(ClearanceRequest request, String currentDepartment) {
+        if (request == null || request.getSignoffs() == null || currentDepartment == null) return;
+
+        int currentIndex = CLEARANCE_SEQUENCE.indexOf(currentDepartment.toUpperCase());
+        if (currentIndex <= 0) return;
+
+        for (int i = 0; i < currentIndex; i++) {
+            String requiredDept = CLEARANCE_SEQUENCE.get(i);
+            boolean cleared = request.getSignoffs().stream()
+                    .filter(s -> requiredDept.equalsIgnoreCase(s.getDepartmentType()))
+                    .anyMatch(s -> "APPROVED".equalsIgnoreCase(s.getSignoffStatus()));
+
+            if (!cleared) {
+                throw new IllegalStateException(String.format(
+                        "Sequential Clearance Violation: Cannot sign off for '%s' until '%s' has approved.",
+                        currentDepartment, requiredDept));
+            }
         }
     }
 }

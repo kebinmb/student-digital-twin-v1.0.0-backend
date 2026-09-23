@@ -60,7 +60,17 @@ public class QrAttendanceService {
         AttendanceSession saved = sessionRepository.save(session);
         log.info("Dynamic QR Attendance Session started for schedule #{}. Seed: {}", schedule.getId(), qrSeed);
 
-        String qrDataUrl = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='%23116834'/><text x='50%' y='50%' fill='white' font-size='14' text-anchor='middle' dominant-baseline='middle'>" + qrSeed.substring(0, 15) + "</text></svg>";
+        String qrDataUrl;
+        try {
+            com.google.zxing.qrcode.QRCodeWriter qrCodeWriter = new com.google.zxing.qrcode.QRCodeWriter();
+            com.google.zxing.common.BitMatrix bitMatrix = qrCodeWriter.encode(qrSeed, com.google.zxing.BarcodeFormat.QR_CODE, 256, 256);
+            java.io.ByteArrayOutputStream pngOutputStream = new java.io.ByteArrayOutputStream();
+            com.google.zxing.client.j2se.MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
+            qrDataUrl = "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(pngOutputStream.toByteArray());
+        } catch (Exception e) {
+            log.error("Failed to generate ZXing QR barcode, falling back to SVG", e);
+            qrDataUrl = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='%23116834'/><text x='50%' y='50%' fill='white' font-size='14' text-anchor='middle' dominant-baseline='middle'>" + qrSeed.substring(0, 15) + "</text></svg>";
+        }
 
         return new AttendanceSessionResponse(
                 saved.getId(),

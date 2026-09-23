@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.compliance;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.compliance.ComplianceDtos.*;
 import com.sdt.web_app.service.compliance.ChedHemisExportService;
 import com.sdt.web_app.service.compliance.ClearanceWorkflowService;
@@ -26,6 +27,7 @@ public class ClearanceAndChedController {
     private final SecurityUtils securityUtils;
 
     // Clearance Workflows
+    @Auditable(action = "INITIATE_CLEARANCE", entityName = "ClearanceRequest")
     @PostMapping("/clearance/requests")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'STUDENT')")
     public ResponseEntity<ClearanceRequestDto> initiateClearanceRequest(@Valid @RequestBody InitiateClearanceRequest request, Authentication authentication) {
@@ -46,6 +48,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "CLEARANCE_SIGNOFF", entityName = "ClearanceSignoff", entityId = "#signoffId")
     @PutMapping("/clearance/signoffs/{signoffId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'CHAIRPERSON', 'FACULTY')")
     public ResponseEntity<ClearanceSignoffDto> processSignoff(
@@ -79,6 +82,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "APPLY_GRADUATION", entityName = "GraduationApplication")
     @PostMapping("/graduation/apply")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'STUDENT')")
     public ResponseEntity<GraduationApplicationDto> applyForGraduation(@Valid @RequestBody ApplyForGraduationRequest request, Authentication authentication) {
@@ -87,6 +91,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @Auditable(action = "ISSUE_SPECIAL_ORDER", entityName = "GraduationApplication", entityId = "#id")
     @PostMapping("/graduation/applications/{id}/special-order")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<GraduationApplicationDto> issueSpecialOrder(
@@ -110,6 +115,13 @@ public class ClearanceAndChedController {
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
     public ResponseEntity<ChedFormE1InstitutionalDto> exportFormE1Institutional(@PathVariable Long campusId) {
         ChedFormE1InstitutionalDto result = chedHemisExportService.exportFormE1Institutional(campusId);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/compliance/ched/e2/{campusId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
+    public ResponseEntity<List<ChedFormE2ProgramDto>> exportFormE2Programs(@PathVariable Long campusId) {
+        List<ChedFormE2ProgramDto> result = chedHemisExportService.exportFormE2Programs(campusId);
         return ResponseEntity.ok(result);
     }
 

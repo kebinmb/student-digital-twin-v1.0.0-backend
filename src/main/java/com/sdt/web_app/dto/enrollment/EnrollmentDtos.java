@@ -209,6 +209,8 @@ public class EnrollmentDtos {
             Long internalCourseId,
 
             @NotNull(message = "External numerical grade is required")
+            @jakarta.validation.constraints.DecimalMin(value = "1.00", message = "External numerical grade must be at least 1.00.")
+            @jakarta.validation.constraints.DecimalMax(value = "3.00", message = "CHED CMO 25 Violation: External numerical grade must be 3.00 or better to qualify for crediting.")
             BigDecimal externalNumericalGrade,
 
             @NotNull(message = "Credits granted is required")

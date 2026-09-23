@@ -39,6 +39,7 @@ public class CashieringService {
     private final StudentAccountLedgerRepository ledgerRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+    private final OrBookletService orBookletService;
 
     @Transactional
     public CashierReceiptDto processPayment(ProcessPaymentRequest request, Long cashierUserId) {
@@ -81,9 +82,12 @@ public class CashieringService {
             method = CashierReceipt.PaymentMethod.CASH;
         }
 
-        // Generate serial OR number OR-YYYY-00001
-        long totalReceipts = receiptRepository.countTotalReceipts() + 1;
-        String orNumber = "OR-" + Year.now().getValue() + "-" + String.format("%05d", totalReceipts);
+        // Generate serial OR number from active booklet or fallback to serial generator
+        String orNumber = (request.referenceNumber() != null && request.referenceNumber().startsWith("OR-")) 
+                ? request.referenceNumber().trim() 
+                : (orBookletService != null 
+                        ? orBookletService.consumeNextOrNumber(cashierUserId) 
+                        : "OR-" + Year.now().getValue() + "-" + String.format("%05d", receiptRepository.countTotalReceipts() + 1));
 
         CashierReceipt receipt = CashierReceipt.builder()
                 .orNumber(orNumber)
@@ -166,6 +170,38 @@ public class CashieringService {
         Slice<CashierReceipt> slice = receiptRepository.findByStudentProfileId(studentProfileId, pageable);
         Slice<CashierReceiptDto> responseSlice = slice.map(this::mapToReceiptDto);
         return SliceResponse.from(responseSlice);
+    }
+
+    @Transactional(readOnly = true)
+    public EodRcdReportDto generateEodRcdReport(Long cashierUserId, String reportDateStr) {
+        User cashier = userRepository.findById(cashierUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Cashier user not found: " + cashierUserId));
+
+        List<CashierReceipt> allReceipts = receiptRepository.findByCashierUserId(cashierUserId);
+
+        BigDecimal totalCollected = allReceipts.stream()
+                .filter(r -> r.getStatus() == CashierReceipt.ReceiptStatus.VALID)
+                .map(CashierReceipt::getAmountPaid)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<CashierReceiptDto> dtos = allReceipts.stream().map(this::mapToReceiptDto).toList();
+
+        EodRcdFundClusterSummaryDto stfSummary = new EodRcdFundClusterSummaryDto(
+                "FUND_164",
+                "Fund 164 - Special Trust Fund (Tuition & TOSF Income)",
+                totalCollected,
+                dtos.size()
+        );
+
+        return new EodRcdReportDto(
+                cashier.getId(),
+                cashier.getUsername(),
+                reportDateStr != null ? reportDateStr : java.time.LocalDate.now().toString(),
+                totalCollected,
+                dtos.size(),
+                List.of(stfSummary),
+                dtos
+        );
     }
 
     private BigDecimal getCurrentLedgerBalance(Long studentProfileId) {

@@ -22,6 +22,31 @@ public class StudentAssessmentInvoice {
         UNPAID, PARTIAL, PAID, FHE_COVERED, VOID
     }
 
+    @Converter(autoApply = true)
+    public static class InvoiceStatusConverter implements AttributeConverter<InvoiceStatus, String> {
+        @Override
+        public String convertToDatabaseColumn(InvoiceStatus attribute) {
+            return attribute != null ? attribute.name() : InvoiceStatus.UNPAID.name();
+        }
+
+        @Override
+        public InvoiceStatus convertToEntityAttribute(String dbData) {
+            if (dbData == null || dbData.isBlank()) return InvoiceStatus.UNPAID;
+            String norm = dbData.trim().toUpperCase();
+            return switch (norm) {
+                case "PARTIALLY_PAID" -> InvoiceStatus.PARTIAL;
+                case "CANCELLED" -> InvoiceStatus.VOID;
+                default -> {
+                    try {
+                        yield InvoiceStatus.valueOf(norm);
+                    } catch (IllegalArgumentException e) {
+                        yield InvoiceStatus.UNPAID;
+                    }
+                }
+            };
+        }
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -77,7 +102,7 @@ public class StudentAssessmentInvoice {
     @Builder.Default
     private BigDecimal outstandingBalance = BigDecimal.ZERO;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = InvoiceStatusConverter.class)
     @Column(nullable = false, length = 30)
     @Builder.Default
     private InvoiceStatus status = InvoiceStatus.UNPAID;

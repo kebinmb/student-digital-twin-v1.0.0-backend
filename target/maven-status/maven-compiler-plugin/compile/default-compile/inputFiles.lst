@@ -38,6 +38,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\DepartmentController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\FinancialController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\GradingScaleController.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\InstitutionalOutcomeController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\ProgramController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\TermController.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\lms\LmsSyncController.java
@@ -98,10 +99,12 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\faculty\FacultyProfile.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\CashierReceipt.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\FeeTemplate.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\OrBooklet.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\StudentAccountLedger.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\StudentAssessmentInvoice.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\UnifastFheClaim.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\UnifastFheClaimItem.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\financial\VoidedOfficialReceipt.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\grade\ClassRecordItem.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\grade\GradeSealingAudit.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\grade\SectionGradingCategory.java
@@ -122,6 +125,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\FeeCategoryCode.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\GradingScale.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\GradingScaleCode.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\InstitutionalOutcome.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\PaymentTermTemplate.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\Program.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\ProgramOutcome.java
@@ -132,6 +136,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\TermType.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\TermTypeConverter.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\lms\LtiDeployment.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\lms\LtiOidcState.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\lms\LtiUserMapping.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\ClassSchedule.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\ClassSection.java
@@ -165,10 +170,12 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\faculty\FacultyProfileRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\CashierReceiptRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\FeeTemplateRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\OrBookletRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\StudentAccountLedgerRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\StudentAssessmentInvoiceRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\UnifastFheClaimItemRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\UnifastFheClaimRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\financial\VoidedOfficialReceiptRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\grade\ClassRecordItemRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\grade\GradeSealingAuditRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\grade\SectionGradingCategoryRepository.java
@@ -186,12 +193,14 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\FeeCatalogRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\FeeCategoryRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\GradingScaleRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\InstitutionalOutcomeRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\PaymentTermTemplateRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\ProgramOutcomeRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\ProgramRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\ScholarshipDiscountRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\TermRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\lms\LtiDeploymentRepository.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\lms\LtiOidcStateRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\lms\LtiUserMappingRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\ClassScheduleRepository.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\ClassSectionRepository.java
@@ -220,6 +229,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\faculty\FacultySecurity.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\financial\CashieringService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\financial\FeeAssessmentService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\financial\OrBookletService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\financial\UnifastBillingService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\grade\ClassRecordService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\grade\GradeChangeService.java
@@ -237,6 +247,7 @@ C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\j
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\FinancialStructureService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\GradeTransmutationService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\GradingScaleService.java
+C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\InstitutionalOutcomeService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\PrerequisiteEvaluationService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\ProgramService.java
 C:\Users\jkmor\Documents\projects\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\TermLifecycleService.java

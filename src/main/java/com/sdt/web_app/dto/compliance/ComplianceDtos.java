@@ -122,6 +122,17 @@ public class ComplianceDtos {
     ) {}
 
     // CHED Regulatory Reporting DTOs
+    public record ChedFormE2ProgramDto(
+            Long programId,
+            String programCode,
+            String programName,
+            String cmoReference,
+            String major,
+            Integer totalUnitsRequired,
+            String governmentRecognitionNo,
+            Boolean active
+    ) {}
+
     public record ChedFormE1InstitutionalDto(
             Long campusId,
             String campusName,

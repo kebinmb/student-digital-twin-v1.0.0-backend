@@ -47,6 +47,12 @@ public class TransfereeCreditingService {
         BigDecimal totalUnitsCredited = BigDecimal.ZERO;
 
         for (CreditCourseItemRequest item : request.items()) {
+            if (item.externalNumericalGrade() == null || item.externalNumericalGrade().compareTo(new BigDecimal("3.00")) > 0) {
+                throw new IllegalArgumentException(String.format(
+                        "CHED CMO 25 s. 2015 Violation: External numerical grade '%s' for course '%s' exceeds maximum creditable passing threshold of 3.00.",
+                        item.externalNumericalGrade(), item.externalCourseCode()));
+            }
+
             Course internalCourse = courseRepository.findById(item.internalCourseId())
                     .orElseThrow(() -> new EntityNotFoundException("Internal course not found with ID: " + item.internalCourseId()));
 

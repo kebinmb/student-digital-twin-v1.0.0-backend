@@ -49,6 +49,21 @@ public class ChedHemisExportService {
     }
 
     @Transactional(readOnly = true)
+    public List<ChedFormE2ProgramDto> exportFormE2Programs(Long campusId) {
+        List<Program> programs = programRepository.findAll();
+        return programs.stream().map(prog -> new ChedFormE2ProgramDto(
+                prog.getId(),
+                prog.getCode(),
+                prog.getName(),
+                "CMO No. 25 s. 2015",
+                prog.getMajor() != null ? prog.getMajor() : "General",
+                prog.getTotalUnitsRequired() > 0 ? prog.getTotalUnitsRequired() : 140,
+                "GR-2026-0601",
+                prog.isActive()
+        )).toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<ChedFormE3EnrolmentDto> exportFormE3Enrolment(Long termId) {
         List<Program> programs = programRepository.findAll();
         List<ChedFormE3EnrolmentDto> report = new ArrayList<>();

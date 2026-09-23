@@ -14,6 +14,8 @@ import com.sdt.web_app.repositories.financial.UnifastFheClaimItemRepository;
 import com.sdt.web_app.repositories.financial.UnifastFheClaimRepository;
 import com.sdt.web_app.repositories.institution.CampusRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
+import com.sdt.web_app.entities.financial.StudentAccountLedger;
+import com.sdt.web_app.repositories.financial.StudentAccountLedgerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,7 @@ public class UnifastBillingService {
     private final UnifastFheClaimRepository claimRepository;
     private final UnifastFheClaimItemRepository claimItemRepository;
     private final StudentAssessmentInvoiceRepository invoiceRepository;
+    private final StudentAccountLedgerRepository ledgerRepository;
     private final TermRepository termRepository;
     private final com.sdt.web_app.service.institution.TermService termService;
     private final CampusRepository campusRepository;
@@ -124,6 +127,72 @@ public class UnifastBillingService {
         return mapToClaimDto(updatedBatch);
     }
 
+    @Transactional
+    public UnifastFheClaimItemDto disallowClaimItem(Long itemId, DisallowClaimItemRequest request, Long actorUserId) {
+        UnifastFheClaimItem item = claimItemRepository.findById(itemId)
+                .orElseThrow(() -> new EntityNotFoundException("UniFAST claim item not found with ID: " + itemId));
+
+        item.setVerificationStatus("DISQUALIFIED");
+        UnifastFheClaimItem savedItem = claimItemRepository.save(item);
+
+        StudentProfile student = item.getStudentProfile();
+        UnifastFheClaim claimBatch = item.getClaimBatch();
+
+        // Reversals on Student Account Ledger
+        if (student != null) {
+            List<StudentAccountLedger> latest = ledgerRepository.findLatestByStudentProfileId(student.getId());
+            BigDecimal currentBalance = latest.isEmpty() ? BigDecimal.ZERO : latest.get(0).getRunningBalance();
+            BigDecimal newBalance = currentBalance.add(item.getTotalClaimedAmount()).setScale(2, RoundingMode.HALF_UP);
+
+            User actor = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+
+            StudentAccountLedger disallowLedger = StudentAccountLedger.builder()
+                    .transactionNumber("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                    .studentProfile(student)
+                    .assessmentInvoice(item.getAssessmentInvoice())
+                    .term(claimBatch != null ? claimBatch.getTerm() : null)
+                    .transactionType(StudentAccountLedger.TransactionType.CHARGE)
+                    .description("UniFAST Audit Disallowance Reversal: " + (request != null && request.reason() != null ? request.reason() : "Disallowed by COA/UniFAST Audit"))
+                    .debitAmount(item.getTotalClaimedAmount())
+                    .creditAmount(BigDecimal.ZERO)
+                    .runningBalance(newBalance)
+                    .referenceNumber(claimBatch != null ? claimBatch.getClaimBatchNumber() : "DISALLOW-" + itemId)
+                    .createdByUser(actor)
+                    .build();
+            ledgerRepository.save(disallowLedger);
+
+            // Update student invoice outstanding balance & status
+            if (item.getAssessmentInvoice() != null) {
+                StudentAssessmentInvoice invoice = item.getAssessmentInvoice();
+                invoice.setOutstandingBalance(invoice.getOutstandingBalance().add(item.getTotalClaimedAmount()).setScale(2, RoundingMode.HALF_UP));
+                invoice.setStatus(StudentAssessmentInvoice.InvoiceStatus.UNPAID);
+                invoiceRepository.save(invoice);
+            }
+        }
+
+        // Recalculate parent batch totals
+        if (claimBatch != null) {
+            List<UnifastFheClaimItem> activeItems = claimItemRepository.findByClaimBatchId(claimBatch.getId()).stream()
+                    .filter(i -> !"DISQUALIFIED".equals(i.getVerificationStatus()))
+                    .toList();
+
+            BigDecimal tuition = activeItems.stream().map(UnifastFheClaimItem::getTuitionAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal tosf = activeItems.stream().map(i -> i.getMiscAmount().add(i.getLabAmount())).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal total = activeItems.stream().map(UnifastFheClaimItem::getTotalClaimedAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            claimBatch.setTotalBeneficiaries(activeItems.size());
+            claimBatch.setTotalTuitionClaimed(tuition.setScale(2, RoundingMode.HALF_UP));
+            claimBatch.setTotalTosfClaimed(tosf.setScale(2, RoundingMode.HALF_UP));
+            claimBatch.setTotalClaimAmount(total.setScale(2, RoundingMode.HALF_UP));
+            claimRepository.save(claimBatch);
+        }
+
+        log.warn("UniFAST claim item {} disallowed for student profile {}. Reason: {}",
+                itemId, student != null ? student.getStudentNumber() : "N/A", request != null ? request.reason() : "Audit Disallowance");
+
+        return mapToClaimItemDto(savedItem);
+    }
+
     @Transactional(readOnly = true)
     public List<UnifastFheClaimDto> getClaimsByTerm(Long termId) {
         return claimRepository.findByTermId(termId).stream()
@@ -182,3 +251,4 @@ public class UnifastBillingService {
         );
     }
 }
+

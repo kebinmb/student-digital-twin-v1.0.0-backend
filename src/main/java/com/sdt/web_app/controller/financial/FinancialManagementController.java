@@ -1,8 +1,10 @@
 package com.sdt.web_app.controller.financial;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.financial.FinancialDtos.*;
 import com.sdt.web_app.service.financial.CashieringService;
 import com.sdt.web_app.service.financial.FeeAssessmentService;
+import com.sdt.web_app.service.financial.OrBookletService;
 import com.sdt.web_app.service.financial.UnifastBillingService;
 import com.sdt.web_app.service.security.SecurityUtils;
 import jakarta.validation.Valid;
@@ -23,8 +25,10 @@ public class FinancialManagementController {
     private final FeeAssessmentService feeAssessmentService;
     private final CashieringService cashieringService;
     private final UnifastBillingService unifastBillingService;
+    private final OrBookletService orBookletService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "CREATE_FEE_TEMPLATE", entityName = "FeeTemplate")
     @PostMapping("/fee-templates")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'ACCOUNTANT')")
     public ResponseEntity<FeeTemplateDto> createFeeTemplate(@Valid @RequestBody CreateFeeTemplateRequest request, Authentication authentication) {
@@ -39,11 +43,21 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "ASSESS_ENROLLMENT", entityName = "StudentAssessmentInvoice", entityId = "#enrollmentId")
     @PostMapping("/assess/{enrollmentId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'ACCOUNTANT', 'CASHIER')")
     public ResponseEntity<StudentAssessmentInvoiceDto> assessEnrollment(@PathVariable Long enrollmentId, Authentication authentication) {
         Long actorUserId = securityUtils.resolveUserId(authentication);
         StudentAssessmentInvoiceDto result = feeAssessmentService.assessEnrollment(enrollmentId, actorUserId);
+        return ResponseEntity.ok(result);
+    }
+
+    @Auditable(action = "ADJUST_ASSESSMENT_ADD_DROP", entityName = "StudentAssessmentInvoice", entityId = "#enrollmentId")
+    @PostMapping("/assess/{enrollmentId}/adjust")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'ACCOUNTANT', 'CASHIER')")
+    public ResponseEntity<StudentAssessmentInvoiceDto> adjustAssessmentForAddDrop(@PathVariable Long enrollmentId, Authentication authentication) {
+        Long actorUserId = securityUtils.resolveUserId(authentication);
+        StudentAssessmentInvoiceDto result = feeAssessmentService.adjustAssessmentForAddDrop(enrollmentId, actorUserId);
         return ResponseEntity.ok(result);
     }
 
@@ -67,6 +81,7 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "PROCESS_PAYMENT", entityName = "CashierReceipt")
     @PostMapping("/payments")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
     public ResponseEntity<CashierReceiptDto> processPayment(@Valid @RequestBody ProcessPaymentRequest request, Authentication authentication) {
@@ -97,6 +112,40 @@ public class FinancialManagementController {
         return ResponseEntity.ok(cashieringService.getReceiptsByStudentProfileSlice(studentProfileId, page, size, sortBy, sortDir));
     }
 
+    @Auditable(action = "CREATE_OR_BOOKLET", entityName = "OrBooklet")
+    @PostMapping("/or-booklets")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
+    public ResponseEntity<OrBookletDto> createOrBooklet(@Valid @RequestBody CreateOrBookletRequest request) {
+        OrBookletDto result = orBookletService.createBooklet(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @GetMapping("/or-booklets/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
+    public ResponseEntity<OrBookletDto> getActiveBookletForCashier(Authentication authentication) {
+        Long cashierUserId = securityUtils.resolveUserId(authentication);
+        OrBookletDto result = orBookletService.getActiveBookletForCashier(cashierUserId);
+        return ResponseEntity.ok(result);
+    }
+
+    @Auditable(action = "VOID_OFFICIAL_RECEIPT", entityName = "VoidedOfficialReceipt")
+    @PostMapping("/or-booklets/void")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
+    public ResponseEntity<VoidedOfficialReceiptDto> voidOfficialReceipt(@Valid @RequestBody VoidOfficialReceiptRequest request, Authentication authentication) {
+        Long cashierUserId = securityUtils.resolveUserId(authentication);
+        VoidedOfficialReceiptDto result = orBookletService.voidOfficialReceipt(request, cashierUserId);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/cashier/eod-rcd")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
+    public ResponseEntity<EodRcdReportDto> generateEodRcdReport(@RequestParam(name = "date", required = false) String date, Authentication authentication) {
+        Long cashierUserId = securityUtils.resolveUserId(authentication);
+        EodRcdReportDto result = cashieringService.generateEodRcdReport(cashierUserId, date);
+        return ResponseEntity.ok(result);
+    }
+
+    @Auditable(action = "GENERATE_UNIFAST_CLAIM", entityName = "UnifastFheClaim")
     @PostMapping("/unifast/claims")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
     public ResponseEntity<UnifastFheClaimDto> generateUnifastClaimBatch(@Valid @RequestBody CreateUnifastClaimRequest request, Authentication authentication) {
@@ -118,4 +167,14 @@ public class FinancialManagementController {
         UnifastFheClaimDto result = unifastBillingService.getClaimBatch(claimBatchId);
         return ResponseEntity.ok(result);
     }
+
+    @Auditable(action = "DISALLOW_UNIFAST_CLAIM_ITEM", entityName = "UnifastFheClaimItem", entityId = "#itemId")
+    @PutMapping("/unifast/claims/items/{itemId}/disallow")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
+    public ResponseEntity<UnifastFheClaimItemDto> disallowClaimItem(@PathVariable Long itemId, @Valid @RequestBody DisallowClaimItemRequest request, Authentication authentication) {
+        Long actorUserId = securityUtils.resolveUserId(authentication);
+        UnifastFheClaimItemDto result = unifastBillingService.disallowClaimItem(itemId, request, actorUserId);
+        return ResponseEntity.ok(result);
+    }
 }
+

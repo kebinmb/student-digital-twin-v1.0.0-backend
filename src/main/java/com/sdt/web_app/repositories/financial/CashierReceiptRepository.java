@@ -19,6 +19,9 @@ public interface CashierReceiptRepository extends JpaRepository<CashierReceipt, 
 
     Slice<CashierReceipt> findByStudentProfileId(Long studentProfileId, Pageable pageable);
 
+    @Query("SELECT r FROM CashierReceipt r WHERE r.cashierUser.id = :cashierUserId ORDER BY r.issuedAt DESC")
+    List<CashierReceipt> findByCashierUserId(Long cashierUserId);
+
     @Query("SELECT COUNT(r) FROM CashierReceipt r")
     long countTotalReceipts();
 }

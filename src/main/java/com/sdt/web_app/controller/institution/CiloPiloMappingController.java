@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.institution;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.institution.CiloPiloMappingDtos.*;
 import com.sdt.web_app.service.institution.CiloPiloMappingService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class CiloPiloMappingController {
 
     private final CiloPiloMappingService mappingService;
 
+    @Auditable(action = "SAVE_CILO_PILO_MAPPING", entityName = "CiloPiloMapping")
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<CiloPiloMappingResponse> createOrUpdateMapping(

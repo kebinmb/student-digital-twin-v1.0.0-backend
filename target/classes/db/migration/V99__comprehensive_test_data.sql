@@ -203,16 +203,16 @@ AS new_ft ON DUPLICATE KEY UPDATE tuition_per_unit = new_ft.tuition_per_unit;
 
 INSERT INTO student_assessment_invoices (id, invoice_number, student_enrollment_id, student_profile_id, term_id, total_tuition_fee, total_lab_fee, total_misc_fee, total_gross_assessment, fhe_subsidy_amount, scholarship_discount_amount, net_assessed_amount, total_paid_amount, outstanding_balance, status, is_fhe_eligible)
 VALUES 
-    (10, 'INV-2026-0001', 10, 10, 10, 1800.00, 1000.00, 2000.00, 4800.00, 4800.00, 0.00, 0.00, 0.00, 0.00, 'PAID', TRUE),
-    (11, 'INV-2026-0002', 11, 11, 10, 1800.00, 1000.00, 2000.00, 4800.00, 0.00, 0.00, 4800.00, 1000.00, 3800.00, 'PARTIALLY_PAID', FALSE),
-    (12, 'INV-2026-0003', 12, 12, 10, 1800.00, 1000.00, 2000.00, 4800.00, 4800.00, 0.00, 0.00, 0.00, 0.00, 'PAID', TRUE)
+    (10, 'INV-2026-0001', 10, 10, 10, 1800.00, 1000.00, 2000.00, 4800.00, 4800.00, 0.00, 0.00, 0.00, 0.00, 'FHE_COVERED', TRUE),
+    (11, 'INV-2026-0002', 11, 11, 10, 1800.00, 1000.00, 2000.00, 4800.00, 0.00, 0.00, 4800.00, 1000.00, 3800.00, 'PARTIAL', FALSE),
+    (12, 'INV-2026-0003', 12, 12, 10, 1800.00, 1000.00, 2000.00, 4800.00, 4800.00, 0.00, 0.00, 0.00, 0.00, 'FHE_COVERED', TRUE)
 AS new_inv ON DUPLICATE KEY UPDATE outstanding_balance = new_inv.outstanding_balance;
 
 INSERT INTO student_account_ledgers (id, transaction_number, student_profile_id, term_id, assessment_invoice_id, transaction_type, description, debit_amount, credit_amount, running_balance, reference_number, created_by_user_id)
 VALUES 
-    (10, 'TXN-2026-0001', 10, 10, 10, 'ASSESSMENT', '1st Semester AY 2026-2027 Assessment', 4800.00, 0.00, 4800.00, 'INV-2026-0001', 17),
-    (11, 'TXN-2026-0002', 10, 10, 10, 'UNIFAST_SUBSIDY', 'RA 10931 Free Higher Education Subsidy', 0.00, 4800.00, 0.00, 'FHE-2026-001', 17),
-    (12, 'TXN-2026-0003', 11, 10, 11, 'ASSESSMENT', '1st Semester AY 2026-2027 Assessment', 4800.00, 0.00, 4800.00, 'INV-2026-0002', 17),
+    (10, 'TXN-2026-0001', 10, 10, 10, 'CHARGE', '1st Semester AY 2026-2027 Gross Assessment', 4800.00, 0.00, 4800.00, 'INV-2026-0001', 17),
+    (11, 'TXN-2026-0002', 10, 10, 10, 'FHE_SUBSIDY', 'RA 10931 Free Higher Education Subsidy', 0.00, 4800.00, 0.00, 'FHE-2026-001', 17),
+    (12, 'TXN-2026-0003', 11, 10, 11, 'CHARGE', '1st Semester AY 2026-2027 Gross Assessment', 4800.00, 0.00, 4800.00, 'INV-2026-0002', 17),
     (13, 'TXN-2026-0004', 11, 10, 11, 'PAYMENT', 'Cash Payment Downpayment', 0.00, 1000.00, 3800.00, 'OR-2026-0001', 16)
 AS new_ledg ON DUPLICATE KEY UPDATE running_balance = new_ledg.running_balance;
 

@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.grade;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.grade.GradeDtos.*;
 import com.sdt.web_app.service.grade.GradeService;
 import com.sdt.web_app.service.security.SecurityUtils;
@@ -24,6 +25,7 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.getSectionRoster(id));
     }
 
+    @Auditable(action = "SAVE_GRADES", entityName = "ClassSection", entityId = "#id")
     @PutMapping("/{id}/grades")
     @PreAuthorize("@sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<GradeActionResponse> saveGrades(
@@ -34,6 +36,7 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.saveGrades(id, request, actorUserId));
     }
 
+    @Auditable(action = "VERIFY_GRADES", entityName = "ClassSection", entityId = "#id")
     @PostMapping("/{id}/grades/verify")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN') and @sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<GradeActionResponse> verifyGrades(
@@ -43,6 +46,7 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.verifyGrades(id, approverUserId));
     }
 
+    @Auditable(action = "REJECT_GRADES", entityName = "ClassSection", entityId = "#id")
     @PostMapping("/{id}/grades/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN') and @sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<GradeActionResponse> rejectGrades(
@@ -56,6 +60,7 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.rejectGrades(id, reason, approverUserId));
     }
 
+    @Auditable(action = "SEAL_GRADES", entityName = "ClassSection", entityId = "#id")
     @PostMapping("/{id}/grades/seal")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<GradeActionResponse> sealGrades(
@@ -65,6 +70,7 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.sealGrades(id, registrarUserId));
     }
 
+    @Auditable(action = "BATCH_VERIFY_GRADES", entityName = "ClassSection")
     @PostMapping("/batch/verify")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<java.util.List<GradeActionResponse>> batchVerifyGrades(
@@ -74,6 +80,7 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.batchVerifyGrades(sectionIds, approverUserId));
     }
 
+    @Auditable(action = "BATCH_SEAL_GRADES", entityName = "ClassSection")
     @PostMapping("/batch/seal")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<java.util.List<GradeActionResponse>> batchSealGrades(

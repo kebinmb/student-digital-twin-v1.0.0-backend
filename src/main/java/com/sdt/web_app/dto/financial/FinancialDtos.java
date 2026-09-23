@@ -157,4 +157,79 @@ public class FinancialDtos {
             @NotNull(message = "Campus ID is required")
             Long campusId
     ) {}
+
+    public record CreateOrBookletRequest(
+            @NotBlank(message = "Booklet code is required")
+            String bookletCode,
+
+            @NotBlank(message = "Start O.R. number is required")
+            String startOrNumber,
+
+            @NotBlank(message = "End O.R. number is required")
+            String endOrNumber,
+
+            @NotNull(message = "Assigned cashier user ID is required")
+            Long assignedCashierId
+    ) {}
+
+    public record OrBookletDto(
+            Long id,
+            String bookletCode,
+            String startOrNumber,
+            String endOrNumber,
+            String currentOrNumber,
+            Long assignedCashierId,
+            String assignedCashierUsername,
+            String status,
+            String createdAt
+    ) {}
+
+    public record VoidOfficialReceiptRequest(
+            @NotBlank(message = "O.R. number is required")
+            String orNumber,
+
+            @NotNull(message = "Booklet ID is required")
+            Long bookletId,
+
+            @NotBlank(message = "Void reason is required")
+            String voidReason
+    ) {}
+
+    public record VoidedOfficialReceiptDto(
+            Long id,
+            String orNumber,
+            Long bookletId,
+            Long voidedByCashierId,
+            String voidedByCashierUsername,
+            String voidReason,
+            String voidedAt
+    ) {}
+
+    public record PaymentTenderItem(
+            @NotBlank String paymentMethod,
+            @NotNull @DecimalMin("0.01") BigDecimal amount,
+            String referenceNumber
+    ) {}
+
+    public record EodRcdFundClusterSummaryDto(
+            String fundClusterCode,
+            String fundClusterName,
+            BigDecimal totalCollected,
+            int receiptCount
+    ) {}
+
+    public record EodRcdReportDto(
+            Long cashierUserId,
+            String cashierUsername,
+            String reportDate,
+            BigDecimal totalCollections,
+            int totalReceiptsIssued,
+            List<EodRcdFundClusterSummaryDto> fundClusterSummaries,
+            List<CashierReceiptDto> receipts
+    ) {}
+
+    public record DisallowClaimItemRequest(
+            @NotBlank(message = "Reason for disallowance is required")
+            String reason
+    ) {}
 }

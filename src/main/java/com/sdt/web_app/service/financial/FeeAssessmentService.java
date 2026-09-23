@@ -120,9 +120,20 @@ public class FeeAssessmentService {
         BigDecimal miscFee = template.getMiscellaneousFlatFee().add(template.getAthleticFlatFee()).setScale(2, RoundingMode.HALF_UP);
         BigDecimal grossAssessment = tuitionFee.add(labFee).add(miscFee).setScale(2, RoundingMode.HALF_UP);
 
-        // Evaluate RA 10931 FHE Eligibility
-        boolean isFheEligible = student.getEnrollmentStatus() == null ||
+        // Evaluate RA 10931 FHE Eligibility & MRR Guard
+        int yearsToComplete = (student.getProgram() != null && "GRADUATE".equalsIgnoreCase(student.getProgram().getDegreeLevel())) ? 2 : 4;
+        int maxAllowedSemesters = 2 * (yearsToComplete + 1);
+        long completedTermsCount = enrollmentRepository.findByStudentId(student.getId()).size();
+
+        boolean isMrrExceeded = completedTermsCount >= maxAllowedSemesters;
+        boolean isRegular = student.getEnrollmentStatus() == null ||
                 student.getEnrollmentStatus() == StudentProfile.EnrollmentStatus.REGULAR;
+        boolean isFheEligible = isRegular && !isMrrExceeded;
+
+        if (isMrrExceeded) {
+            log.info("Student {} exceeded Maximum Residency Rule (MRR) cap ({} enrolled terms vs {} max allowed). Transitioning to self-paying status.",
+                    student.getStudentNumber(), completedTermsCount, maxAllowedSemesters);
+        }
 
         BigDecimal fheSubsidy = isFheEligible ? grossAssessment : BigDecimal.ZERO;
         BigDecimal netAssessed = grossAssessment.subtract(fheSubsidy).setScale(2, RoundingMode.HALF_UP);
@@ -207,6 +218,94 @@ public class FeeAssessmentService {
                 enrollmentId, student.getStudentNumber(), savedInvoice.getInvoiceNumber(), grossAssessment, fheSubsidy, netAssessed);
 
         return mapToInvoiceDto(savedInvoice);
+    }
+
+    @Transactional
+    public StudentAssessmentInvoiceDto adjustAssessmentForAddDrop(Long enrollmentId, Long actorUserId) {
+        StudentEnrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student enrollment not found with ID: " + enrollmentId));
+
+        StudentAssessmentInvoice invoice = invoiceRepository.findByStudentEnrollmentId(enrollmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Assessment invoice not found for enrollment ID: " + enrollmentId));
+
+        StudentProfile student = enrollment.getStudent();
+        Term term = enrollment.getTerm();
+
+        FeeTemplate template = null;
+        if (term.getAcademicYear() != null) {
+            template = feeTemplateRepository.findFirstByAcademicYearIdAndActiveTrueOrderByCreatedAtDesc(term.getAcademicYear().getId()).orElse(null);
+        }
+        if (template == null) {
+            template = createDefaultFeeTemplate();
+        }
+
+        BigDecimal totalLecUnits = BigDecimal.ZERO;
+        BigDecimal totalLabUnits = BigDecimal.ZERO;
+
+        if (enrollment.getItems() != null) {
+            for (EnrollmentCourseItem item : enrollment.getItems()) {
+                if (item.getSection() != null && item.getSection().getCourse() != null) {
+                    BigDecimal lec = item.getSection().getCourse().getLectureUnits();
+                    BigDecimal lab = item.getSection().getCourse().getLabUnits();
+                    if (lec != null) totalLecUnits = totalLecUnits.add(lec);
+                    if (lab != null) totalLabUnits = totalLabUnits.add(lab);
+                }
+            }
+        }
+
+        BigDecimal newTuitionFee = totalLecUnits.multiply(template.getTuitionPerUnit()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal newLabFee = totalLabUnits.multiply(template.getLabFeePerUnit()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal newMiscFee = template.getMiscellaneousFlatFee().add(template.getAthleticFlatFee()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal newGrossAssessment = newTuitionFee.add(newLabFee).add(newMiscFee).setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal oldGrossAssessment = invoice.getTotalGrossAssessment();
+        BigDecimal difference = newGrossAssessment.subtract(oldGrossAssessment).setScale(2, RoundingMode.HALF_UP);
+
+        if (difference.compareTo(BigDecimal.ZERO) != 0) {
+            User actorUser = actorUserId != null ? userRepository.findById(actorUserId).orElse(null) : null;
+            BigDecimal currentBalance = getCurrentLedgerBalance(student.getId());
+            BigDecimal newBalance = currentBalance.add(difference).setScale(2, RoundingMode.HALF_UP);
+
+            StudentAccountLedger.TransactionType txnType = difference.compareTo(BigDecimal.ZERO) > 0 
+                    ? StudentAccountLedger.TransactionType.CHARGE 
+                    : StudentAccountLedger.TransactionType.ADJUSTMENT;
+
+            BigDecimal debit = difference.compareTo(BigDecimal.ZERO) > 0 ? difference : BigDecimal.ZERO;
+            BigDecimal credit = difference.compareTo(BigDecimal.ZERO) < 0 ? difference.abs() : BigDecimal.ZERO;
+
+            StudentAccountLedger adjustmentLedger = StudentAccountLedger.builder()
+                    .transactionNumber("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                    .studentProfile(student)
+                    .term(term)
+                    .assessmentInvoice(invoice)
+                    .transactionType(txnType)
+                    .description("Add/Drop Course Assessment Adjustment (" + (difference.compareTo(BigDecimal.ZERO) > 0 ? "+" : "") + difference + ")")
+                    .debitAmount(debit)
+                    .creditAmount(credit)
+                    .runningBalance(newBalance)
+                    .referenceNumber("ADJUST-" + invoice.getInvoiceNumber())
+                    .createdByUser(actorUser)
+                    .build();
+            ledgerRepository.save(adjustmentLedger);
+
+            invoice.setTotalTuitionFee(newTuitionFee);
+            invoice.setTotalLabFee(newLabFee);
+            invoice.setTotalMiscFee(newMiscFee);
+            invoice.setTotalGrossAssessment(newGrossAssessment);
+
+            if (invoice.isFheEligible()) {
+                invoice.setFheSubsidyAmount(newGrossAssessment);
+                invoice.setNetAssessedAmount(BigDecimal.ZERO);
+                invoice.setOutstandingBalance(BigDecimal.ZERO);
+            } else {
+                BigDecimal newNet = newGrossAssessment.subtract(invoice.getTotalPaidAmount()).setScale(2, RoundingMode.HALF_UP);
+                invoice.setNetAssessedAmount(newGrossAssessment);
+                invoice.setOutstandingBalance(newNet.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : newNet);
+            }
+            invoiceRepository.save(invoice);
+        }
+
+        return mapToInvoiceDto(invoice);
     }
 
     @Transactional(readOnly = true)

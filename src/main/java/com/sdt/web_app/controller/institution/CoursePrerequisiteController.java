@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.institution;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.institution.CoursePrerequisiteDtos.*;
 import com.sdt.web_app.service.institution.CoursePrerequisiteService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class CoursePrerequisiteController {
 
     private final CoursePrerequisiteService prerequisiteService;
 
+    @Auditable(action = "CREATE_PREREQUISITE", entityName = "CoursePrerequisite")
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<CoursePrerequisiteResponse> createPrerequisite(
@@ -38,6 +40,7 @@ public class CoursePrerequisiteController {
         return ResponseEntity.ok(prerequisiteService.getPrerequisitesByCourseId(courseId));
     }
 
+    @Auditable(action = "DELETE_PREREQUISITE", entityName = "CoursePrerequisite", entityId = "#prereqId")
     @DeleteMapping("/{prereqId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<Void> deletePrerequisite(

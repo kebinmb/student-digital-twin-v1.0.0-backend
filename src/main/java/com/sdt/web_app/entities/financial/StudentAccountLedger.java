@@ -22,6 +22,32 @@ public class StudentAccountLedger {
         CHARGE, PAYMENT, ADJUSTMENT, FHE_SUBSIDY, DISCOUNT
     }
 
+    @Converter(autoApply = true)
+    public static class TransactionTypeConverter implements AttributeConverter<TransactionType, String> {
+        @Override
+        public String convertToDatabaseColumn(TransactionType attribute) {
+            return attribute != null ? attribute.name() : TransactionType.CHARGE.name();
+        }
+
+        @Override
+        public TransactionType convertToEntityAttribute(String dbData) {
+            if (dbData == null || dbData.isBlank()) return TransactionType.CHARGE;
+            String norm = dbData.trim().toUpperCase();
+            return switch (norm) {
+                case "UNIFAST_SUBSIDY", "FHE_SUBSIDY_CREDIT" -> TransactionType.FHE_SUBSIDY;
+                case "ASSESSMENT", "GROSS_ASSESSMENT" -> TransactionType.CHARGE;
+                case "CASHIER_PAYMENT" -> TransactionType.PAYMENT;
+                default -> {
+                    try {
+                        yield TransactionType.valueOf(norm);
+                    } catch (IllegalArgumentException e) {
+                        yield TransactionType.CHARGE;
+                    }
+                }
+            };
+        }
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,7 +67,7 @@ public class StudentAccountLedger {
     @JoinColumn(name = "assessment_invoice_id")
     private StudentAssessmentInvoice assessmentInvoice;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = TransactionTypeConverter.class)
     @Column(name = "transaction_type", nullable = false, length = 30)
     private TransactionType transactionType;
 

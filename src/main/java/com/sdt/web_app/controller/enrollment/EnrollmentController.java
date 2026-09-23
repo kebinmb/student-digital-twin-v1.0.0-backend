@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.enrollment;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.admission.AdmissionDtos.AdmissionApplicationResponse;
 import com.sdt.web_app.dto.enrollment.EnrollmentDtos.*;
 import com.sdt.web_app.service.admission.AdmissionService;
@@ -46,6 +47,7 @@ public class EnrollmentController {
     // -------------------------------------------------------------------------
     // Section Enlistment (Atomic Capacity Check & Unit Ceiling Guard)
     // -------------------------------------------------------------------------
+    @Auditable(action = "ENLIST_SECTION", entityName = "StudentEnrollment", entityId = "#studentId")
     @PostMapping("/enlist/student/{studentId}")
     @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<StudentEnrollmentResponse> enlistSection(
@@ -54,6 +56,7 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.enlistSection(studentId, request));
     }
 
+    @Auditable(action = "DROP_SECTION", entityName = "EnrollmentCourseItem", entityId = "#sectionId")
     @DeleteMapping("/enlist/student/{studentId}/term/{termId}/section/{sectionId}")
     @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<StudentEnrollmentResponse> removeEnlistedSection(
@@ -63,6 +66,7 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.removeEnlistedSection(studentId, termId, sectionId));
     }
 
+    @Auditable(action = "CONFIRM_ENROLLMENT", entityName = "StudentEnrollment", entityId = "#studentId")
     @PostMapping("/confirm/student/{studentId}")
     @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<EnrollmentConfirmationDto> confirmEnrollment(
@@ -89,6 +93,7 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.getEnrollmentsByTerm(termId));
     }
 
+    @Auditable(action = "UPDATE_ENROLLMENT_STATUS", entityName = "StudentEnrollment", entityId = "#enrollmentId")
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<StudentEnrollmentResponse> updateEnrollmentStatus(

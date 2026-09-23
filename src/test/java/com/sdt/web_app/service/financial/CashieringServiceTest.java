@@ -38,6 +38,8 @@ class CashieringServiceTest {
     private StudentProfileRepository studentProfileRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private OrBookletService orBookletService;
 
     @InjectMocks
     private CashieringService cashieringService;
@@ -72,7 +74,7 @@ class CashieringServiceTest {
         given(studentProfileRepository.findById(50L)).willReturn(Optional.of(studentProfile));
         given(userRepository.findById(10L)).willReturn(Optional.of(cashier));
         given(invoiceRepository.findById(100L)).willReturn(Optional.of(invoice));
-        given(receiptRepository.countTotalReceipts()).willReturn(0L);
+        given(orBookletService.consumeNextOrNumber(any())).willReturn("OR-2026-00001");
         given(receiptRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
         ProcessPaymentRequest request = new ProcessPaymentRequest(
