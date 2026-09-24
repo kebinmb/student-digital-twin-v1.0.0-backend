@@ -54,8 +54,8 @@ public class DataScopingService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        // ADMIN and REGISTRAR have unrestricted institutional-wide scope
-        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_REGISTRAR")) {
+        // ADMIN, REGISTRAR, CASHIER, and ACCOUNTANT have unrestricted institutional-wide scope
+        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_REGISTRAR") || roles.contains("ROLE_CASHIER") || roles.contains("ROLE_ACCOUNTANT")) {
             return Optional.empty();
         }
 

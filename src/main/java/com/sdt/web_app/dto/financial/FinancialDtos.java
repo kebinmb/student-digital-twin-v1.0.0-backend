@@ -96,8 +96,18 @@ public class FinancialDtos {
             String paymentMethod,
 
             String referenceNumber,
-            String remarks
-    ) {}
+            String remarks,
+            String checkNumber,
+            String draweeBank,
+            String fundClusterCode
+    ) {
+        public ProcessPaymentRequest(
+                Long studentProfileId, Long assessmentInvoiceId, BigDecimal amountTendered, BigDecimal amountPaid,
+                String paymentMethod, String referenceNumber, String remarks
+        ) {
+            this(studentProfileId, assessmentInvoiceId, amountTendered, amountPaid, paymentMethod, referenceNumber, remarks, null, null, "FUND_164");
+        }
+    }
 
     public record CashierReceiptDto(
             Long id,
@@ -115,7 +125,72 @@ public class FinancialDtos {
             String status,
             Long cashierUserId,
             String cashierUsername,
-            String issuedAt
+            String issuedAt,
+            String checkNumber,
+            String draweeBank,
+            String fundClusterCode
+    ) {
+        public CashierReceiptDto(
+                Long id, String orNumber, Long studentProfileId, String studentNumber, String studentName,
+                Long assessmentInvoiceId, BigDecimal amountTendered, BigDecimal amountPaid, BigDecimal changeAmount,
+                String paymentMethod, String referenceNumber, String remarks, String status,
+                Long cashierUserId, String cashierUsername, String issuedAt
+        ) {
+            this(id, orNumber, studentProfileId, studentNumber, studentName, assessmentInvoiceId,
+                    amountTendered, amountPaid, changeAmount, paymentMethod, referenceNumber, remarks, status,
+                    cashierUserId, cashierUsername, issuedAt, null, null, "FUND_164");
+        }
+    }
+
+    public record LinkBizWebhookRequest(
+            @NotBlank String merchantCode,
+            @NotBlank String bankReferenceNumber,
+            @NotBlank String studentNumber,
+            @NotNull @DecimalMin("0.01") BigDecimal transactionAmount,
+            String paymentOption,
+            String transactionDate,
+            String checksum
+    ) {}
+
+    public record LinkBizWebhookResponse(
+            String status,
+            String message,
+            String orNumber,
+            String timestamp
+    ) {}
+
+    public record UnifastForm2BeneficiaryDto(
+            int sequenceNumber,
+            String studentNumber,
+            String learnerReferenceNumber,
+            String lastName,
+            String firstName,
+            String middleName,
+            String extensionName,
+            String sex,
+            String programCode,
+            int yearLevel,
+            BigDecimal lectureUnits,
+            BigDecimal labUnits,
+            BigDecimal totalUnits,
+            BigDecimal tuitionFee,
+            BigDecimal admissionFee,
+            BigDecimal entranceFee,
+            BigDecimal registrationFee,
+            BigDecimal medicalDentalFee,
+            BigDecimal libraryFee,
+            BigDecimal labFee,
+            BigDecimal itFee,
+            BigDecimal athleticFee,
+            BigDecimal culturalFee,
+            BigDecimal guidanceFee,
+            BigDecimal developmentFee,
+            BigDecimal handbookIdFee,
+            BigDecimal examinationFee,
+            BigDecimal totalTosf,
+            BigDecimal totalGrossClaim,
+            String verificationHash,
+            String auditStatus
     ) {}
 
     public record UnifastFheClaimDto(

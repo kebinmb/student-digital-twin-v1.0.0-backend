@@ -68,6 +68,7 @@ public class FinancialManagementController {
     }
 
     @GetMapping("/invoices/student/{studentProfileId}/term/{termId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<StudentAssessmentInvoiceDto> getInvoiceByStudentAndTerm(
             @PathVariable Long studentProfileId,
             @PathVariable Long termId) {
@@ -76,6 +77,7 @@ public class FinancialManagementController {
     }
 
     @GetMapping("/ledgers/student/{studentProfileId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<List<StudentAccountLedgerDto>> getStudentLedgerHistory(@PathVariable Long studentProfileId) {
         List<StudentAccountLedgerDto> result = feeAssessmentService.getStudentLedgerHistory(studentProfileId);
         return ResponseEntity.ok(result);
@@ -97,12 +99,14 @@ public class FinancialManagementController {
     }
 
     @GetMapping("/receipts/student/{studentProfileId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<List<CashierReceiptDto>> getReceiptsByStudentProfile(@PathVariable Long studentProfileId) {
         List<CashierReceiptDto> result = cashieringService.getReceiptsByStudentProfile(studentProfileId);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/receipts/student/{studentProfileId}/slice")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<CashierReceiptDto>> getReceiptsByStudentProfileSlice(
             @PathVariable Long studentProfileId,
             @RequestParam(name = "page", defaultValue = "0") int page,
@@ -175,6 +179,21 @@ public class FinancialManagementController {
         Long actorUserId = securityUtils.resolveUserId(authentication);
         UnifastFheClaimItemDto result = unifastBillingService.disallowClaimItem(itemId, request, actorUserId);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping(value = "/unifast/claims/{claimBatchId}/form2/export", produces = "text/csv")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
+    public ResponseEntity<String> exportForm2Csv(@PathVariable Long claimBatchId) {
+        String csvContent = unifastBillingService.exportForm2Csv(claimBatchId);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"UniFAST_Form_2_Batch_" + claimBatchId + ".csv\"")
+                .body(csvContent);
+    }
+
+    @PostMapping("/gateways/linkbiz/webhook")
+    public ResponseEntity<LinkBizWebhookResponse> processLinkBizWebhook(@Valid @RequestBody LinkBizWebhookRequest request) {
+        LinkBizWebhookResponse response = cashieringService.processLinkBizPayment(request);
+        return ResponseEntity.ok(response);
     }
 }
 

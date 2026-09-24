@@ -28,19 +28,19 @@ public class AcademicYearController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<AcademicYearResponse>> getAllAcademicYears() {
         return ResponseEntity.ok(academicYearService.getAllAcademicYears());
     }
 
     @GetMapping("/current")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<AcademicYearResponse> getCurrentAcademicYear() {
         return ResponseEntity.ok(academicYearService.getCurrentAcademicYear());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<AcademicYearResponse> getAcademicYearById(@PathVariable Long id) {
         return ResponseEntity.ok(academicYearService.getAcademicYearById(id));
     }

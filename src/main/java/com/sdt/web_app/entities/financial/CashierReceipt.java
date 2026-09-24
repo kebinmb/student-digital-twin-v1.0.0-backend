@@ -18,7 +18,7 @@ import java.time.Instant;
 public class CashierReceipt {
 
     public enum PaymentMethod {
-        CASH, ONLINE_BANKING, GCASH, CHECK, SCHOLARSHIP
+        CASH, ONLINE_BANKING, GCASH, MAYA, LINKBIZ, CHECK, BANK_TRANSFER, SCHOLARSHIP
     }
 
     public enum ReceiptStatus {
@@ -59,8 +59,18 @@ public class CashierReceipt {
     @Column(name = "reference_number", length = 100)
     private String referenceNumber;
 
+    @Column(name = "check_number", length = 50)
+    private String checkNumber;
+
+    @Column(name = "drawee_bank", length = 100)
+    private String draweeBank;
+
     @Column(length = 255)
     private String remarks;
+
+    @Column(name = "fund_cluster_code", length = 20)
+    @Builder.Default
+    private String fundClusterCode = "FUND_164";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

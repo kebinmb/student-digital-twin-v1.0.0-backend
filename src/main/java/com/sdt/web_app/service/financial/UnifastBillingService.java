@@ -207,6 +207,130 @@ public class UnifastBillingService {
         return mapToClaimDto(claim);
     }
 
+    @Transactional(readOnly = true)
+    public String exportForm2Csv(Long claimBatchId) {
+        UnifastFheClaim claim = claimRepository.findById(claimBatchId)
+                .orElseThrow(() -> new EntityNotFoundException("UniFAST FHE claim batch not found: " + claimBatchId));
+
+        List<UnifastFheClaimItem> items = claimItemRepository.findByClaimBatchId(claimBatchId);
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("Seq No,Student ID,Learner Reference No,Last Name,First Name,Middle Name,Extension Name,Sex,Program Code,Program Name,Year Level,Academic Units,Tuition Fee,Athletic Fee,Computer Fee,Cultural Fee,Development Fee,Admission Fee,Guidance Fee,Handbook Fee,Laboratory Fee,Library Fee,Medical Dental Fee,Registration Fee,School ID Fee,Total TOSF,Total FHE Amount,Remarks\n");
+
+        int seqNo = 1;
+        for (UnifastFheClaimItem item : items) {
+            StudentProfile sp = item.getStudentProfile();
+            String studentNumber = sp != null ? sp.getStudentNumber() : "N/A";
+            String lrn = "N/A";
+            String lastName = (sp != null && sp.getLastName() != null) ? sp.getLastName() : (sp != null && sp.getUser() != null ? sp.getUser().getUsername() : "N/A");
+            String firstName = (sp != null && sp.getFirstName() != null) ? sp.getFirstName() : "N/A";
+            String middleName = (sp != null && sp.getMiddleName() != null) ? sp.getMiddleName() : "";
+            String extName = (sp != null && sp.getSuffix() != null) ? sp.getSuffix() : "";
+            String sex = "M/F";
+            String progCode = (sp != null && sp.getProgram() != null) ? sp.getProgram().getCode() : "N/A";
+            String progName = (sp != null && sp.getProgram() != null) ? sp.getProgram().getName() : "N/A";
+            int yearLevel = sp != null ? sp.getYearLevel() : 1;
+            BigDecimal units = item.getEnrolledUnits() != null ? item.getEnrolledUnits() : BigDecimal.ZERO;
+
+            BigDecimal tuitionFee = item.getTuitionAmount() != null ? item.getTuitionAmount() : BigDecimal.ZERO;
+            BigDecimal labFee = item.getLabAmount() != null ? item.getLabAmount() : BigDecimal.ZERO;
+            BigDecimal misc = item.getMiscAmount() != null ? item.getMiscAmount() : BigDecimal.ZERO;
+
+            BigDecimal baseAthletic = new BigDecimal("100.00");
+            BigDecimal baseComputer = new BigDecimal("250.00");
+            BigDecimal baseCultural = new BigDecimal("50.00");
+            BigDecimal baseDev = new BigDecimal("150.00");
+            BigDecimal baseAdmission = (yearLevel == 1) ? new BigDecimal("100.00") : BigDecimal.ZERO;
+            BigDecimal baseGuidance = new BigDecimal("50.00");
+            BigDecimal baseHandbook = (yearLevel == 1) ? new BigDecimal("50.00") : BigDecimal.ZERO;
+            BigDecimal baseLibrary = new BigDecimal("150.00");
+            BigDecimal baseMedical = new BigDecimal("100.00");
+            BigDecimal baseReg = new BigDecimal("100.00");
+            BigDecimal baseId = (yearLevel == 1) ? new BigDecimal("50.00") : BigDecimal.ZERO;
+
+            BigDecimal baseTotalMisc = baseAthletic.add(baseComputer).add(baseCultural).add(baseDev)
+                    .add(baseAdmission).add(baseGuidance).add(baseHandbook).add(baseLibrary)
+                    .add(baseMedical).add(baseReg).add(baseId);
+
+            BigDecimal athleticFee, computerFee, culturalFee, devFee, admissionFee;
+            BigDecimal guidanceFee, handbookFee, libraryFee, medicalFee, regFee, idFee;
+
+            if (misc.compareTo(BigDecimal.ZERO) > 0 && baseTotalMisc.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal ratio = misc.divide(baseTotalMisc, 6, RoundingMode.HALF_UP);
+                athleticFee = baseAthletic.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                computerFee = baseComputer.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                culturalFee = baseCultural.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                devFee = baseDev.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                admissionFee = baseAdmission.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                guidanceFee = baseGuidance.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                handbookFee = baseHandbook.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                libraryFee = baseLibrary.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                medicalFee = baseMedical.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                idFee = baseId.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal miscSubtotal = athleticFee.add(computerFee).add(culturalFee).add(devFee)
+                        .add(admissionFee).add(guidanceFee).add(handbookFee).add(libraryFee)
+                        .add(medicalFee).add(idFee);
+                regFee = misc.subtract(miscSubtotal).setScale(2, RoundingMode.HALF_UP);
+            } else {
+                athleticFee = BigDecimal.ZERO.setScale(2);
+                computerFee = BigDecimal.ZERO.setScale(2);
+                culturalFee = BigDecimal.ZERO.setScale(2);
+                devFee = BigDecimal.ZERO.setScale(2);
+                admissionFee = BigDecimal.ZERO.setScale(2);
+                guidanceFee = BigDecimal.ZERO.setScale(2);
+                handbookFee = BigDecimal.ZERO.setScale(2);
+                libraryFee = BigDecimal.ZERO.setScale(2);
+                medicalFee = BigDecimal.ZERO.setScale(2);
+                regFee = BigDecimal.ZERO.setScale(2);
+                idFee = BigDecimal.ZERO.setScale(2);
+            }
+
+            BigDecimal totalTosf = misc.add(labFee).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal totalFheAmount = tuitionFee.add(totalTosf).setScale(2, RoundingMode.HALF_UP);
+            String remarks = item.getVerificationStatus() != null ? item.getVerificationStatus() : "VERIFIED";
+
+            csv.append(seqNo++).append(",")
+                    .append(escapeCsv(studentNumber)).append(",")
+                    .append(escapeCsv(lrn)).append(",")
+                    .append(escapeCsv(lastName)).append(",")
+                    .append(escapeCsv(firstName)).append(",")
+                    .append(escapeCsv(middleName)).append(",")
+                    .append(escapeCsv(extName)).append(",")
+                    .append(escapeCsv(sex)).append(",")
+                    .append(escapeCsv(progCode)).append(",")
+                    .append(escapeCsv(progName)).append(",")
+                    .append(yearLevel).append(",")
+                    .append(units.setScale(2, RoundingMode.HALF_UP)).append(",")
+                    .append(tuitionFee.setScale(2, RoundingMode.HALF_UP)).append(",")
+                    .append(athleticFee).append(",")
+                    .append(computerFee).append(",")
+                    .append(culturalFee).append(",")
+                    .append(devFee).append(",")
+                    .append(admissionFee).append(",")
+                    .append(guidanceFee).append(",")
+                    .append(handbookFee).append(",")
+                    .append(labFee.setScale(2, RoundingMode.HALF_UP)).append(",")
+                    .append(libraryFee).append(",")
+                    .append(medicalFee).append(",")
+                    .append(regFee).append(",")
+                    .append(idFee).append(",")
+                    .append(totalTosf).append(",")
+                    .append(totalFheAmount).append(",")
+                    .append(escapeCsv(remarks))
+                    .append("\n");
+        }
+
+        return csv.toString();
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
     private UnifastFheClaimDto mapToClaimDto(UnifastFheClaim c) {
         List<UnifastFheClaimItemDto> itemDtos = (c.getClaimItems() != null ? c.getClaimItems() : List.<UnifastFheClaimItem>of()).stream()
                 .map(this::mapToClaimItemDto)

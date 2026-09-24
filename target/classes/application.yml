@@ -33,8 +33,11 @@ spring:
     properties:
       hibernate:
         format_sql: false
+        order_inserts: true
+        order_updates: true
         jdbc:
           batch_size: 25
+          batch_versioned_data: true
 
   security:
     oauth2:

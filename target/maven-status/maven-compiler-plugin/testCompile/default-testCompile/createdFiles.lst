@@ -18,6 +18,7 @@ com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTe
 com\sdt\web_app\service\analytics\DigitalTwinRiskServiceTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$1$1.class
 com\sdt\web_app\WebAppApplicationTests.class
+com\sdt\web_app\service\financial\UnifastBillingServiceTest.class
 com\sdt\web_app\service\grade\GradeServiceTest.class
 com\sdt\web_app\service\financial\FeeAssessmentServiceTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$StringMarshaller.class
@@ -54,6 +55,7 @@ com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$1.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$CurriculumStructureTests.class
 com\sdt\web_app\service\analytics\QrAttendanceServiceTest.class
 com\sdt\web_app\service\enrollment\StudentServiceTest.class
+com\sdt\web_app\service\financial\OrBookletServiceTest.class
 com\sdt\web_app\service\institution\TermLifecycleServiceTest.class
 com\sdt\web_app\service\admission\AdmissionQueueAndApplicationServiceTest.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class

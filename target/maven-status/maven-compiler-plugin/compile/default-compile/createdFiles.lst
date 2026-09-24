@@ -160,6 +160,7 @@ com\sdt\web_app\entities\financial\CashierReceipt$CashierReceiptBuilder.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$SemesterBlockDto.class
 com\sdt\web_app\entities\institution\ProgramOutcome.class
 com\sdt\web_app\dto\faculty\FacultyDtos$CreateFacultyAccountRequest.class
+com\sdt\web_app\entities\financial\FundCluster$FundClusterBuilder.class
 com\sdt\web_app\specifications\ClassSectionSpecifications.class
 com\sdt\web_app\controller\institution\CoursePrerequisiteController.class
 com\sdt\web_app\dto\admission\AdmissionDtos$AdmissionConfigDto.class
@@ -244,6 +245,7 @@ com\sdt\web_app\entities\scheduling\Room$RoomBuilder.class
 com\sdt\web_app\entities\admission\EntranceExamSlot.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$AddPrerequisiteRequest.class
 com\sdt\web_app\repositories\admission\AdmissionApplicationRepository$PostExamApplicantEquityStatisticsProjection.class
+com\sdt\web_app\repositories\financial\FundClusterRepository.class
 com\sdt\web_app\aspect\AuditLogAspect.class
 com\sdt\web_app\dto\analytics\AnalyticsDtos$DigitalTwinRiskProfileDto.class
 com\sdt\web_app\controller\scheduling\SchedulingController.class
@@ -264,6 +266,7 @@ com\sdt\web_app\entities\institution\Department$DepartmentBuilder.class
 com\sdt\web_app\config\JwtDenylistValidator.class
 com\sdt\web_app\dto\institution\DepartmentDtos.class
 com\sdt\web_app\repositories\admission\EntranceExamSlotRepository.class
+com\sdt\web_app\dto\financial\FinancialDtos$LinkBizWebhookResponse.class
 com\sdt\web_app\dto\institution\CoursePrerequisiteDtos$CreateCoursePrerequisiteRequest.class
 com\sdt\web_app\entities\financial\StudentAssessmentInvoice.class
 com\sdt\web_app\repositories\financial\OrBookletRepository.class
@@ -440,6 +443,7 @@ com\sdt\web_app\entities\enrollment\StudentProfile$ClearanceStatus.class
 com\sdt\web_app\repositories\grade\StudentAssessmentScoreRepository.class
 com\sdt\web_app\service\institution\CoursePrerequisiteService.class
 com\sdt\web_app\dto\compliance\ComplianceDtos$ChedFormE1InstitutionalDto.class
+com\sdt\web_app\dto\financial\FinancialDtos$UnifastForm2BeneficiaryDto.class
 com\sdt\web_app\dto\institution\TermDtos$CreateTermRequest.class
 com\sdt\web_app\dto\institution\CourseOutcomeDtos$CourseOutcomeResponse.class
 com\sdt\web_app\repositories\institution\CurriculumRepository.class
@@ -460,6 +464,7 @@ com\sdt\web_app\entities\enrollment\EnrollmentCourseItem.class
 com\sdt\web_app\entities\institution\Campus.class
 com\sdt\web_app\entities\financial\OrBooklet.class
 com\sdt\web_app\service\compliance\DegreeAuditService.class
+com\sdt\web_app\dto\financial\FinancialDtos$LinkBizWebhookRequest.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$AvailableCourseDto.class
 com\sdt\web_app\dto\admission\AdmissionDtos$QueueTokenRequest.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$RoomResponse.class
@@ -531,6 +536,7 @@ com\sdt\web_app\dto\enrollment\EnrollmentDtos$ConfirmEnrollmentRequest.class
 com\sdt\web_app\dto\financial\FinancialDtos$DisallowClaimItemRequest.class
 com\sdt\web_app\dto\compliance\ComplianceDtos$ChedFormE4GraduateDto.class
 com\sdt\web_app\service\scheduling\SectionSecurity.class
+com\sdt\web_app\entities\financial\FundCluster.class
 com\sdt\web_app\dto\institution\CourseOutcomeDtos$CreateCourseOutcomeRequest.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$ScheduleSlotResponse.class
 com\sdt\web_app\service\analytics\EquityTargetService.class

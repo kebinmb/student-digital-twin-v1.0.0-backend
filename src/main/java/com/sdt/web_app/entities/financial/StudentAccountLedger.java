@@ -93,6 +93,10 @@ public class StudentAccountLedger {
     @Column(name = "reference_number", length = 100)
     private String referenceNumber;
 
+    @Column(name = "fund_cluster_code", length = 20)
+    @Builder.Default
+    private String fundClusterCode = "FUND_164";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
     private User createdByUser;

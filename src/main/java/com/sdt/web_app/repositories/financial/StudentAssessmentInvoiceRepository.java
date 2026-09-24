@@ -19,6 +19,11 @@ public interface StudentAssessmentInvoiceRepository extends JpaRepository<Studen
     @Query("SELECT i FROM StudentAssessmentInvoice i WHERE i.studentProfile.id = :studentProfileId AND i.term.id = :termId")
     Optional<StudentAssessmentInvoice> findByStudentProfileIdAndTermId(Long studentProfileId, Long termId);
 
-    @Query("SELECT i FROM StudentAssessmentInvoice i WHERE i.term.id = :termId AND i.fheEligible = true AND i.status != 'VOID'")
-    List<StudentAssessmentInvoice> findFheEligibleInvoicesByTerm(Long termId);
+    @Query("SELECT i FROM StudentAssessmentInvoice i " +
+           "JOIN FETCH i.studentProfile sp " +
+           "JOIN FETCH i.studentEnrollment se " +
+           "LEFT JOIN FETCH sp.user u " +
+           "LEFT JOIN FETCH sp.program p " +
+           "WHERE i.term.id = :termId AND i.fheEligible = true AND i.status != 'VOID'")
+    List<StudentAssessmentInvoice> findFheEligibleInvoicesByTerm(@org.springframework.data.repository.query.Param("termId") Long termId);
 }

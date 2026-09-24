@@ -32,13 +32,13 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
     public ResponseEntity<StudentProfileResponse> getStudentById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<StudentSearchResultDto>> searchStudents(
             @RequestParam(value = "query", required = false, defaultValue = "") String query,
             Authentication authentication) {

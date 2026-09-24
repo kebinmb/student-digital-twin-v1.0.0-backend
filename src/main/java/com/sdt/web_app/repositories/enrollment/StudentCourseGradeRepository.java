@@ -1,6 +1,7 @@
 package com.sdt.web_app.repositories.enrollment;
 
 import com.sdt.web_app.entities.enrollment.StudentCourseGrade;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,7 @@ import java.util.Optional;
 @Repository
 public interface StudentCourseGradeRepository extends JpaRepository<StudentCourseGrade, Long> {
 
+    @EntityGraph(attributePaths = {"course"})
     List<StudentCourseGrade> findByStudentId(Long studentId);
 
     Optional<StudentCourseGrade> findByStudentIdAndCourseId(Long studentId, Long courseId);

@@ -89,6 +89,9 @@ public class CashieringService {
                         ? orBookletService.consumeNextOrNumber(cashierUserId) 
                         : "OR-" + Year.now().getValue() + "-" + String.format("%05d", receiptRepository.countTotalReceipts() + 1));
 
+        String clusterCode = (request.fundClusterCode() != null && !request.fundClusterCode().isBlank()) 
+                ? request.fundClusterCode().trim() : "FUND_164";
+
         CashierReceipt receipt = CashierReceipt.builder()
                 .orNumber(orNumber)
                 .studentProfile(student)
@@ -98,6 +101,9 @@ public class CashieringService {
                 .changeAmount(changeAmount)
                 .paymentMethod(method)
                 .referenceNumber(request.referenceNumber() != null ? request.referenceNumber().trim() : null)
+                .checkNumber(request.checkNumber() != null ? request.checkNumber().trim() : null)
+                .draweeBank(request.draweeBank() != null ? request.draweeBank().trim() : null)
+                .fundClusterCode(clusterCode)
                 .remarks(request.remarks() != null ? request.remarks().trim() : "Payment received")
                 .status(CashierReceipt.ReceiptStatus.VALID)
                 .cashierUser(cashierUser)
@@ -140,6 +146,7 @@ public class CashieringService {
                 .creditAmount(request.amountPaid())
                 .runningBalance(newLedgerBalance)
                 .referenceNumber(savedReceipt.getOrNumber())
+                .fundClusterCode(clusterCode)
                 .createdByUser(cashierUser)
                 .build();
         ledgerRepository.save(ledger);
@@ -186,12 +193,39 @@ public class CashieringService {
 
         List<CashierReceiptDto> dtos = allReceipts.stream().map(this::mapToReceiptDto).toList();
 
-        EodRcdFundClusterSummaryDto stfSummary = new EodRcdFundClusterSummaryDto(
-                "FUND_164",
-                "Fund 164 - Special Trust Fund (Tuition & TOSF Income)",
-                totalCollected,
-                dtos.size()
-        );
+        java.util.Map<String, List<CashierReceipt>> byCluster = allReceipts.stream()
+                .filter(r -> r.getStatus() == CashierReceipt.ReceiptStatus.VALID)
+                .collect(java.util.stream.Collectors.groupingBy(r -> r.getFundClusterCode() != null ? r.getFundClusterCode() : "FUND_164"));
+
+        List<EodRcdFundClusterSummaryDto> fundSummaries = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, List<CashierReceipt>> entry : byCluster.entrySet()) {
+            String clusterCode = entry.getKey();
+            List<CashierReceipt> clusterReceipts = entry.getValue();
+            BigDecimal clusterTotal = clusterReceipts.stream()
+                    .map(CashierReceipt::getAmountPaid)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            String clusterName = switch (clusterCode) {
+                case "FUND_101" -> "Fund 101 - Regular Agency Fund (GAA Subsidy)";
+                case "FUND_164" -> "Fund 164 - Special Trust Fund (Tuition & TOSF Income)";
+                case "FUND_184" -> "Fund 184 - Revolving Fund / IGP";
+                default -> clusterCode + " - Other Receipts";
+            };
+            fundSummaries.add(new EodRcdFundClusterSummaryDto(
+                    clusterCode,
+                    clusterName,
+                    clusterTotal,
+                    clusterReceipts.size()
+            ));
+        }
+
+        if (fundSummaries.isEmpty()) {
+            fundSummaries.add(new EodRcdFundClusterSummaryDto(
+                    "FUND_164",
+                    "Fund 164 - Special Trust Fund (Tuition & TOSF Income)",
+                    BigDecimal.ZERO,
+                    0
+            ));
+        }
 
         return new EodRcdReportDto(
                 cashier.getId(),
@@ -199,9 +233,100 @@ public class CashieringService {
                 reportDateStr != null ? reportDateStr : java.time.LocalDate.now().toString(),
                 totalCollected,
                 dtos.size(),
-                List.of(stfSummary),
+                fundSummaries,
                 dtos
         );
+    }
+
+    @Transactional
+    public LinkBizWebhookResponse processLinkBizPayment(LinkBizWebhookRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("LinkBiz request payload cannot be null");
+        }
+
+        // Idempotency check: see if receipt already created for this bank reference number
+        List<CashierReceipt> existing = receiptRepository.findAll().stream()
+                .filter(r -> request.bankReferenceNumber() != null && request.bankReferenceNumber().equalsIgnoreCase(r.getReferenceNumber()))
+                .toList();
+        if (!existing.isEmpty()) {
+            CashierReceipt r = existing.get(0);
+            log.info("LinkBiz payment webhook duplicate received for bankReferenceNumber {}. Returning existing receipt {}.", request.bankReferenceNumber(), r.getOrNumber());
+            return new LinkBizWebhookResponse("SUCCESS", "Payment already processed", r.getOrNumber(), Instant.now().toString());
+        }
+
+        StudentProfile student = studentProfileRepository.findByStudentNumber(request.studentNumber())
+                .orElseThrow(() -> new EntityNotFoundException("Student profile not found for student number: " + request.studentNumber()));
+
+        List<StudentAssessmentInvoice> invoices = invoiceRepository.findByStudentProfileId(student.getId());
+        StudentAssessmentInvoice invoice = invoices.isEmpty() ? null : invoices.get(0);
+
+        User systemCashier = userRepository.findAll().stream()
+                .filter(u -> u.getRoles() != null && (u.getRoles().contains(com.sdt.web_app.entities.authentication.Roles.CASHIER) || u.getRoles().contains(com.sdt.web_app.entities.authentication.Roles.ADMIN)))
+                .findFirst()
+                .orElseGet(() -> userRepository.findAll().stream().findFirst()
+                        .orElseThrow(() -> new IllegalStateException("No system or cashier user available")));
+
+        String orNumber = (orBookletService != null)
+                ? orBookletService.consumeNextOrNumber(systemCashier.getId())
+                : "OR-" + Year.now().getValue() + "-" + String.format("%05d", receiptRepository.countTotalReceipts() + 1);
+
+        CashierReceipt receipt = CashierReceipt.builder()
+                .orNumber(orNumber)
+                .studentProfile(student)
+                .assessmentInvoice(invoice)
+                .amountTendered(request.transactionAmount())
+                .amountPaid(request.transactionAmount())
+                .changeAmount(BigDecimal.ZERO)
+                .paymentMethod(CashierReceipt.PaymentMethod.LINKBIZ)
+                .referenceNumber(request.bankReferenceNumber())
+                .remarks("LandBank Link.BizPortal e-Payment Webhook Ref: " + request.bankReferenceNumber())
+                .status(CashierReceipt.ReceiptStatus.VALID)
+                .cashierUser(systemCashier)
+                .issuedAt(Instant.now())
+                .fundClusterCode("FUND_164")
+                .build();
+
+        CashierReceipt savedReceipt = receiptRepository.save(receipt);
+
+        if (invoice != null) {
+            BigDecimal newTotalPaid = invoice.getTotalPaidAmount().add(request.transactionAmount()).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal newBalance = invoice.getNetAssessedAmount().subtract(newTotalPaid).setScale(2, RoundingMode.HALF_UP);
+            if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+                newBalance = BigDecimal.ZERO;
+            }
+            invoice.setTotalPaidAmount(newTotalPaid);
+            invoice.setOutstandingBalance(newBalance);
+            if (newBalance.compareTo(BigDecimal.ZERO) == 0) {
+                invoice.setStatus(StudentAssessmentInvoice.InvoiceStatus.PAID);
+            } else {
+                invoice.setStatus(StudentAssessmentInvoice.InvoiceStatus.PARTIAL);
+            }
+            invoiceRepository.save(invoice);
+        }
+
+        BigDecimal currentLedgerBalance = getCurrentLedgerBalance(student.getId());
+        BigDecimal newLedgerBalance = currentLedgerBalance.subtract(request.transactionAmount()).setScale(2, RoundingMode.HALF_UP);
+
+        StudentAccountLedger ledger = StudentAccountLedger.builder()
+                .transactionNumber("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .studentProfile(student)
+                .term(invoice != null ? invoice.getTerm() : null)
+                .assessmentInvoice(invoice)
+                .transactionType(StudentAccountLedger.TransactionType.PAYMENT)
+                .description("e-Payment via LandBank Link.BizPortal (Ref: " + request.bankReferenceNumber() + ")")
+                .debitAmount(BigDecimal.ZERO)
+                .creditAmount(request.transactionAmount())
+                .runningBalance(newLedgerBalance)
+                .referenceNumber(savedReceipt.getOrNumber())
+                .fundClusterCode("FUND_164")
+                .createdByUser(systemCashier)
+                .build();
+        ledgerRepository.save(ledger);
+
+        log.info("Processed LinkBiz payment OR {} for student {} amount {} bankRef {}",
+                savedReceipt.getOrNumber(), student.getStudentNumber(), request.transactionAmount(), request.bankReferenceNumber());
+
+        return new LinkBizWebhookResponse("SUCCESS", "Payment processed successfully", savedReceipt.getOrNumber(), Instant.now().toString());
     }
 
     private BigDecimal getCurrentLedgerBalance(Long studentProfileId) {
@@ -232,7 +357,10 @@ public class CashieringService {
                 r.getStatus() != null ? r.getStatus().name() : "VALID",
                 r.getCashierUser() != null ? r.getCashierUser().getId() : null,
                 r.getCashierUser() != null ? r.getCashierUser().getUsername() : "System",
-                r.getIssuedAt() != null ? r.getIssuedAt().toString() : Instant.now().toString()
+                r.getIssuedAt() != null ? r.getIssuedAt().toString() : Instant.now().toString(),
+                r.getCheckNumber(),
+                r.getDraweeBank(),
+                r.getFundClusterCode() != null ? r.getFundClusterCode() : "FUND_164"
         );
     }
 }

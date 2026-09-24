@@ -65,8 +65,8 @@ public class AcademicScopeAssertionService {
 
         AcademicScopeContext resolvedScope;
 
-        // 1. ADMIN and REGISTRAR: System-wide unrestricted academic scope
-        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_REGISTRAR")) {
+        // 1. ADMIN, REGISTRAR, CASHIER, and ACCOUNTANT: System-wide unrestricted academic scope
+        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_REGISTRAR") || authorities.contains("ROLE_CASHIER") || authorities.contains("ROLE_ACCOUNTANT")) {
             resolvedScope = AcademicScopeContext.unrestricted(userId);
         } else {
             User user = userRepository.findById(userId)

@@ -86,16 +86,21 @@ public class OrBookletService {
 
         String currentOr = booklet.getCurrentOrNumber();
         try {
-            long currentNum = Long.parseLong(currentOr.replaceAll("\\D+", ""));
-            long endNum = Long.parseLong(booklet.getEndOrNumber().replaceAll("\\D+", ""));
-            if (currentNum >= endNum) {
-                booklet.setStatus(OrBooklet.BookletStatus.EXHAUSTED);
-            } else {
-                String prefix = currentOr.replaceAll("\\d+$", "");
-                int numLen = currentOr.length() - prefix.length();
-                booklet.setCurrentOrNumber(prefix + String.format("%0" + numLen + "d", currentNum + 1));
+            java.util.regex.Matcher mCurrent = java.util.regex.Pattern.compile("^(.*?)(\\d+)$").matcher(currentOr);
+            java.util.regex.Matcher mEnd = java.util.regex.Pattern.compile("^(.*?)(\\d+)$").matcher(booklet.getEndOrNumber());
+            if (mCurrent.matches() && mEnd.matches()) {
+                String prefix = mCurrent.group(1);
+                String numStr = mCurrent.group(2);
+                long currentNum = Long.parseLong(numStr);
+                long endNum = Long.parseLong(mEnd.group(2));
+                if (currentNum >= endNum) {
+                    booklet.setStatus(OrBooklet.BookletStatus.EXHAUSTED);
+                } else {
+                    int numLen = numStr.length();
+                    booklet.setCurrentOrNumber(prefix + String.format("%0" + numLen + "d", currentNum + 1));
+                }
+                bookletRepository.save(booklet);
             }
-            bookletRepository.save(booklet);
         } catch (Exception e) {
             log.warn("Could not auto-increment O.R. number format: {}", currentOr);
         }
