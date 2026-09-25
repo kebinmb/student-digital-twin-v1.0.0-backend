@@ -6,9 +6,11 @@ import com.sdt.web_app.entities.institution.Course;
 import com.sdt.web_app.entities.institution.Curriculum;
 import com.sdt.web_app.entities.institution.CurriculumCourse;
 import com.sdt.web_app.entities.institution.Program;
+import com.sdt.web_app.entities.institution.Major;
 import com.sdt.web_app.repositories.institution.CourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumRepository;
+import com.sdt.web_app.repositories.institution.MajorRepository;
 import com.sdt.web_app.repositories.institution.ProgramRepository;
 import com.sdt.web_app.config.CacheConfig;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +31,7 @@ public class CurriculumService {
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final ProgramRepository programRepository;
     private final CourseRepository courseRepository;
+    private final MajorRepository majorRepository;
 
     @CacheEvict(value = CacheConfig.CACHE_CURRICULA_BY_PROGRAM, allEntries = true)
     public CurriculumResponse createCurriculum(CreateCurriculumRequest request) {
@@ -39,8 +42,18 @@ public class CurriculumService {
             throw new IllegalArgumentException("Curriculum with code already exists: " + request.code());
         }
 
+        Major major = null;
+        if (request.majorId() != null) {
+            major = majorRepository.findById(request.majorId())
+                    .orElseThrow(() -> new IllegalArgumentException("Major not found with ID: " + request.majorId()));
+            if (!major.getProgram().getId().equals(program.getId())) {
+                throw new IllegalArgumentException("Major does not belong to program ID: " + program.getId());
+            }
+        }
+
         Curriculum curriculum = Curriculum.builder()
                 .program(program)
+                .major(major)
                 .code(request.code().trim().toUpperCase())
                 .name(request.name().trim())
                 .effectiveAcademicYear(request.effectiveAcademicYear().trim())
@@ -94,6 +107,7 @@ public class CurriculumService {
         CurriculumCourse curriculumCourse = CurriculumCourse.builder()
                 .curriculum(curriculum)
                 .course(course)
+                .creditUnits(course.getCreditUnits())
                 .yearLevel(request.yearLevel())
                 .semester(request.semester())
                 .sequenceOrder(seqOrder)
@@ -164,17 +178,35 @@ public class CurriculumService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<CurriculumResponse> getCurriculaByProgramAndMajor(Long programId, Long majorId) {
+        if (!programRepository.existsById(programId)) {
+            throw new IllegalArgumentException("Program not found with ID: " + programId);
+        }
+        List<Curriculum> list;
+        if (majorId != null) {
+            list = curriculumRepository.findByProgramIdAndMajorIdAndIsActiveTrueOrderByCodeAsc(programId, majorId);
+        } else {
+            list = curriculumRepository.findByProgramIdAndIsActiveTrueOrderByCodeAsc(programId);
+        }
+        return list.stream().map(this::mapToResponse).toList();
+    }
+
     private Curriculum findCurriculumById(Long id) {
         return curriculumRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Curriculum not found with ID: " + id));
     }
 
     private CurriculumResponse mapToResponse(Curriculum c) {
+        Long majorId = c.getMajor() != null ? c.getMajor().getId() : null;
+        String majorName = c.getMajor() != null ? c.getMajor().getName() : null;
         return new CurriculumResponse(
                 c.getId(),
                 c.getProgram().getId(),
                 c.getProgram().getCode(),
                 c.getProgram().getName(),
+                majorId,
+                majorName,
                 c.getCode(),
                 c.getName(),
                 c.getEffectiveAcademicYear(),

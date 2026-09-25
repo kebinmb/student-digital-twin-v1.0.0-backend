@@ -42,6 +42,9 @@ public class CurriculumCourse {
     @Builder.Default
     private int sequenceOrder = 1;
 
+    @Column(name = "credit_units", precision = 4, scale = 2)
+    private java.math.BigDecimal creditUnits;
+
     @Column(nullable = false, length = 30)
     @Builder.Default
     private String category = "PROFESSIONAL_MAJOR"; // GEN_ED, PROFESSIONAL_MAJOR, ELECTIVE, MANDATED
@@ -50,6 +53,10 @@ public class CurriculumCourse {
         this.yearLevel = yearLevel;
         this.semester = semester;
         this.sequenceOrder = sequenceOrder;
+    }
+
+    public void updateCreditUnits(java.math.BigDecimal creditUnits) {
+        this.creditUnits = creditUnits;
     }
 
     @Override

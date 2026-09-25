@@ -32,10 +32,12 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CleanSlateSchemaAndEmptyDataIntegrationTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumMajorLinkingTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\CurriculumValidationTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\GradeTransmutationServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\InstitutionalCrudPrerequisiteValidationTest.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\MajorServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\institution\TermLifecycleServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\lms\Lti13AdvantageServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\PerformanceAndCachingOptimizationTest.java

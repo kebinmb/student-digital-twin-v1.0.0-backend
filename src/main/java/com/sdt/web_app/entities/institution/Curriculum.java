@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString(exclude = "program")
+@ToString(exclude = {"program", "major"})
 @BatchSize(size = 50)
 public class Curriculum {
 
@@ -39,6 +39,10 @@ public class Curriculum {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "program_id", nullable = false)
     private Program program;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "major_id")
+    private Major major;
 
     @Column(unique = true, nullable = false, length = 30, updatable = false)
     private String code;
@@ -92,6 +96,13 @@ public class Curriculum {
         }
         this.name = name;
         this.effectiveAcademicYear = effectiveAcademicYear;
+    }
+
+    public void assignMajor(Major major) {
+        if (!isEditable()) {
+            throw new IllegalStateException("Curriculum is locked under status: " + this.status);
+        }
+        this.major = major;
     }
 
     @Override

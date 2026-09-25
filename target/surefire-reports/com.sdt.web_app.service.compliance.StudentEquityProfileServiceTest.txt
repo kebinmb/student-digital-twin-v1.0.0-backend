@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.compliance.StudentEquityProfileServiceTest
 -------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.240 s -- in com.sdt.web_app.service.compliance.StudentEquityProfileServiceTest
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.265 s -- in com.sdt.web_app.service.compliance.StudentEquityProfileServiceTest

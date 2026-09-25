@@ -167,6 +167,14 @@ public class CurriculumController {
         return ResponseEntity.ok(designerService.getCurriculaByProgram(programId));
     }
 
+    @GetMapping("/program/{programId}/major/{majorId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
+    public ResponseEntity<List<com.sdt.web_app.dto.institution.CurriculumDtos.CurriculumResponse>> getCurriculaByProgramAndMajor(
+            @PathVariable("programId") Long programId,
+            @PathVariable("majorId") Long majorId) {
+        return ResponseEntity.ok(curriculumService.getCurriculaByProgramAndMajor(programId, majorId));
+    }
+
     @GetMapping({"", "/lookup"})
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CurriculumLookupOption>> getCurriculumLookupOptions() {

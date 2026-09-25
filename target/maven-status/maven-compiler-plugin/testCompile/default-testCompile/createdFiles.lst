@@ -34,6 +34,7 @@ com\sdt\web_app\service\grade\ClassRecordInProgressGradingTest.class
 com\sdt\web_app\BaseIntegrationTest.class
 com\sdt\web_app\TestWebAppApplication.class
 com\sdt\web_app\AuthenticationIntegrationTest$LoginTests.class
+com\sdt\web_app\service\institution\MajorServiceTest.class
 com\sdt\web_app\service\compliance\ClearanceWorkflowServiceTest.class
 com\sdt\web_app\service\lms\Lti13AdvantageServiceTest.class
 com\sdt\web_app\service\enrollment\EnrollmentServiceTest.class
@@ -60,5 +61,6 @@ com\sdt\web_app\service\institution\TermLifecycleServiceTest.class
 com\sdt\web_app\service\admission\AdmissionQueueAndApplicationServiceTest.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class
 com\sdt\web_app\service\analytics\EquityTargetServiceTest.class
+com\sdt\web_app\service\institution\CurriculumMajorLinkingTest.class
 com\sdt\web_app\service\grade\ClassRecordMatrixIntegrationTest.class
 com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.class

@@ -15,20 +15,26 @@ public interface CurriculumRepository extends JpaRepository<Curriculum, Long> {
 
     boolean existsByCode(String code);
 
-    @EntityGraph(attributePaths = {"program"})
+    @EntityGraph(attributePaths = {"program", "major"})
     List<Curriculum> findByProgramId(Long programId);
 
     boolean existsByProgramId(Long programId);
 
-    @EntityGraph(attributePaths = {"program"})
+    @EntityGraph(attributePaths = {"program", "major"})
     List<Curriculum> findByIsActiveTrue();
 
-    @EntityGraph(attributePaths = {"program"})
+    @EntityGraph(attributePaths = {"program", "major"})
     List<Curriculum> findByIsActiveTrueOrderByCodeAsc();
 
-    @EntityGraph(attributePaths = {"program"})
+    @EntityGraph(attributePaths = {"program", "major"})
     List<Curriculum> findByProgramIdInAndIsActiveTrueOrderByCodeAsc(List<Long> programIds);
 
-    @EntityGraph(attributePaths = {"program"})
+    @EntityGraph(attributePaths = {"program", "major"})
     List<Curriculum> findByProgramIdAndIsActiveTrueOrderByCodeAsc(Long programId);
+
+    @EntityGraph(attributePaths = {"program", "major"})
+    List<Curriculum> findByProgramIdAndMajorIdAndIsActiveTrueOrderByCodeAsc(Long programId, Long majorId);
+
+    @EntityGraph(attributePaths = {"program", "major"})
+    List<Curriculum> findByProgramIdAndMajorIsNullAndIsActiveTrueOrderByCodeAsc(Long programId);
 }

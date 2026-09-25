@@ -10,6 +10,8 @@ public class CurriculumDtos {
             @NotNull(message = "Program ID is required")
             Long programId,
 
+            Long majorId,
+
             @NotBlank(message = "Curriculum code is required")
             @Size(max = 30, message = "Curriculum code must not exceed 30 characters")
             String code,
@@ -22,6 +24,9 @@ public class CurriculumDtos {
             @Size(max = 20, message = "Effective academic year must not exceed 20 characters")
             String effectiveAcademicYear
     ) {
+        public CreateCurriculumRequest(Long programId, String code, String name, String effectiveAcademicYear) {
+            this(programId, null, code, name, effectiveAcademicYear);
+        }
     }
 
     public record UpdateCurriculumRequest(
@@ -40,6 +45,8 @@ public class CurriculumDtos {
             Long programId,
             String programCode,
             String programName,
+            Long majorId,
+            String majorName,
             String code,
             String name,
             String effectiveAcademicYear,
@@ -47,5 +54,19 @@ public class CurriculumDtos {
             int versionNumber,
             boolean isActive
     ) {
+        public CurriculumResponse(
+                Long id,
+                Long programId,
+                String programCode,
+                String programName,
+                String code,
+                String name,
+                String effectiveAcademicYear,
+                String status,
+                int versionNumber,
+                boolean isActive
+        ) {
+            this(id, programId, programCode, programName, null, null, code, name, effectiveAcademicYear, status, versionNumber, isActive);
+        }
     }
 }

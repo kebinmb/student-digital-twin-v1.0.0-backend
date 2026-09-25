@@ -39,6 +39,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\FinancialController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\GradingScaleController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\InstitutionalOutcomeController.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\MajorController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\ProgramController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\institution\TermController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\lms\LmsSyncController.java
@@ -70,6 +71,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\DepartmentDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\FinancialDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\GradingScaleDtos.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\MajorDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\ProgramDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\institution\TermDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\lms\LmsDtos.java
@@ -127,6 +129,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\GradingScale.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\GradingScaleCode.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\InstitutionalOutcome.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\Major.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\PaymentTermTemplate.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\Program.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\institution\ProgramOutcome.java
@@ -196,6 +199,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\FeeCategoryRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\GradingScaleRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\InstitutionalOutcomeRepository.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\MajorRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\PaymentTermTemplateRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\ProgramOutcomeRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\institution\ProgramRepository.java
@@ -250,6 +254,8 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\GradeTransmutationService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\GradingScaleService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\InstitutionalOutcomeService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\MajorService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\MajorServiceImpl.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\PrerequisiteEvaluationService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\ProgramService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\institution\TermLifecycleService.java
