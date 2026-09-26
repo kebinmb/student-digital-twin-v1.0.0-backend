@@ -243,6 +243,28 @@ class InstitutionalCrudPrerequisiteValidationTest {
                 .hasMessageContaining("circular dependency");
     }
 
+    @Test
+    @DisplayName("CoursePrerequisite creation allows mutual CO_REQUISITE relationships without cycle errors")
+    void createPrerequisite_MutualCoRequisite_Succeeds() {
+        // Course 2 co-requires Course 1
+        var resp1 = prerequisiteService.createPrerequisite(new CreateCoursePrerequisiteRequest(
+                testCourse2.getId(),
+                testCourse1.getId(),
+                "CO_REQUISITE",
+                "3.00"
+        ));
+        assertThat(resp1).isNotNull();
+
+        // Mutual co-requisite: Course 1 co-requires Course 2 -> should succeed without cycle error
+        var resp2 = prerequisiteService.createPrerequisite(new CreateCoursePrerequisiteRequest(
+                testCourse1.getId(),
+                testCourse2.getId(),
+                "CO_REQUISITE",
+                "3.00"
+        ));
+        assertThat(resp2).isNotNull();
+    }
+
     // -------------------------------------------------------------------------
     // 4. CILO-PILO Mapping Prerequisite Enforcement
     // -------------------------------------------------------------------------

@@ -26,7 +26,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import com.sdt.web_app.service.security.StudentProfileL2CacheService;
+import java.util.List;
 import java.util.Optional;
+
+import com.sdt.web_app.entities.analytics.FacultyAttendanceRecord;
+import com.sdt.web_app.entities.authentication.User;
+import com.sdt.web_app.repositories.analytics.FacultyAttendanceRecordRepository;
+import com.sdt.web_app.repositories.authentication.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -35,30 +41,100 @@ public class QrAttendanceService {
 
     private final AttendanceSessionRepository sessionRepository;
     private final AttendanceRecordRepository recordRepository;
+    private final FacultyAttendanceRecordRepository facultyAttendanceRecordRepository;
+    private final UserRepository userRepository;
     private final ClassScheduleRepository scheduleRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    public static String computeHmacToken(Long sessionId, long window, String secretKey) {
+        try {
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(
+                    secretKey.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(secretKeySpec);
+            byte[] hash = mac.doFinal((sessionId + ":" + window).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return java.util.HexFormat.of().formatHex(hash).substring(0, 16);
+        } catch (Exception e) {
+            return "TOTP-" + window;
+        }
+    }
 
     @Transactional
     public AttendanceSessionResponse startSession(StartAttendanceSessionRequest request) {
+        return startSession(request, null);
+    }
+
+    @Transactional
+    public AttendanceSessionResponse startSession(StartAttendanceSessionRequest request, Long creatorUserId) {
         ClassSchedule schedule = scheduleRepository.findById(request.sectionScheduleId())
                 .orElseThrow(() -> new EntityNotFoundException("Class schedule not found: " + request.sectionScheduleId()));
 
+        User creatorUser = null;
+        if (creatorUserId != null) {
+            creatorUser = userRepository.findById(creatorUserId).orElse(null);
+        }
+        if (creatorUser == null && schedule.getInstructor() != null) {
+            creatorUser = schedule.getInstructor();
+        }
+
         String qrSeed = "QR-ATT-" + UUID.randomUUID().toString();
+        String secretKey = UUID.randomUUID().toString().replace("-", "");
         Instant expiresAt = Instant.now().plus(15, ChronoUnit.MINUTES);
+
+        // Dynamically resolve campus coordinates if request coordinates are null
+        BigDecimal sessionLat = request.latitude();
+        BigDecimal sessionLon = request.longitude();
+        if (sessionLat == null || sessionLon == null) {
+            BigDecimal defaultLat = new BigDecimal("10.7428");
+            BigDecimal defaultLon = new BigDecimal("122.9694");
+            if (schedule.getRoom() != null && schedule.getRoom().getCampus() != null) {
+                String code = schedule.getRoom().getCampus().getCode();
+                if (code != null) {
+                    switch (code.toUpperCase()) {
+                        case "ALIJIS" -> {
+                            defaultLat = new BigDecimal("10.6385");
+                            defaultLon = new BigDecimal("122.9723");
+                        }
+                        case "FORTUNE_TOWNE", "FORTUNETOWNE" -> {
+                            defaultLat = new BigDecimal("10.6772");
+                            defaultLon = new BigDecimal("122.9856");
+                        }
+                        case "BINALBAGAN" -> {
+                            defaultLat = new BigDecimal("10.1916");
+                            defaultLon = new BigDecimal("122.8624");
+                        }
+                        default -> {
+                            defaultLat = new BigDecimal("10.7428");
+                            defaultLon = new BigDecimal("122.9694");
+                        }
+                    }
+                }
+            }
+            if (sessionLat == null) sessionLat = defaultLat;
+            if (sessionLon == null) sessionLon = defaultLon;
+        }
 
         AttendanceSession session = AttendanceSession.builder()
                 .schedule(schedule)
                 .sessionDate(LocalDate.now())
                 .qrSeed(qrSeed)
+                .secretKey(secretKey)
                 .qrExpiresAt(expiresAt)
-                .latitude(request.latitude() != null ? request.latitude() : new BigDecimal("10.7202"))
-                .longitude(request.longitude() != null ? request.longitude() : new BigDecimal("122.5621"))
+                .latitude(sessionLat)
+                .longitude(sessionLon)
                 .allowedRadiusMeters(request.allowedRadiusMeters() != null ? request.allowedRadiusMeters() : 50)
+                .creatorUser(creatorUser)
                 .build();
 
         AttendanceSession saved = sessionRepository.save(session);
         log.info("Dynamic QR Attendance Session started for schedule #{}. Seed: {}", schedule.getId(), qrSeed);
+
+        // Record initial separate faculty/creator attendance when host launches session
+        if (creatorUser != null) {
+            recordInitialFacultyAttendance(saved, creatorUser, sessionLat, sessionLon);
+        }
 
         String qrDataUrl;
         try {
@@ -84,17 +160,94 @@ public class QrAttendanceService {
         );
     }
 
+    private void recordInitialFacultyAttendance(AttendanceSession session, User creatorUser, BigDecimal lat, BigDecimal lon) {
+        try {
+            FacultyAttendanceRecord existing = facultyAttendanceRecordRepository
+                    .findBySessionIdAndFacultyUserId(session.getId(), creatorUser.getId())
+                    .orElse(null);
+            if (existing == null) {
+                FacultyAttendanceRecord record = FacultyAttendanceRecord.builder()
+                        .session(session)
+                        .facultyUser(creatorUser)
+                        .facultyProfile(creatorUser.getFacultyProfile())
+                        .verifiedAt(Instant.now())
+                        .status(FacultyAttendanceRecord.Status.PRESENT)
+                        .deviceFingerprint("Session-Host-Console")
+                        .verifiedLatitude(lat)
+                        .verifiedLongitude(lon)
+                        .isGeofenceValid(true)
+                        .notes("Initiated attendance session")
+                        .build();
+                facultyAttendanceRecordRepository.save(record);
+            }
+        } catch (Exception e) {
+            log.warn("Could not record initial faculty attendance for user #{}: {}", creatorUser.getId(), e.getMessage());
+        }
+    }
+
+    public AttendanceSession resolveSessionBySeed(String rawSeed) {
+        if (rawSeed != null && rawSeed.contains(":TOTP:")) {
+            String[] parts = rawSeed.split(":TOTP:");
+            String baseSeed = parts[0];
+            String token = parts.length > 1 ? parts[1] : "";
+            AttendanceSession session = sessionRepository.findByQrSeed(baseSeed)
+                    .orElseThrow(() -> new EntityNotFoundException("Invalid or expired QR attendance seed."));
+
+            if (session.getSecretKey() != null) {
+                long currentWindow = Instant.now().getEpochSecond() / 30;
+                boolean tokenMatch = false;
+                for (long window : List.of(currentWindow, currentWindow - 1)) {
+                    String expected = computeHmacToken(session.getId(), window, session.getSecretKey());
+                    if (expected.equals(token)) {
+                        tokenMatch = true;
+                        break;
+                    }
+                }
+                if (!tokenMatch) {
+                    throw new SecurityException("Expired or invalid rotating QR security token. Please scan the current live QR board.");
+                }
+            }
+            return session;
+        } else {
+            return sessionRepository.findByQrSeed(rawSeed)
+                    .orElseThrow(() -> new EntityNotFoundException("Invalid or expired QR attendance seed."));
+        }
+    }
+
     @Transactional
     public AttendanceRecordResponse scanAttendance(ScanAttendanceRequest request) {
-        AttendanceSession session = sessionRepository.findByQrSeed(request.qrSeed())
-                .orElseThrow(() -> new EntityNotFoundException("Invalid or expired QR attendance seed."));
+        String rawSeed = request.qrSeed();
+        AttendanceSession session = resolveSessionBySeed(rawSeed);
 
         if (session.isExpired()) {
             throw new IllegalStateException("Attendance QR code has expired. Please request instructor to generate a fresh QR session.");
         }
 
-        StudentProfile student = Optional.ofNullable(studentProfileL2CacheService.findById(request.studentId()))
-                .orElseThrow(() -> new EntityNotFoundException("Student profile not found: " + request.studentId()));
+        StudentProfile student = studentProfileL2CacheService.findById(request.studentId());
+        if (student == null) {
+            // Check if the provided studentId was actually a userId
+            student = studentProfileL2CacheService.findByUserId(request.studentId());
+        }
+        if (student == null) {
+            student = studentProfileRepository.findByStudentNumber(String.valueOf(request.studentId())).orElse(null);
+        }
+        if (student == null) {
+            throw new EntityNotFoundException("Student profile not found: " + request.studentId());
+        }
+
+        // Anti-Proxy Guard: Check if physical device has already submitted attendance for another student
+        String deviceFp = request.deviceFingerprint() != null && !request.deviceFingerprint().isBlank()
+                ? request.deviceFingerprint()
+                : "Device-Mobile-App";
+
+        if (!"Device-Mobile-App".equalsIgnoreCase(deviceFp)) {
+            boolean deviceReused = recordRepository.existsBySessionIdAndDeviceFingerprintAndStudentIdNot(
+                    session.getId(), deviceFp, student.getId());
+            if (deviceReused) {
+                log.warn("Proxy scan rejected: Device {} already submitted attendance for another student in session #{}", deviceFp, session.getId());
+                throw new IllegalStateException("Anti-Proxy Guard: This mobile device has already submitted attendance for another student in this session.");
+            }
+        }
 
         // Geofence GPS Distance Verification using Haversine formula
         boolean isGeofenceValid = true;
@@ -111,18 +264,39 @@ public class QrAttendanceService {
             }
         }
 
-        AttendanceRecord record = recordRepository.findBySessionIdAndStudentId(session.getId(), student.getId())
-                .orElseGet(() -> AttendanceRecord.builder()
-                        .session(session)
-                        .student(student)
-                        .status(AttendanceRecord.Status.PRESENT)
-                        .deviceFingerprint(request.deviceFingerprint() != null ? request.deviceFingerprint() : "Device-Mobile-App")
-                        .verifiedLatitude(request.latitude())
-                        .verifiedLongitude(request.longitude())
-                        .build());
+        final StudentProfile finalStudent = student;
+        AttendanceRecord record = recordRepository.findBySessionIdAndStudentId(session.getId(), finalStudent.getId())
+                .orElse(null);
+
+        if (record != null) {
+            // Update existing record rather than creating a duplicate
+            record.setScannedAt(Instant.now());
+            record.setVerifiedLatitude(request.latitude());
+            record.setVerifiedLongitude(request.longitude());
+            record.setDeviceFingerprint(deviceFp);
+            record.setStatus(AttendanceRecord.Status.PRESENT);
+        } else {
+            record = AttendanceRecord.builder()
+                    .session(session)
+                    .student(finalStudent)
+                    .status(AttendanceRecord.Status.PRESENT)
+                    .deviceFingerprint(deviceFp)
+                    .verifiedLatitude(request.latitude())
+                    .verifiedLongitude(request.longitude())
+                    .build();
+        }
 
         AttendanceRecord saved = recordRepository.save(record);
         log.info("Attendance scanned and verified for student {} in session #{}", student.getStudentNumber(), session.getId());
+
+        // Publish telemetry event for event-driven asynchronous risk computation
+        if (eventPublisher != null) {
+            try {
+                eventPublisher.publishEvent(new com.sdt.web_app.events.analytics.AttendanceScannedEvent(student.getId(), session.getId(), saved.getId()));
+            } catch (Exception e) {
+                log.warn("Failed to publish AttendanceScannedEvent: {}", e.getMessage());
+            }
+        }
 
         String sectionCode = session.getSchedule() != null && session.getSchedule().getSection() != null
                 ? session.getSchedule().getSection().getSectionCode() : "N/A";
@@ -250,6 +424,113 @@ public class QrAttendanceService {
                     saved.getStatus() != null ? saved.getStatus().name() : "PRESENT",
                     true,
                     saved.getScannedAt(),
+                    saved.getDeviceFingerprint()
+            );
+        }).toList();
+    }
+
+    @Transactional
+    public FacultyAttendanceRecordResponse verifyCreatorAttendance(VerifyCreatorAttendanceRequest request, Long creatorUserId) {
+        String rawSeed = request.qrSeed();
+        AttendanceSession session = resolveSessionBySeed(rawSeed);
+
+        if (session.isExpired()) {
+            throw new IllegalStateException("Attendance QR code has expired. Please generate a fresh QR session.");
+        }
+
+        User creatorUser = userRepository.findById(creatorUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Faculty/Conductor user not found: " + creatorUserId));
+
+        // Geofence GPS Distance Verification using Haversine formula
+        boolean isGeofenceValid = true;
+        if (session.getLatitude() != null && session.getLongitude() != null && request.latitude() != null && request.longitude() != null) {
+            double distanceMeters = calculateHaversineDistance(
+                    session.getLatitude().doubleValue(), session.getLongitude().doubleValue(),
+                    request.latitude().doubleValue(), request.longitude().doubleValue()
+            );
+            if (distanceMeters > session.getAllowedRadiusMeters()) {
+                isGeofenceValid = false;
+                throw new IllegalStateException(String.format(
+                        "Geofence Violation: Conductor device location (%.2f meters away) exceeds allowed %d-meter classroom radius.",
+                        distanceMeters, session.getAllowedRadiusMeters()));
+            }
+        }
+
+        String deviceFp = request.deviceFingerprint() != null && !request.deviceFingerprint().isBlank()
+                ? request.deviceFingerprint()
+                : "Host-Console";
+
+        // Idempotent: Update existing faculty attendance record or create new if not yet present
+        FacultyAttendanceRecord record = facultyAttendanceRecordRepository
+                .findBySessionIdAndFacultyUserId(session.getId(), creatorUser.getId())
+                .orElseGet(() -> FacultyAttendanceRecord.builder()
+                        .session(session)
+                        .facultyUser(creatorUser)
+                        .facultyProfile(creatorUser.getFacultyProfile())
+                        .build());
+
+        record.setVerifiedAt(Instant.now());
+        record.setVerifiedLatitude(request.latitude());
+        record.setVerifiedLongitude(request.longitude());
+        record.setDeviceFingerprint(deviceFp);
+        record.setIsGeofenceValid(isGeofenceValid);
+        record.setStatus(FacultyAttendanceRecord.Status.PRESENT);
+        if (record.getFacultyProfile() == null && creatorUser.getFacultyProfile() != null) {
+            record.setFacultyProfile(creatorUser.getFacultyProfile());
+        }
+
+        FacultyAttendanceRecord saved = facultyAttendanceRecordRepository.save(record);
+        log.info("Faculty/Host geofenced attendance verified for user {} in session #{}", creatorUser.getUsername(), session.getId());
+
+        String sectionCode = session.getSchedule() != null && session.getSchedule().getSection() != null
+                ? session.getSchedule().getSection().getSectionCode() : "N/A";
+        String courseCode = session.getSchedule() != null && session.getSchedule().getSection() != null && session.getSchedule().getSection().getCourse() != null
+                ? session.getSchedule().getSection().getCourse().getCode() : "N/A";
+        String roleName = creatorUser.getRoles() != null && !creatorUser.getRoles().isEmpty()
+                ? creatorUser.getRoles().iterator().next().name() : "FACULTY";
+
+        return new FacultyAttendanceRecordResponse(
+                saved.getId(),
+                session.getId(),
+                sectionCode,
+                courseCode,
+                creatorUser.getId(),
+                creatorUser.getUsername(),
+                roleName,
+                saved.getStatus().name(),
+                Boolean.TRUE.equals(saved.getIsGeofenceValid()),
+                saved.getVerifiedAt(),
+                saved.getDeviceFingerprint()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<FacultyAttendanceRecordResponse> getDailyFacultyAttendance(LocalDate date, Long sectionId) {
+        LocalDate queryDate = date != null ? date : LocalDate.now();
+        List<FacultyAttendanceRecord> records = facultyAttendanceRecordRepository.findDailyFacultyAttendanceRecords(queryDate, sectionId);
+        return records.stream().map(saved -> {
+            AttendanceSession session = saved.getSession();
+            ClassSchedule schedule = session != null ? session.getSchedule() : null;
+            com.sdt.web_app.entities.scheduling.ClassSection section = schedule != null ? schedule.getSection() : null;
+            User user = saved.getFacultyUser();
+
+            String secCode = section != null ? section.getSectionCode() : "N/A";
+            String crsCode = (section != null && section.getCourse() != null) ? section.getCourse().getCode() : "N/A";
+            String userName = user != null ? user.getUsername() : "Faculty #" + saved.getId();
+            String roleName = user != null && user.getRoles() != null && !user.getRoles().isEmpty()
+                    ? user.getRoles().iterator().next().name() : "FACULTY";
+
+            return new FacultyAttendanceRecordResponse(
+                    saved.getId(),
+                    session != null ? session.getId() : null,
+                    secCode,
+                    crsCode,
+                    user != null ? user.getId() : null,
+                    userName,
+                    roleName,
+                    saved.getStatus() != null ? saved.getStatus().name() : "PRESENT",
+                    Boolean.TRUE.equals(saved.getIsGeofenceValid()),
+                    saved.getVerifiedAt(),
                     saved.getDeviceFingerprint()
             );
         }).toList();

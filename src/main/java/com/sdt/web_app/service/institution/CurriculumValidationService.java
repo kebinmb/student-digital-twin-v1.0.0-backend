@@ -113,8 +113,10 @@ public class CurriculumValidationService {
         if (!courseMap.isEmpty()) {
             List<CoursePrerequisite> allPrereqs = coursePrerequisiteRepository.findPrerequisitesForCourseIds(courseMap.keySet());
             for (CoursePrerequisite cp : allPrereqs) {
-                adjList.computeIfAbsent(cp.getCourse().getId(), k -> new ArrayList<>())
-                        .add(cp.getPrerequisiteCourse());
+                if ("HARD".equalsIgnoreCase(cp.getRuleType())) {
+                    adjList.computeIfAbsent(cp.getCourse().getId(), k -> new ArrayList<>())
+                            .add(cp.getPrerequisiteCourse());
+                }
             }
         }
 

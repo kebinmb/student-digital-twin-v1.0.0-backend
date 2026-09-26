@@ -23,6 +23,14 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
     @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId")
     long countTotalByStudentId(@Param("studentId") Long studentId);
 
+    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status = 'PRESENT' AND ar.scannedAt >= :since")
+    long countRecentPresentByStudentId(@Param("studentId") Long studentId, @Param("since") java.time.Instant since);
+
+    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.scannedAt >= :since")
+    long countRecentTotalByStudentId(@Param("studentId") Long studentId, @Param("since") java.time.Instant since);
+
+    boolean existsBySessionIdAndDeviceFingerprintAndStudentIdNot(Long sessionId, String deviceFingerprint, Long studentId);
+
     @Query("""
         SELECT DISTINCT ar FROM AttendanceRecord ar
         JOIN FETCH ar.session s

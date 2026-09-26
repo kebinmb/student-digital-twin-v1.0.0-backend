@@ -14,6 +14,7 @@ import java.util.Objects;
     @Index(name = "idx_att_rec_scanned_at", columnList = "scanned_at")
 })
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -35,7 +36,7 @@ public class AttendanceRecord {
     @JoinColumn(name = "student_profile_id", nullable = false)
     private StudentProfile student;
 
-    @Column(name = "scanned_at", updatable = false)
+    @Column(name = "scanned_at")
     @Builder.Default
     private Instant scannedAt = Instant.now();
 

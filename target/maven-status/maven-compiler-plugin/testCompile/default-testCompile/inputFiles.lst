@@ -2,6 +2,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\AsyncSecurityConfigTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\AuthenticationIntegrationTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\BaseIntegrationTest.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\controller\analytics\DigitalTwinAnalyticsControllerTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\controller\PublicHealthController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\controller\TestSecurityControllers.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest.java
@@ -9,6 +10,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\analytics\DigitalTwinRiskServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\analytics\EquityTargetServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\analytics\QrAttendanceServiceTest.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\analytics\StudentInterventionServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\authentication\JwtDenylistSecurityTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\authentication\RateLimitingIntegrationTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\authentication\UserServiceTest.java

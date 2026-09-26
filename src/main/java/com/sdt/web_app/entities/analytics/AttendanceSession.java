@@ -1,5 +1,6 @@
 package com.sdt.web_app.entities.analytics;
 
+import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.scheduling.ClassSchedule;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,9 +13,11 @@ import java.util.Objects;
 @Entity
 @Table(name = "attendance_sessions", indexes = {
     @Index(name = "idx_att_sess_date_sched", columnList = "session_date, section_schedule_id"),
-    @Index(name = "idx_att_sess_seed", columnList = "qr_seed")
+    @Index(name = "idx_att_sess_seed", columnList = "qr_seed"),
+    @Index(name = "idx_att_sess_creator", columnList = "creator_user_id")
 })
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -28,6 +31,10 @@ public class AttendanceSession {
     @JoinColumn(name = "section_schedule_id", nullable = false)
     private ClassSchedule schedule;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_user_id")
+    private User creatorUser;
+
     @Column(name = "session_date", nullable = false)
     private LocalDate sessionDate;
 
@@ -36,6 +43,9 @@ public class AttendanceSession {
 
     @Column(name = "qr_expires_at", nullable = false)
     private Instant qrExpiresAt;
+
+    @Column(name = "secret_key", length = 64)
+    private String secretKey;
 
     @Column(name = "latitude", precision = 10, scale = 8)
     private BigDecimal latitude;

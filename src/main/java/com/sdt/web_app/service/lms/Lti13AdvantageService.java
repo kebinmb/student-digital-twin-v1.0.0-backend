@@ -68,14 +68,31 @@ public class Lti13AdvantageService {
             throw new IllegalStateException("LTI 1.3 deployment is currently disabled.");
         }
 
-        // Mock token validation & session generation for Canvas/Moodle LTI launch
-        log.info("LTI 1.3 Launch validated for sub claim {} on platform {}", request.subClaim(), deployment.getPlatformName());
+        // Dynamically resolve user mapping if registered for this deployment
+        java.util.Optional<com.sdt.web_app.entities.lms.LtiUserMapping> mappingOpt = userMappingRepository
+                .findByDeploymentIdAndSubClaim(deployment.getId(), request.subClaim());
+
+        String targetLink = "/portal/student";
+        String username = "lti_user_" + request.subClaim().substring(0, Math.min(8, request.subClaim().length()));
+        String role = "ROLE_STUDENT";
+
+        if (mappingOpt.isPresent()) {
+            com.sdt.web_app.entities.authentication.User mappedUser = mappingOpt.get().getUser();
+            if (mappedUser != null) {
+                username = mappedUser.getUsername();
+                if (mappedUser.getRoles() != null && !mappedUser.getRoles().isEmpty()) {
+                    role = "ROLE_" + mappedUser.getRoles().iterator().next().name();
+                }
+            }
+        }
+
+        log.info("LTI 1.3 Launch validated for sub claim {} on platform {}, resolved user {}", request.subClaim(), deployment.getPlatformName(), username);
 
         return new LtiLaunchResponse(
-                "/portal/student",
+                targetLink,
                 "lti-session-token-" + UUID.randomUUID(),
-                "lti_user_" + request.subClaim().substring(0, Math.min(8, request.subClaim().length())),
-                "ROLE_STUDENT"
+                username,
+                role
         );
     }
 

@@ -9,7 +9,9 @@ import java.time.Instant;
 import java.util.Objects;
 
 @Entity
-@Table(name = "student_risk_scores")
+@Table(name = "student_risk_scores", uniqueConstraints = {
+    @UniqueConstraint(name = "uq_srs_student", columnNames = {"student_profile_id"})
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -28,7 +30,7 @@ public class StudentRiskScore {
     @JoinColumn(name = "student_profile_id", nullable = false)
     private StudentProfile student;
 
-    @Column(name = "evaluated_at", updatable = false)
+    @Column(name = "evaluated_at", nullable = false)
     @Builder.Default
     private Instant evaluatedAt = Instant.now();
 
@@ -51,6 +53,22 @@ public class StudentRiskScore {
 
     @Column(name = "recommended_interventions", columnDefinition = "TEXT")
     private String recommendedInterventions;
+
+    public void updateEvaluation(
+            BigDecimal academicRiskScore,
+            BigDecimal attendanceRiskScore,
+            BigDecimal socioeconomicRiskScore,
+            RiskLevel compositeRiskLevel,
+            BigDecimal predictedDropoutProbability,
+            String recommendedInterventions) {
+        this.academicRiskScore = academicRiskScore;
+        this.attendanceRiskScore = attendanceRiskScore;
+        this.socioeconomicRiskScore = socioeconomicRiskScore;
+        this.compositeRiskLevel = compositeRiskLevel;
+        this.predictedDropoutProbability = predictedDropoutProbability;
+        this.recommendedInterventions = recommendedInterventions;
+        this.evaluatedAt = Instant.now();
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -59,8 +59,10 @@ com\sdt\web_app\service\enrollment\StudentServiceTest.class
 com\sdt\web_app\service\financial\OrBookletServiceTest.class
 com\sdt\web_app\service\institution\TermLifecycleServiceTest.class
 com\sdt\web_app\service\admission\AdmissionQueueAndApplicationServiceTest.class
+com\sdt\web_app\controller\analytics\DigitalTwinAnalyticsControllerTest.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class
 com\sdt\web_app\service\analytics\EquityTargetServiceTest.class
 com\sdt\web_app\service\institution\CurriculumMajorLinkingTest.class
 com\sdt\web_app\service\grade\ClassRecordMatrixIntegrationTest.class
+com\sdt\web_app\service\analytics\StudentInterventionServiceTest.class
 com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.class

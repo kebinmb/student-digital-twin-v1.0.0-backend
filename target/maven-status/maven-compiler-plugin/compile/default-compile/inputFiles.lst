@@ -15,6 +15,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\admission\PublicAdmissionController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\analytics\AttendanceController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\analytics\DigitalTwinAnalyticsController.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\analytics\StudentInterventionController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\audit\AuditLogController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\AuthenticationController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\authentication\PasswordResetController.java
@@ -81,6 +82,8 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\admission\EntranceExamSlot.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\AttendanceRecord.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\AttendanceSession.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\FacultyAttendanceRecord.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\StudentIntervention.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\analytics\StudentRiskScore.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\audit\AuditLog.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\authentication\PasswordResetToken.java
@@ -146,6 +149,8 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\ClassSection.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\FacultyWorkload.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\Room.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\events\analytics\AssessmentScoreChangedEvent.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\events\analytics\AttendanceScannedEvent.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\exceptions\GlobalExceptionHandler.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\exceptions\InvalidTokenException.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\exceptions\QueueSessionExpiredException.java
@@ -156,6 +161,8 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\admission\EntranceExamSlotRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\AttendanceRecordRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\AttendanceSessionRepository.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\FacultyAttendanceRecordRepository.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\StudentInterventionRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\analytics\StudentRiskScoreRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\audit\AuditLogRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\authentication\PasswordResetTokenRepository.java
@@ -217,6 +224,9 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\DigitalTwinRiskService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\EquityTargetService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\QrAttendanceService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\ScheduledRiskEvaluationTask.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\StudentInterventionService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\analytics\StudentTelemetryEventListener.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\audit\AuditLogService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\AuthService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\authentication\PasswordResetService.java

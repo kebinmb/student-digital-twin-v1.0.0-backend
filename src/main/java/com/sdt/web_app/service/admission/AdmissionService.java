@@ -489,7 +489,7 @@ public class AdmissionService {
         return termRepository.findByIsActiveTrue()
                 .map(Term::getId)
                 .or(() -> termRepository.findAll().stream().findFirst().map(Term::getId))
-                .orElse(1L);
+                .orElseThrow(() -> new EntityNotFoundException("No active or configured academic term found in database"));
     }
 
     private String generateUniqueApplicationNumber(Term term) {

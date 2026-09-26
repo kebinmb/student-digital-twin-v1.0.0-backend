@@ -129,8 +129,9 @@ public class EnrollmentService {
                 Course requiredCourse = cp.getPrerequisiteCourse();
                 StudentCourseGrade grade = passedCourseMap.get(requiredCourse.getId());
                 boolean isSatisfied = grade != null && grade.isPassed();
+                boolean isHard = !"CO_REQUISITE".equalsIgnoreCase(cp.getRuleType());
 
-                if (!isSatisfied) {
+                if (isHard && !isSatisfied) {
                     allPrereqsSatisfied = false;
                     if (!failureReason.isEmpty()) failureReason.append("; ");
                     failureReason.append("Missing prerequisite: ")
@@ -257,6 +258,9 @@ public class EnrollmentService {
         Map<Long, StudentCourseGrade> gradeMap = studentGrades.stream()
                 .collect(Collectors.toMap(g -> g.getCourse().getId(), g -> g, (a, b) -> a));
         for (CoursePrerequisite cp : prerequisites) {
+            if ("CO_REQUISITE".equalsIgnoreCase(cp.getRuleType())) {
+                continue;
+            }
             StudentCourseGrade grade = gradeMap.get(cp.getPrerequisiteCourse().getId());
             if (grade == null || !grade.isPassed()) {
                 throw new IllegalStateException(String.format(
@@ -382,6 +386,33 @@ public class EnrollmentService {
 
         if (enrollment.getItems().isEmpty()) {
             throw new IllegalStateException("Cannot confirm enrollment: no courses have been enlisted.");
+        }
+
+        // Gate 3: Enforce co-requisite validation for all enlisted courses
+        Set<Long> enlistedCourseIds = enrollment.getItems().stream()
+                .map(item -> item.getSection().getCourse().getId())
+                .collect(Collectors.toSet());
+
+        List<StudentCourseGrade> studentGrades = studentCourseGradeRepository.findPassedGradesByStudentId(student.getId());
+        Set<Long> passedCourseIds = studentGrades.stream()
+                .filter(StudentCourseGrade::isPassed)
+                .map(g -> g.getCourse().getId())
+                .collect(Collectors.toSet());
+
+        for (EnrollmentCourseItem item : enrollment.getItems()) {
+            Course currentCourse = item.getSection().getCourse();
+            List<CoursePrerequisite> prereqs = prerequisiteRepository.findByCourseId(currentCourse.getId());
+            for (CoursePrerequisite cp : prereqs) {
+                if ("CO_REQUISITE".equalsIgnoreCase(cp.getRuleType())) {
+                    Long coreqCourseId = cp.getPrerequisiteCourse().getId();
+                    boolean isSatisfied = passedCourseIds.contains(coreqCourseId) || enlistedCourseIds.contains(coreqCourseId);
+                    if (!isSatisfied) {
+                        throw new IllegalStateException(String.format(
+                                "Gate 3 Violation: Missing mandatory co-requisite '%s' (%s) required for course '%s'. Co-requisites must be either previously passed or concurrently enlisted in the same term.",
+                                cp.getPrerequisiteCourse().getCode(), cp.getPrerequisiteCourse().getTitle(), currentCourse.getCode()));
+                    }
+                }
+            }
         }
 
         enrollment.updateStatus(StudentEnrollment.Status.ENROLLED);

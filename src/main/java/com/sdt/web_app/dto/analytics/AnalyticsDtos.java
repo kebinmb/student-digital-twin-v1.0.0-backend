@@ -47,6 +47,36 @@ public class AnalyticsDtos {
             String deviceFingerprint
     ) {}
 
+    public record VerifyCreatorAttendanceRequest(
+            @NotNull String qrSeed,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String deviceFingerprint
+    ) {}
+
+    public record FacultyAttendanceRecordResponse(
+            Long recordId,
+            Long sessionId,
+            String sectionCode,
+            String courseCode,
+            Long facultyUserId,
+            String facultyName,
+            String facultyRole,
+            String attendanceStatus,
+            boolean isGeofenceValid,
+            Instant verifiedAt,
+            String deviceFingerprint
+    ) {}
+
+    public record ActivityAlertDto(
+            String activityTitle,
+            String categoryName,
+            BigDecimal scoreEarned,
+            BigDecimal maxPoints,
+            BigDecimal percentage,
+            String suggestion
+    ) {}
+
     public record DigitalTwinRiskProfileDto(
             Long studentId,
             String studentNumber,
@@ -59,8 +89,26 @@ public class AnalyticsDtos {
             String compositeRiskLevel,
             BigDecimal predictedDropoutProbability,
             List<String> recommendedInterventions,
-            Instant evaluatedAt
-    ) {}
+            Instant evaluatedAt,
+            List<ActivityAlertDto> activityAlerts
+    ) {
+        public DigitalTwinRiskProfileDto(
+                Long studentId,
+                String studentNumber,
+                String studentName,
+                String programCode,
+                Integer yearLevel,
+                BigDecimal academicRiskScore,
+                BigDecimal attendanceRiskScore,
+                BigDecimal socioeconomicRiskScore,
+                String compositeRiskLevel,
+                BigDecimal predictedDropoutProbability,
+                List<String> recommendedInterventions,
+                Instant evaluatedAt
+        ) {
+            this(studentId, studentNumber, studentName, programCode, yearLevel, academicRiskScore, attendanceRiskScore, socioeconomicRiskScore, compositeRiskLevel, predictedDropoutProbability, recommendedInterventions, evaluatedAt, List.of());
+        }
+    }
 
     public record EarlyWarningRadarItemDto(
             Long studentId,
@@ -72,5 +120,37 @@ public class AnalyticsDtos {
             BigDecimal dropoutProbability,
             String primaryRiskFactor,
             String suggestedAction
+    ) {}
+
+    public record DispatchInterventionRequest(
+            @NotNull Long studentId,
+            Long riskScoreId,
+            @NotNull String interventionType,
+            Long assignedCounselorId,
+            String triggerFactor,
+            String notes
+    ) {}
+
+    public record UpdateInterventionStatusRequest(
+            @NotNull String status,
+            String resolutionSummary,
+            String additionalNotes
+    ) {}
+
+    public record StudentInterventionDto(
+            Long id,
+            Long studentId,
+            String studentNumber,
+            String studentName,
+            Long riskScoreId,
+            String interventionType,
+            String status,
+            Long assignedCounselorId,
+            String assignedCounselorName,
+            String triggerFactor,
+            String caseNotes,
+            String resolutionSummary,
+            Instant dispatchedAt,
+            Instant resolvedAt
     ) {}
 }

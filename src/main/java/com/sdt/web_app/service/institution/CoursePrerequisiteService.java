@@ -35,14 +35,14 @@ public class CoursePrerequisiteService {
             throw new IllegalArgumentException("Prerequisite relationship already exists between " + course.getCode() + " and " + prerequisiteCourse.getCode());
         }
 
-        // Cycle check: verify that prerequisiteCourse cannot reach course in the dependency graph
-        if (createsCycle(request.courseId(), request.prerequisiteCourseId())) {
-            throw new IllegalStateException("Adding prerequisite introduces a circular dependency between " + course.getCode() + " and " + prerequisiteCourse.getCode());
-        }
-
         String ruleType = (request.ruleType() != null && !request.ruleType().isBlank())
                 ? request.ruleType()
                 : "HARD";
+
+        // Cycle check: verify that prerequisiteCourse cannot reach course in the dependency graph for HARD prerequisites
+        if ("HARD".equalsIgnoreCase(ruleType) && createsCycle(request.courseId(), request.prerequisiteCourseId())) {
+            throw new IllegalStateException("Adding prerequisite introduces a circular dependency between " + course.getCode() + " and " + prerequisiteCourse.getCode());
+        }
 
         String minGrade = (request.minGradeRequired() != null && !request.minGradeRequired().isBlank())
                 ? request.minGradeRequired()
@@ -91,6 +91,9 @@ public class CoursePrerequisiteService {
 
             List<CoursePrerequisite> prereqs = prerequisiteRepository.findByCourseId(currentId);
             for (CoursePrerequisite cp : prereqs) {
+                if (!"HARD".equalsIgnoreCase(cp.getRuleType())) {
+                    continue;
+                }
                 Long nextId = cp.getPrerequisiteCourse().getId();
                 if (visited.add(nextId)) {
                     queue.add(nextId);

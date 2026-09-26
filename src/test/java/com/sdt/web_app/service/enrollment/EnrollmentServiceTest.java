@@ -521,4 +521,121 @@ class EnrollmentServiceTest {
         assertThat(response.status()).isEqualTo("ENROLLED");
         assertThat(response.totalCreditUnits()).isEqualByComparingTo(new BigDecimal("3.00"));
     }
+
+    @Test
+    @DisplayName("Gate 3: Should allow provisional enlistment when prerequisite is a CO_REQUISITE")
+    void shouldAllowProvisionalEnlistmentForCoRequisite() {
+        given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
+        given(termService.getTermById(20L)).willReturn(term);
+        given(sectionRepository.findByIdWithSchedules(200L)).willReturn(Optional.of(openSection));
+
+        CoursePrerequisite coreq = CoursePrerequisite.builder()
+                .course(course2)
+                .prerequisiteCourse(course1)
+                .ruleType("CO_REQUISITE")
+                .minGradeRequired("3.00")
+                .build();
+        given(prerequisiteRepository.findByCourseId(102L)).willReturn(List.of(coreq));
+        given(sectionRepository.incrementEnrolledCountIfOpen(200L)).willReturn(1);
+        given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.empty());
+        given(studentEnrollmentRepository.save(any(StudentEnrollment.class))).willAnswer(inv -> inv.getArgument(0));
+
+        EnlistSectionRequest request = new EnlistSectionRequest(20L, 200L);
+        StudentEnrollmentResponse response = enrollmentService.enlistSection(50L, request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.status()).isEqualTo("ENLISTED");
+    }
+
+    @Test
+    @DisplayName("Gate 3: Should block confirm enrollment when mandatory CO_REQUISITE is missing")
+    void shouldBlockConfirmEnrollmentWhenMandatoryCoRequisiteMissing() {
+        StudentEnrollment enrollment = StudentEnrollment.builder()
+                .student(student)
+                .term(term)
+                .status(StudentEnrollment.Status.ENLISTED)
+                .totalCreditUnits(new BigDecimal("3.00"))
+                .isOverloadApproved(false)
+                .items(new LinkedHashSet<>())
+                .build();
+        ReflectionTestUtils.setField(enrollment, "id", 300L);
+
+        EnrollmentCourseItem item = EnrollmentCourseItem.builder()
+                .enrollment(enrollment)
+                .section(openSection) // course2
+                .build();
+        enrollment.addItem(item);
+
+        given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
+        given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.of(enrollment));
+
+        CoursePrerequisite coreq = CoursePrerequisite.builder()
+                .course(course2)
+                .prerequisiteCourse(course1)
+                .ruleType("CO_REQUISITE")
+                .minGradeRequired("3.00")
+                .build();
+        given(prerequisiteRepository.findByCourseId(102L)).willReturn(List.of(coreq));
+        given(studentCourseGradeRepository.findPassedGradesByStudentId(50L)).willReturn(Collections.emptyList());
+
+        ConfirmEnrollmentRequest request = new ConfirmEnrollmentRequest(20L);
+
+        assertThatThrownBy(() -> enrollmentService.confirmEnrollment(50L, request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Gate 3 Violation: Missing mandatory co-requisite 'IT 101'");
+    }
+
+    @Test
+    @DisplayName("Gate 3: Should allow confirm enrollment when mandatory CO_REQUISITE is enlisted concurrently")
+    void shouldAllowConfirmEnrollmentWhenCoRequisiteEnlistedConcurrently() {
+        ClassSection section1 = ClassSection.builder()
+                .term(term)
+                .course(course1)
+                .sectionCode("BSIT-1A-C1")
+                .maxCapacity(40)
+                .status(ClassSection.Status.OPEN)
+                .build();
+        ReflectionTestUtils.setField(section1, "id", 201L);
+
+        StudentEnrollment enrollment = StudentEnrollment.builder()
+                .student(student)
+                .term(term)
+                .status(StudentEnrollment.Status.ENLISTED)
+                .totalCreditUnits(new BigDecimal("6.00"))
+                .isOverloadApproved(false)
+                .items(new LinkedHashSet<>())
+                .build();
+        ReflectionTestUtils.setField(enrollment, "id", 300L);
+
+        EnrollmentCourseItem item2 = EnrollmentCourseItem.builder()
+                .enrollment(enrollment)
+                .section(openSection) // course2
+                .build();
+        EnrollmentCourseItem item1 = EnrollmentCourseItem.builder()
+                .enrollment(enrollment)
+                .section(section1) // course1 (the co-requisite)
+                .build();
+        enrollment.addItem(item2);
+        enrollment.addItem(item1);
+
+        given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
+        given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.of(enrollment));
+
+        CoursePrerequisite coreq = CoursePrerequisite.builder()
+                .course(course2)
+                .prerequisiteCourse(course1)
+                .ruleType("CO_REQUISITE")
+                .minGradeRequired("3.00")
+                .build();
+        given(prerequisiteRepository.findByCourseId(102L)).willReturn(List.of(coreq));
+        given(prerequisiteRepository.findByCourseId(101L)).willReturn(Collections.emptyList());
+        given(studentCourseGradeRepository.findPassedGradesByStudentId(50L)).willReturn(Collections.emptyList());
+
+        ConfirmEnrollmentRequest request = new ConfirmEnrollmentRequest(20L);
+        EnrollmentConfirmationDto confirmation = enrollmentService.confirmEnrollment(50L, request);
+
+        assertThat(confirmation).isNotNull();
+        assertThat(confirmation.status()).isEqualTo("ENROLLED");
+        assertThat(enrollment.getStatus()).isEqualTo(StudentEnrollment.Status.ENROLLED);
+    }
 }
