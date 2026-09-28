@@ -31,7 +31,7 @@ public class AcademicYearService {
         }
 
         if (request.isCurrent()) {
-            academicYearRepository.findByIsCurrentTrue().ifPresent(AcademicYear::unmarkAsCurrent);
+            academicYearRepository.findAllByIsCurrentTrue().forEach(AcademicYear::unmarkAsCurrent);
         }
 
         AcademicYear academicYear = AcademicYear.builder()

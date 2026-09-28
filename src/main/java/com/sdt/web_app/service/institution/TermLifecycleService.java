@@ -35,7 +35,7 @@ public class TermLifecycleService {
         }
 
         AcademicYear parentAy = targetTerm.getAcademicYear();
-        academicYearRepository.findFirstByIsCurrentTrueOrderByIdDesc().ifPresent(currentAy -> {
+        academicYearRepository.findAllByIsCurrentTrue().forEach(currentAy -> {
             if (!currentAy.getId().equals(parentAy.getId())) {
                 currentAy.unmarkAsCurrent();
             }

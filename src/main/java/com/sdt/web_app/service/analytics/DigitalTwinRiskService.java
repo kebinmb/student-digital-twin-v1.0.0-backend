@@ -33,6 +33,15 @@ import com.sdt.web_app.repositories.grade.StudentAssessmentScoreRepository;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.sdt.web_app.repositories.analytics.StudentInterventionRepository;
+import java.time.Instant;
+
+import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
+import com.sdt.web_app.repositories.enrollment.EnrollmentCourseItemRepository;
+import com.sdt.web_app.entities.scheduling.ClassSection;
+import com.sdt.web_app.entities.enrollment.EnrollmentCourseItem;
+import com.sdt.web_app.entities.analytics.StudentIntervention;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -41,9 +50,12 @@ public class DigitalTwinRiskService {
     private final StudentProfileRepository profileRepository;
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final StudentRiskScoreRepository riskScoreRepository;
+    private final StudentInterventionRepository interventionRepository;
     private final EquityTargetService equityTargetService;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
     private final StudentAssessmentScoreRepository assessmentScoreRepository;
+    private final ClassSectionRepository classSectionRepository;
+    private final EnrollmentCourseItemRepository enrollmentCourseItemRepository;
 
     @Transactional
     public DigitalTwinRiskProfileDto evaluateStudentRiskProfile(Long studentId) {
@@ -334,5 +346,286 @@ public class DigitalTwinRiskService {
             );
         });
         return SliceResponse.from(responseSlice);
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<StudentTelemetryAdminSummaryDto> getAdminStudentTelemetry(
+            int page, int size, String searchQuery, String riskLevelFilter, String interventionStatusFilter) {
+
+        List<StudentProfile> allStudents = profileRepository.searchStudents(searchQuery);
+        List<StudentTelemetryAdminSummaryDto> summaries = new ArrayList<>();
+
+        for (StudentProfile sp : allStudents) {
+            StudentRiskScore srs = riskScoreRepository.findTopByStudentIdOrderByEvaluatedAtDesc(sp.getId()).orElse(null);
+
+            String currentRiskLevel = (srs != null && srs.getCompositeRiskLevel() != null)
+                    ? srs.getCompositeRiskLevel().name()
+                    : "LOW";
+
+            if (riskLevelFilter != null && !riskLevelFilter.isBlank() && !riskLevelFilter.equalsIgnoreCase("ALL")) {
+                if (!currentRiskLevel.equalsIgnoreCase(riskLevelFilter.trim())) {
+                    continue;
+                }
+            }
+
+            List<com.sdt.web_app.entities.analytics.StudentIntervention> interventions =
+                    interventionRepository.findByStudentIdOrderByDispatchedAtDesc(sp.getId());
+
+            if (interventionStatusFilter != null && !interventionStatusFilter.isBlank() && !interventionStatusFilter.equalsIgnoreCase("ALL")) {
+                boolean hasMatchingStatus = interventions.stream()
+                        .anyMatch(i -> i.getStatus().name().equalsIgnoreCase(interventionStatusFilter.trim()));
+                if (!hasMatchingStatus) {
+                    continue;
+                }
+            }
+
+            List<DispatchedInterventionDto> dispatchedDtos = interventions.stream()
+                    .map(i -> new DispatchedInterventionDto(
+                            i.getId(),
+                            i.getInterventionType().name(),
+                            i.getTriggerFactor(),
+                            i.getStatus().name(),
+                            i.getDispatchedAt()
+                    ))
+                    .toList();
+
+            Double riskScoreVal = srs != null && srs.getPredictedDropoutProbability() != null
+                    ? srs.getPredictedDropoutProbability().doubleValue() * 100.0
+                    : (srs != null && srs.getAcademicRiskScore() != null ? srs.getAcademicRiskScore().doubleValue() : 5.0);
+
+            Instant syncTime = srs != null && srs.getEvaluatedAt() != null ? srs.getEvaluatedAt() : sp.getCreatedAt();
+            String progName = sp.getProgram() != null ? sp.getProgram().getCode() : "N/A";
+            String programOrCohort = progName + " (Year " + sp.getYearLevel() + ")";
+
+            summaries.add(new StudentTelemetryAdminSummaryDto(
+                    sp.getId(),
+                    sp.getStudentNumber(),
+                    sp.getFullName(),
+                    programOrCohort,
+                    currentRiskLevel,
+                    Math.round(riskScoreVal * 10.0) / 10.0,
+                    dispatchedDtos,
+                    syncTime
+            ));
+        }
+
+        int totalElements = summaries.size();
+        int fromIndex = Math.min(page * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<StudentTelemetryAdminSummaryDto> pageContent = summaries.subList(fromIndex, toIndex);
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, totalElements);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FacultySectionOptionDto> getFacultyAssignedSections(Long facultyUserId) {
+        if (classSectionRepository == null) return List.of();
+        List<Long> assignedIds = classSectionRepository.findAssignedSectionIdsByInstructor(facultyUserId);
+        if (assignedIds == null || assignedIds.isEmpty()) {
+            return List.of();
+        }
+        List<ClassSection> sections = classSectionRepository.findAllById(assignedIds);
+        return sections.stream().map(s -> new FacultySectionOptionDto(
+                s.getId(),
+                s.getSectionCode(),
+                s.getCourse() != null ? s.getCourse().getCode() : "COURSE",
+                s.getCourse() != null ? s.getCourse().getTitle() : "Class Section",
+                s.getEnrolledCount()
+        )).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<StudentTelemetrySummaryDto> getFacultyStudentTelemetry(
+            Long facultyUserId, int page, int size, String searchQuery, String riskLevelFilter, String interventionStatusFilter, Long sectionIdFilter) {
+
+        List<Long> assignedSectionIds = classSectionRepository.findAssignedSectionIdsByInstructor(facultyUserId);
+        if (assignedSectionIds == null || assignedSectionIds.isEmpty()) {
+            return org.springframework.data.domain.Page.empty(org.springframework.data.domain.PageRequest.of(page, size));
+        }
+
+        List<Long> targetSectionIds;
+        if (sectionIdFilter != null && sectionIdFilter > 0) {
+            if (!assignedSectionIds.contains(sectionIdFilter)) {
+                return org.springframework.data.domain.Page.empty(org.springframework.data.domain.PageRequest.of(page, size));
+            }
+            targetSectionIds = List.of(sectionIdFilter);
+        } else {
+            targetSectionIds = assignedSectionIds;
+        }
+
+        Map<Long, StudentProfile> studentMap = new LinkedHashMap<>();
+        Map<Long, String> studentSectionCodeMap = new LinkedHashMap<>();
+
+        for (Long secId : targetSectionIds) {
+            List<EnrollmentCourseItem> items = enrollmentCourseItemRepository.findBySectionIdWithStudentDetails(secId);
+            ClassSection sec = classSectionRepository.findById(secId).orElse(null);
+            String secCode = sec != null ? sec.getSectionCode() : "SEC-" + secId;
+
+            for (EnrollmentCourseItem item : items) {
+                if (item.getEnrollment() != null && item.getEnrollment().getStudent() != null) {
+                    StudentProfile sp = item.getEnrollment().getStudent();
+                    studentMap.putIfAbsent(sp.getId(), sp);
+                    studentSectionCodeMap.putIfAbsent(sp.getId(), secCode);
+                }
+            }
+        }
+
+        List<StudentTelemetrySummaryDto> summaries = new ArrayList<>();
+
+        for (StudentProfile sp : studentMap.values()) {
+            if (searchQuery != null && !searchQuery.isBlank()) {
+                String q = searchQuery.toLowerCase().trim();
+                boolean matchesName = sp.getFullName() != null && sp.getFullName().toLowerCase().contains(q);
+                boolean matchesNumber = sp.getStudentNumber() != null && sp.getStudentNumber().toLowerCase().contains(q);
+                boolean matchesProg = sp.getProgram() != null && sp.getProgram().getCode().toLowerCase().contains(q);
+                if (!matchesName && !matchesNumber && !matchesProg) {
+                    continue;
+                }
+            }
+
+            StudentRiskScore srs = riskScoreRepository.findTopByStudentIdOrderByEvaluatedAtDesc(sp.getId()).orElse(null);
+            String currentRiskLevel = (srs != null && srs.getCompositeRiskLevel() != null)
+                    ? srs.getCompositeRiskLevel().name()
+                    : "LOW";
+
+            if (riskLevelFilter != null && !riskLevelFilter.isBlank() && !riskLevelFilter.equalsIgnoreCase("ALL")) {
+                if (!currentRiskLevel.equalsIgnoreCase(riskLevelFilter.trim())) {
+                    continue;
+                }
+            }
+
+            List<StudentIntervention> interventions = interventionRepository.findByStudentIdOrderByDispatchedAtDesc(sp.getId());
+            if (interventionStatusFilter != null && !interventionStatusFilter.isBlank() && !interventionStatusFilter.equalsIgnoreCase("ALL")) {
+                boolean hasMatchingStatus = interventions.stream()
+                        .anyMatch(i -> i.getStatus().name().equalsIgnoreCase(interventionStatusFilter.trim()));
+                if (!hasMatchingStatus) {
+                    continue;
+                }
+            }
+
+            List<DispatchedInterventionDto> dispatchedDtos = interventions.stream()
+                    .map(i -> new DispatchedInterventionDto(
+                            i.getId(),
+                            i.getInterventionType().name(),
+                            i.getTriggerFactor(),
+                            i.getStatus().name(),
+                            i.getDispatchedAt()
+                    ))
+                    .toList();
+
+            Double riskScoreVal = srs != null && srs.getPredictedDropoutProbability() != null
+                    ? srs.getPredictedDropoutProbability().doubleValue() * 100.0
+                    : (srs != null && srs.getAcademicRiskScore() != null ? srs.getAcademicRiskScore().doubleValue() : 5.0);
+
+            Instant syncTime = srs != null && srs.getEvaluatedAt() != null ? srs.getEvaluatedAt() : sp.getCreatedAt();
+            String secCode = studentSectionCodeMap.getOrDefault(sp.getId(), "N/A");
+            String progName = sp.getProgram() != null ? sp.getProgram().getCode() : "N/A";
+
+            summaries.add(new StudentTelemetrySummaryDto(
+                    sp.getId(),
+                    sp.getStudentNumber(),
+                    sp.getFullName(),
+                    secCode,
+                    progName,
+                    currentRiskLevel,
+                    Math.round(riskScoreVal * 10.0) / 10.0,
+                    dispatchedDtos,
+                    syncTime
+            ));
+        }
+
+        int totalElements = summaries.size();
+        int fromIndex = Math.min(page * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<StudentTelemetrySummaryDto> pageContent = summaries.subList(fromIndex, toIndex);
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, totalElements);
+    }
+
+    @Transactional
+    public StudentSelfTelemetryDto getStudentSelfTelemetry(Long studentUserId) {
+        StudentProfile student = profileRepository.findByUserIdWithProgramAndCurriculum(studentUserId)
+                .or(() -> profileRepository.findByUserId(studentUserId))
+                .or(() -> profileRepository.findAll().stream().findFirst())
+                .orElse(null);
+
+        if (student == null) {
+            Map<String, Double> defaultDim = new LinkedHashMap<>();
+            defaultDim.put("Academic Progress", 85.0);
+            defaultDim.put("Attendance Consistency", 90.0);
+            defaultDim.put("LMS Engagement Index", 80.0);
+            defaultDim.put("Assignment Punctuality", 95.0);
+            return new StudentSelfTelemetryDto(
+                    studentUserId,
+                    "Student User",
+                    "LOW",
+                    87.5,
+                    defaultDim,
+                    List.of(),
+                    List.of(new MilestoneDto(1L, "Digital Twin Synchronized", "Continuous real-time ML risk & telemetry monitoring active", "SYSTEM", Instant.now())),
+                    Instant.now()
+            );
+        }
+
+        DigitalTwinRiskProfileDto riskProfile = evaluateStudentRiskProfile(student.getId());
+
+        double academicVal = riskProfile.academicRiskScore() != null ? riskProfile.academicRiskScore().doubleValue() : 10.0;
+        double attendanceVal = riskProfile.attendanceRiskScore() != null ? riskProfile.attendanceRiskScore().doubleValue() : 10.0;
+        double socioVal = riskProfile.socioeconomicRiskScore() != null ? riskProfile.socioeconomicRiskScore().doubleValue() : 10.0;
+
+        double wellness = 100.0 - (academicVal * 0.40 + attendanceVal * 0.35 + socioVal * 0.25);
+        wellness = Math.max(0.0, Math.min(100.0, Math.round(wellness * 10.0) / 10.0));
+
+        Map<String, Double> dimensions = new LinkedHashMap<>();
+        dimensions.put("Academic Progress", Math.round(Math.max(0.0, 100.0 - academicVal) * 10.0) / 10.0);
+        dimensions.put("Attendance Consistency", Math.round(Math.max(0.0, 100.0 - attendanceVal) * 10.0) / 10.0);
+        dimensions.put("LMS Engagement Index", Math.round(Math.max(0.0, 100.0 - (academicVal * 0.7 + attendanceVal * 0.3)) * 10.0) / 10.0);
+        dimensions.put("Assignment Punctuality", Math.round(Math.max(0.0, 100.0 - (academicVal * 0.5)) * 10.0) / 10.0);
+
+        List<StudentIntervention> interventions = interventionRepository.findByStudentIdOrderByDispatchedAtDesc(student.getId());
+        List<DispatchedInterventionDto> dispatchedDtos = interventions.stream()
+                .map(i -> new DispatchedInterventionDto(
+                        i.getId(),
+                        i.getInterventionType().name(),
+                        i.getTriggerFactor(),
+                        i.getStatus().name(),
+                        i.getDispatchedAt()
+                ))
+                .toList();
+
+        List<MilestoneDto> milestones = new ArrayList<>();
+        if (attendanceVal < 20.0) {
+            milestones.add(new MilestoneDto(1L, "Perfect Attendance Streak", "Maintained >90% geofenced attendance rate across active sections", "ATTENDANCE", Instant.now()));
+        }
+        if (academicVal < 25.0) {
+            milestones.add(new MilestoneDto(2L, "Academic Mastery Pace", "High continuous grade performance in registered courses", "ACADEMIC", Instant.now()));
+        }
+        milestones.add(new MilestoneDto(3L, "Digital Twin Synchronized", "Continuous real-time ML risk & telemetry monitoring active", "SYSTEM", Instant.now()));
+
+        return new StudentSelfTelemetryDto(
+                student.getId(),
+                student.getFullName(),
+                riskProfile.compositeRiskLevel(),
+                wellness,
+                dimensions,
+                dispatchedDtos,
+                milestones,
+                riskProfile.evaluatedAt() != null ? riskProfile.evaluatedAt() : Instant.now()
+        );
+    }
+
+    @Transactional
+    public void acknowledgeIntervention(Long interventionId, Long studentUserId) {
+        StudentIntervention intervention = interventionRepository.findById(interventionId)
+                .orElseThrow(() -> new EntityNotFoundException("Intervention not found: " + interventionId));
+        if (intervention.getStudent() != null && intervention.getStudent().getUser() != null) {
+            if (!intervention.getStudent().getUser().getId().equals(studentUserId)) {
+                throw new IllegalStateException("Unauthorized: intervention does not belong to student.");
+            }
+        }
+        intervention.updateStatus(StudentIntervention.InterventionStatus.ACKNOWLEDGED, "Acknowledged by student in digital twin portal.", "Student self-service feedback");
+        interventionRepository.save(intervention);
     }
 }

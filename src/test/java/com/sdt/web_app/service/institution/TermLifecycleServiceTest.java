@@ -63,7 +63,7 @@ class TermLifecycleServiceTest {
     void activateTerm_Success() {
         given(termRepository.findWithAcademicYearById(10L)).willReturn(Optional.of(term));
         given(termRepository.findAllByIsActiveTrue()).willReturn(List.of());
-        given(academicYearRepository.findFirstByIsCurrentTrueOrderByIdDesc()).willReturn(Optional.empty());
+        given(academicYearRepository.findAllByIsCurrentTrue()).willReturn(List.of());
 
         Term result = termLifecycleService.activateTerm(10L);
 

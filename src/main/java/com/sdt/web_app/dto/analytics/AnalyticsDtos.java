@@ -153,4 +153,62 @@ public class AnalyticsDtos {
             Instant dispatchedAt,
             Instant resolvedAt
     ) {}
+
+    public record DispatchedInterventionDto(
+            Long id,
+            String interventionType,
+            String triggerReason,
+            String status,
+            Instant dispatchedAt
+    ) {}
+
+    public record StudentTelemetrySummaryDto(
+            Long studentId,
+            String studentNumber,
+            String fullName,
+            String sectionCode,
+            String program,
+            String riskLevel,
+            Double riskScore,
+            List<DispatchedInterventionDto> activeInterventions,
+            Instant lastTelemetrySync
+    ) {}
+
+    public record StudentTelemetryAdminSummaryDto(
+            Long studentId,
+            String studentNumber,
+            String fullName,
+            String programOrCohort,
+            String riskLevel,
+            Double riskScore,
+            List<DispatchedInterventionDto> activeInterventions,
+            Instant lastTelemetrySync
+    ) {}
+
+    public record FacultySectionOptionDto(
+            Long sectionId,
+            String sectionCode,
+            String courseCode,
+            String courseTitle,
+            int enrolledCount
+    ) {}
+
+    public record MilestoneDto(
+            Long id,
+            String title,
+            String description,
+            String category,
+            Instant achievedAt
+    ) {}
+
+    public record StudentSelfTelemetryDto(
+            Long studentId,
+            String fullName,
+            String riskLevel,
+            Double wellnessScore,
+            java.util.Map<String, Double> dimensionScores,
+            List<DispatchedInterventionDto> recommendations,
+            List<MilestoneDto> milestones,
+            Instant lastSync
+    ) {}
 }

@@ -33,7 +33,11 @@ public class StudentIntervention {
         ASSIGNED,
         IN_PROGRESS,
         RESOLVED,
-        ESCALATED
+        ESCALATED,
+        PENDING,
+        DISPATCHED,
+        ACKNOWLEDGED,
+        FAILED
     }
 
     @Id

@@ -44,9 +44,9 @@ ALTER TABLE admission_applications
 -- 3. Seed Initial Admission Configuration for Term 4 (Locked by default until ADMIN/GUIDANCE activation)
 INSERT INTO admission_configs (id, term_id, is_active, daily_slot_limit, total_opened_slots, days_open, start_date, end_date)
 VALUES (1, 4, FALSE, 1000, 20000, 20, '2026-10-01', '2026-10-21')
-ON DUPLICATE KEY UPDATE 
-    is_active = VALUES(is_active),
-    daily_slot_limit = VALUES(daily_slot_limit),
-    total_opened_slots = VALUES(total_opened_slots);
+AS new_row ON DUPLICATE KEY UPDATE 
+    is_active = new_row.is_active,
+    daily_slot_limit = new_row.daily_slot_limit,
+    total_opened_slots = new_row.total_opened_slots;
 
 SET FOREIGN_KEY_CHECKS = 1;
