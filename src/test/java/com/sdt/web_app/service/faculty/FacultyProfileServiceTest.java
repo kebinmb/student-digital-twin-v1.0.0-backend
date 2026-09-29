@@ -281,4 +281,78 @@ class FacultyProfileServiceTest {
         assertThat(response.programId()).isEqualTo(200L);
         assertThat(response.programCode()).isEqualTo("BSCS");
     }
+
+    @Test
+    @DisplayName("Should provision new faculty account with full name details")
+    void createFacultyAccount_WithNameDetails_Success() {
+        CreateFacultyAccountRequest request = new CreateFacultyAccountRequest(
+                "prof_curie",
+                "curie@example.com",
+                "Secret123!",
+                "FAC-2026-7777",
+                "Marie",
+                "Salomea",
+                "Curie",
+                "PhD",
+                "DOCTORATE",
+                "PROFESSOR_I",
+                "PRC-7777777",
+                "FULL_TIME",
+                true,
+                null,
+                null
+        );
+
+        given(userRepository.existsByUsername("prof_curie")).willReturn(false);
+        given(userRepository.existsByEmail("curie@example.com")).willReturn(false);
+        given(profileRepository.existsByFacultyIdNumber("FAC-2026-7777")).willReturn(false);
+        given(passwordEncoder.encode("Secret123!")).willReturn("encodedPassword");
+        given(userRepository.save(any(User.class))).willAnswer(inv -> {
+            User u = inv.getArgument(0);
+            ReflectionTestUtils.setField(u, "id", 777L);
+            return u;
+        });
+        given(profileRepository.save(any(FacultyProfile.class))).willAnswer(inv -> {
+            FacultyProfile fp = inv.getArgument(0);
+            ReflectionTestUtils.setField(fp, "id", 3003L);
+            return fp;
+        });
+
+        FacultyProfileResponse response = facultyService.createFacultyAccount(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.firstName()).isEqualTo("Marie");
+        assertThat(response.middleName()).isEqualTo("Salomea");
+        assertThat(response.lastName()).isEqualTo("Curie");
+        assertThat(response.suffix()).isEqualTo("PhD");
+        assertThat(response.fullName()).isEqualTo("Marie Salomea Curie PhD");
+    }
+
+    @Test
+    @DisplayName("Should update faculty profile with name details")
+    void updateFacultyProfile_WithNameDetails_Success() {
+        UpdateFacultyProfileRequest request = new UpdateFacultyProfileRequest(
+                "Albert",
+                null,
+                "Einstein",
+                null,
+                "DOCTORATE",
+                "PROFESSOR_I",
+                "PRC-9999999",
+                "FULL_TIME",
+                true,
+                null,
+                null
+        );
+
+        given(profileRepository.findByUserIdWithUser(42L)).willReturn(Optional.of(profile));
+        given(profileRepository.save(any(FacultyProfile.class))).willAnswer(inv -> inv.getArgument(0));
+
+        FacultyProfileResponse response = facultyService.updateProfile(42L, request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.firstName()).isEqualTo("Albert");
+        assertThat(response.lastName()).isEqualTo("Einstein");
+        assertThat(response.fullName()).isEqualTo("Albert Einstein");
+    }
 }

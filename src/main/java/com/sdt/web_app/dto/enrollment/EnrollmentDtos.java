@@ -142,6 +142,14 @@ public class EnrollmentDtos {
 
             String password,
 
+            String firstName,
+
+            String middleName,
+
+            String lastName,
+
+            String suffix,
+
             @NotNull(message = "Program ID is required")
             Long programId,
 
@@ -165,7 +173,21 @@ public class EnrollmentDtos {
                 String classification,
                 Integer yearLevel
         ) {
-            this(studentNumber, username, email, password, programId, curriculumId, classification, yearLevel, null);
+            this(studentNumber, username, email, password, null, null, null, null, programId, curriculumId, classification, yearLevel, null);
+        }
+
+        public CreateStudentRequest(
+                String studentNumber,
+                String username,
+                String email,
+                String password,
+                Long programId,
+                Long curriculumId,
+                String classification,
+                Integer yearLevel,
+                Long admissionApplicationId
+        ) {
+            this(studentNumber, username, email, password, null, null, null, null, programId, curriculumId, classification, yearLevel, admissionApplicationId);
         }
     }
 
@@ -175,6 +197,11 @@ public class EnrollmentDtos {
             Long userId,
             String username,
             String email,
+            String firstName,
+            String middleName,
+            String lastName,
+            String suffix,
+            String fullName,
             Long programId,
             String programCode,
             String programName,
@@ -188,7 +215,30 @@ public class EnrollmentDtos {
             BigDecimal cumulativeGpa,
             String financialClearance,
             String departmentalClearance
-    ) {}
+    ) {
+        public StudentProfileResponse(
+                Long id,
+                String studentNumber,
+                Long userId,
+                String username,
+                String email,
+                Long programId,
+                String programCode,
+                String programName,
+                Long curriculumId,
+                String curriculumCode,
+                String classification,
+                int yearLevel,
+                String enrollmentStatus,
+                boolean isGraduating,
+                BigDecimal totalUnitsEarned,
+                BigDecimal cumulativeGpa,
+                String financialClearance,
+                String departmentalClearance
+        ) {
+            this(id, studentNumber, userId, username, email, null, null, null, null, username, programId, programCode, programName, curriculumId, curriculumCode, classification, yearLevel, enrollmentStatus, isGraduating, totalUnitsEarned, cumulativeGpa, financialClearance, departmentalClearance);
+        }
+    }
 
     public record UpdateClearanceRequest(
             String financialClearance,

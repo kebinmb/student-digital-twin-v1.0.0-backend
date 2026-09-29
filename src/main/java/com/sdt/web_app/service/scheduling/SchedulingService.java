@@ -815,6 +815,10 @@ public class SchedulingService {
                         t.getAcademicYear().isCurrent(),
                         t.isActive(),
                         t.isEnrollmentOpen(),
+                        t.isGradingOpen(),
+                        t.isAddDropOpen(),
+                        t.getStartDate(),
+                        t.getEndDate(),
                         t.getMaxHoursPerClass() != null ? t.getMaxHoursPerClass() : new BigDecimal("3.0")
                 ))
                 .toList();
@@ -897,6 +901,7 @@ public class SchedulingService {
                 sec.getMaxCapacity(),
                 sec.getEnrolledCount(),
                 sec.getStatus().name(),
+                sec.getGradeStatus() != null ? sec.getGradeStatus().name() : "DRAFT",
                 slotResponses
         );
     }

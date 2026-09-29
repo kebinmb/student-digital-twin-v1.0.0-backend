@@ -252,4 +252,53 @@ class StudentServiceTest {
 
         assertThat(result).isPresent().contains(500L);
     }
+
+    @Test
+    @DisplayName("Should successfully register a new student with full name details")
+    void createStudent_WithNameDetails_Success() {
+        CreateStudentRequest req = new CreateStudentRequest(
+                "2026-IT-0101",
+                "maria_clara",
+                "maria@example.com",
+                "Password123!",
+                "Maria",
+                "Santos",
+                "Clara",
+                null,
+                10L,
+                20L,
+                "INCOMING_FIRST_YEAR",
+                1,
+                null
+        );
+
+        given(studentProfileRepository.existsByStudentNumber("2026-IT-0101")).willReturn(false);
+        given(userRepository.existsByUsername("maria_clara")).willReturn(false);
+        given(userRepository.existsByEmail("maria@example.com")).willReturn(false);
+        given(programRepository.findById(10L)).willReturn(Optional.of(program));
+        given(curriculumRepository.findById(20L)).willReturn(Optional.of(curriculum));
+        given(passwordEncoder.encode("Password123!")).willReturn("$hashedPassword");
+
+        User savedUser = User.builder()
+                .username("maria_clara")
+                .email("maria@example.com")
+                .enabled(true)
+                .build();
+        ReflectionTestUtils.setField(savedUser, "id", 101L);
+        given(userRepository.save(any(User.class))).willReturn(savedUser);
+
+        given(studentProfileRepository.save(any(StudentProfile.class))).willAnswer(inv -> {
+            StudentProfile sp = inv.getArgument(0);
+            ReflectionTestUtils.setField(sp, "id", 1001L);
+            return sp;
+        });
+
+        StudentProfileResponse resp = studentService.createStudent(req);
+
+        assertThat(resp).isNotNull();
+        assertThat(resp.firstName()).isEqualTo("Maria");
+        assertThat(resp.middleName()).isEqualTo("Santos");
+        assertThat(resp.lastName()).isEqualTo("Clara");
+        assertThat(resp.fullName()).isEqualTo("Maria Santos Clara");
+    }
 }

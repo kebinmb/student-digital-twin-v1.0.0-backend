@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -152,8 +153,31 @@ public class SchedulingDtos {
             int maxCapacity,
             int enrolledCount,
             String status,
+            String gradeStatus,
             List<ScheduleSlotResponse> schedules
-    ) {}
+    ) {
+        public SectionDetailResponse(
+                Long id,
+                Long termId,
+                String termName,
+                Long curriculumId,
+                String curriculumCode,
+                String curriculumName,
+                Long courseId,
+                String courseCode,
+                String courseTitle,
+                BigDecimal lectureUnits,
+                BigDecimal labUnits,
+                BigDecimal creditUnits,
+                String sectionCode,
+                int maxCapacity,
+                int enrolledCount,
+                String status,
+                List<ScheduleSlotResponse> schedules
+        ) {
+            this(id, termId, termName, curriculumId, curriculumCode, curriculumName, courseId, courseCode, courseTitle, lectureUnits, labUnits, creditUnits, sectionCode, maxCapacity, enrolledCount, status, "DRAFT", schedules);
+        }
+    }
 
     public record ScheduleSlotResponse(
             Long id,
@@ -234,10 +258,18 @@ public class SchedulingDtos {
             boolean isCurrent,
             boolean isActive,
             boolean isEnrollmentOpen,
+            boolean isGradingOpen,
+            boolean isAddDropOpen,
+            LocalDate startDate,
+            LocalDate endDate,
             BigDecimal maxHoursPerClass
     ) {
         public SchedulingTermDto(Long id, Long academicYearId, String academicYearCode, String termType, String termName, boolean isCurrent, boolean isActive, boolean isEnrollmentOpen) {
-            this(id, academicYearId, academicYearCode, termType, termName, isCurrent, isActive, isEnrollmentOpen, new BigDecimal("3.0"));
+            this(id, academicYearId, academicYearCode, termType, termName, isCurrent, isActive, isEnrollmentOpen, false, false, null, null, new BigDecimal("3.0"));
+        }
+
+        public SchedulingTermDto(Long id, Long academicYearId, String academicYearCode, String termType, String termName, boolean isCurrent, boolean isActive, boolean isEnrollmentOpen, BigDecimal maxHoursPerClass) {
+            this(id, academicYearId, academicYearCode, termType, termName, isCurrent, isActive, isEnrollmentOpen, false, false, null, null, maxHoursPerClass);
         }
     }
 

@@ -22,8 +22,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username:       # Your sending Gmail address
-    password:       # 16-character Google App Password (not your account password)
+    username: johnkevin.moraca@chmsu.edu.ph      # Your sending Gmail address
+    password: yzai ukpt gwfh dlbh      # 16-character Google App Password (not your account password)
     properties:
       mail:
         smtp:

@@ -115,9 +115,26 @@ public class StudentService {
                     .orElse(null);
         }
 
+        String firstName = request.firstName() != null && !request.firstName().isBlank()
+                ? request.firstName().trim()
+                : (app != null ? app.getFirstName() : null);
+        String middleName = request.middleName() != null && !request.middleName().isBlank()
+                ? request.middleName().trim()
+                : (app != null ? app.getMiddleName() : null);
+        String lastName = request.lastName() != null && !request.lastName().isBlank()
+                ? request.lastName().trim()
+                : (app != null ? app.getLastName() : null);
+        String suffix = request.suffix() != null && !request.suffix().isBlank()
+                ? request.suffix().trim()
+                : (app != null ? app.getSuffix() : null);
+
         StudentProfile profile = StudentProfile.builder()
                 .user(savedUser)
                 .studentNumber(trimmedStudentNumber)
+                .firstName(firstName)
+                .middleName(middleName)
+                .lastName(lastName)
+                .suffix(suffix)
                 .program(program)
                 .curriculum(curriculum)
                 .yearLevel(yearLevel)
@@ -410,6 +427,11 @@ public class StudentService {
                 sp.getUser() != null ? sp.getUser().getId() : null,
                 sp.getUser() != null ? sp.getUser().getUsername() : "student",
                 sp.getUser() != null ? sp.getUser().getEmail() : null,
+                sp.getFirstName(),
+                sp.getMiddleName(),
+                sp.getLastName(),
+                sp.getSuffix(),
+                sp.getFullName(),
                 sp.getProgram() != null ? sp.getProgram().getId() : null,
                 sp.getProgram() != null ? sp.getProgram().getCode() : "N/A",
                 sp.getProgram() != null ? sp.getProgram().getName() : "N/A",

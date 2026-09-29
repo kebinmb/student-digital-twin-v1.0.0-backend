@@ -51,7 +51,7 @@ public class StudentPortalService {
                 })
                 .toList();
 
-        String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
+        String studentName = student.getFullName();
         String gpa = student.getCumulativeGpa() != null ? String.format("%.2f", student.getCumulativeGpa()) : "N/A";
         String units = student.getTotalUnitsEarned() != null ? student.getTotalUnitsEarned().toString() : "0.00";
 
