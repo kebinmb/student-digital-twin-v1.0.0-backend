@@ -3,6 +3,7 @@ package com.sdt.web_app.controller.analytics;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.*;
 import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.service.analytics.StudentInterventionService;
+import com.sdt.web_app.entities.analytics.StudentIntervention;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,16 @@ import java.util.List;
 public class StudentInterventionController {
 
     private final StudentInterventionService interventionService;
+
+    @GetMapping("/types")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<String>> getInterventionTypes() {
+        return ResponseEntity.ok(
+                java.util.Arrays.stream(StudentIntervention.InterventionType.values())
+                        .map(Enum::name)
+                        .toList()
+        );
+    }
 
     @PostMapping("/dispatch")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")

@@ -26,7 +26,12 @@ public class FacultyProfileController {
 
     @GetMapping("/faculty")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
-    public ResponseEntity<List<FacultyProfileResponse>> getAllFaculty() {
+    public ResponseEntity<?> getAllFaculty(
+            @RequestParam(name = "page", required = false) Integer page,
+            @RequestParam(name = "size", required = false) Integer size) {
+        if (page != null && size != null) {
+            return ResponseEntity.ok(facultyProfileService.getAllFacultyProfiles(org.springframework.data.domain.PageRequest.of(page, size)));
+        }
         return ResponseEntity.ok(facultyProfileService.getAllFacultyProfiles());
     }
 

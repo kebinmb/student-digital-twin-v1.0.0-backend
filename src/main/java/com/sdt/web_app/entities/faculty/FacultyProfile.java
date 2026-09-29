@@ -63,6 +63,18 @@ public class FacultyProfile {
     @Column(name = "faculty_id_number", nullable = false, unique = true, length = 30)
     private String facultyIdNumber;
 
+    @Column(name = "first_name", length = 50)
+    private String firstName;
+
+    @Column(name = "middle_name", length = 50)
+    private String middleName;
+
+    @Column(name = "last_name", length = 50)
+    private String lastName;
+
+    @Column(name = "suffix", length = 10)
+    private String suffix;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "highest_degree", nullable = false, length = 50)
     @Builder.Default
@@ -108,6 +120,25 @@ public class FacultyProfile {
         this.prcLicenseNo = prcLicenseNo;
         if (employmentStatus != null) this.employmentStatus = employmentStatus;
         this.isTenured = isTenured;
+    }
+
+    public String getFullName() {
+        if (firstName == null && lastName == null) {
+            return user != null ? user.getUsername() : facultyIdNumber;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (firstName != null) sb.append(firstName);
+        if (middleName != null && !middleName.isBlank()) sb.append(" ").append(middleName);
+        if (lastName != null) sb.append(" ").append(lastName);
+        if (suffix != null && !suffix.isBlank()) sb.append(" ").append(suffix);
+        return sb.toString().trim();
+    }
+
+    public void updateName(String firstName, String middleName, String lastName, String suffix) {
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+        this.suffix = suffix;
     }
 
     public void assignCollege(Department college) {

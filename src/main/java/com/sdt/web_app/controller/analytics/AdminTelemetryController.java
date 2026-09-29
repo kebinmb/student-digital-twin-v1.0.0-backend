@@ -16,7 +16,7 @@ public class AdminTelemetryController {
     private final DigitalTwinRiskService riskService;
 
     @GetMapping("/students")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'GUIDANCE')")
     public ResponseEntity<Page<StudentTelemetryAdminSummaryDto>> getAdminStudentTelemetry(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,

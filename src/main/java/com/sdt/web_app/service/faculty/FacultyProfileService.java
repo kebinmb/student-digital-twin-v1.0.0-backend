@@ -25,6 +25,7 @@ import com.sdt.web_app.service.security.AcademicScopeContext;
 import com.sdt.web_app.specifications.FacultyProfileSpecifications;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -152,6 +153,10 @@ public class FacultyProfileService {
                 .college(assignedCollege)
                 .program(assignedProgram)
                 .facultyIdNumber(trimmedFacultyId)
+                .firstName(request.firstName() != null && !request.firstName().isBlank() ? request.firstName().trim() : null)
+                .middleName(request.middleName() != null && !request.middleName().isBlank() ? request.middleName().trim() : null)
+                .lastName(request.lastName() != null && !request.lastName().isBlank() ? request.lastName().trim() : null)
+                .suffix(request.suffix() != null && !request.suffix().isBlank() ? request.suffix().trim() : null)
                 .highestDegree(degree)
                 .academicRank(rank)
                 .prcLicenseNo(request.prcLicenseNo() != null ? request.prcLicenseNo().trim() : null)
@@ -183,6 +188,23 @@ public class FacultyProfileService {
         return profileRepository.findAllWithUser().stream()
                 .map(this::mapToProfileResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<FacultyProfileResponse> getAllFacultyProfiles(org.springframework.data.domain.Pageable pageable) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope != null && scope.isDean()) {
+                return profileRepository.findAll(FacultyProfileSpecifications.inCollege(scope.collegeId()), pageable)
+                        .map(this::mapToProfileResponse);
+            } else if (scope != null && scope.isChairperson()) {
+                return profileRepository.findAll(FacultyProfileSpecifications.inProgram(scope.programId()), pageable)
+                        .map(this::mapToProfileResponse);
+            }
+        }
+        return profileRepository.findAll((Specification<FacultyProfile>) null, pageable)
+                .map(this::mapToProfileResponse);
     }
 
     @Transactional
@@ -254,6 +276,14 @@ public class FacultyProfileService {
         FacultyProfile.EmploymentStatus status = FacultyProfile.EmploymentStatus.valueOf(request.employmentStatus().trim().toUpperCase());
 
         profile.updateCredentials(degree, rank, request.prcLicenseNo(), status, request.isTenured());
+        if (request.firstName() != null || request.middleName() != null || request.lastName() != null || request.suffix() != null) {
+            profile.updateName(
+                    request.firstName() != null ? request.firstName().trim() : profile.getFirstName(),
+                    request.middleName() != null ? request.middleName().trim() : profile.getMiddleName(),
+                    request.lastName() != null ? request.lastName().trim() : profile.getLastName(),
+                    request.suffix() != null ? request.suffix().trim() : profile.getSuffix()
+            );
+        }
 
         if (request.collegeId() != null && departmentRepository != null) {
             Department college = departmentRepository.findById(request.collegeId())
@@ -329,7 +359,7 @@ public class FacultyProfileService {
             summaryList.add(new ChedE5WorkloadSummaryDto(
                     faculty.getId(),
                     fp != null ? fp.getFacultyIdNumber() : "FAC-" + faculty.getId(),
-                    faculty.getUsername(),
+                    fp != null && fp.getFullName() != null && !fp.getFullName().isBlank() ? fp.getFullName() : faculty.getUsername(),
                     faculty.getEmail(),
                     fp != null ? fp.getHighestDegree().name() : "BACHELORS",
                     fp != null ? fp.getAcademicRank().name() : "INSTRUCTOR_I",
@@ -370,6 +400,11 @@ public class FacultyProfileService {
                 fp.getUser().getUsername(),
                 fp.getUser().getEmail(),
                 fp.getFacultyIdNumber(),
+                fp.getFirstName(),
+                fp.getMiddleName(),
+                fp.getLastName(),
+                fp.getSuffix(),
+                fp.getFullName(),
                 fp.getHighestDegree().name(),
                 fp.getAcademicRank().name(),
                 fp.getPrcLicenseNo(),

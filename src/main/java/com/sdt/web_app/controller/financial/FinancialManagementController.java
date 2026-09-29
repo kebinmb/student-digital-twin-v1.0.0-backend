@@ -132,6 +132,20 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/or-booklets")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
+    public ResponseEntity<?> getCashierBooklets(
+            @RequestParam(name = "page", required = false) Integer page,
+            @RequestParam(name = "size", required = false) Integer size,
+            Authentication authentication) {
+        Long cashierUserId = securityUtils.resolveUserId(authentication);
+        if (page != null && size != null) {
+            return ResponseEntity.ok(orBookletService.getCashierBooklets(cashierUserId, org.springframework.data.domain.PageRequest.of(page, size)));
+        }
+        List<OrBookletDto> result = orBookletService.getCashierBooklets(cashierUserId);
+        return ResponseEntity.ok(result);
+    }
+
     @Auditable(action = "VOID_OFFICIAL_RECEIPT", entityName = "VoidedOfficialReceipt")
     @PostMapping("/or-booklets/void")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")

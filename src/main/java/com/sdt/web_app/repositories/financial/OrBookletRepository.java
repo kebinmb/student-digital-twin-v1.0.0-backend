@@ -19,4 +19,8 @@ public interface OrBookletRepository extends JpaRepository<OrBooklet, Long> {
 
     @Query("SELECT b FROM OrBooklet b WHERE b.assignedCashier.id = :cashierUserId")
     List<OrBooklet> findByAssignedCashierId(@Param("cashierUserId") Long cashierUserId);
+
+    @Query(value = "SELECT b FROM OrBooklet b WHERE b.assignedCashier.id = :cashierUserId",
+           countQuery = "SELECT count(b) FROM OrBooklet b WHERE b.assignedCashier.id = :cashierUserId")
+    org.springframework.data.domain.Page<OrBooklet> findByAssignedCashierId(@Param("cashierUserId") Long cashierUserId, org.springframework.data.domain.Pageable pageable);
 }

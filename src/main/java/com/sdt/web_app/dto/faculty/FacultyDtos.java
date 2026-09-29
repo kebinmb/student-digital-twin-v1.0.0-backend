@@ -20,6 +20,14 @@ public class FacultyDtos {
             @jakarta.validation.constraints.NotBlank(message = "Faculty ID number is required")
             String facultyIdNumber,
 
+            String firstName,
+
+            String middleName,
+
+            String lastName,
+
+            String suffix,
+
             @NotNull(message = "Highest degree is required")
             String highestDegree,
 
@@ -47,7 +55,22 @@ public class FacultyDtos {
                 String prcLicenseNo,
                 String employmentStatus,
                 boolean isTenured) {
-            this(username, email, password, facultyIdNumber, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null);
+            this(username, email, password, facultyIdNumber, null, null, null, null, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null);
+        }
+
+        public CreateFacultyAccountRequest(
+                String username,
+                String email,
+                String password,
+                String facultyIdNumber,
+                String highestDegree,
+                String academicRank,
+                String prcLicenseNo,
+                String employmentStatus,
+                boolean isTenured,
+                Long collegeId,
+                Long programId) {
+            this(username, email, password, facultyIdNumber, null, null, null, null, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, collegeId, programId);
         }
     }
 
@@ -57,6 +80,11 @@ public class FacultyDtos {
             String username,
             String email,
             String facultyIdNumber,
+            String firstName,
+            String middleName,
+            String lastName,
+            String suffix,
+            String fullName,
             String highestDegree,
             String academicRank,
             String prcLicenseNo,
@@ -80,11 +108,39 @@ public class FacultyDtos {
                 String prcLicenseNo,
                 String employmentStatus,
                 boolean isTenured) {
-            this(id, userId, username, email, facultyIdNumber, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null, null, null, null, null);
+            this(id, userId, username, email, facultyIdNumber, null, null, null, null, username, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null, null, null, null, null);
+        }
+
+        public FacultyProfileResponse(
+                Long id,
+                Long userId,
+                String username,
+                String email,
+                String facultyIdNumber,
+                String highestDegree,
+                String academicRank,
+                String prcLicenseNo,
+                String employmentStatus,
+                boolean isTenured,
+                Long collegeId,
+                String collegeCode,
+                String collegeName,
+                Long programId,
+                String programCode,
+                String programName) {
+            this(id, userId, username, email, facultyIdNumber, null, null, null, null, username, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, collegeId, collegeCode, collegeName, programId, programCode, programName);
         }
     }
 
     public record UpdateFacultyProfileRequest(
+            String firstName,
+
+            String middleName,
+
+            String lastName,
+
+            String suffix,
+
             @NotNull(message = "Highest degree is required")
             String highestDegree,
 
@@ -108,7 +164,18 @@ public class FacultyDtos {
                 String prcLicenseNo,
                 String employmentStatus,
                 boolean isTenured) {
-            this(highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null);
+            this(null, null, null, null, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, null, null);
+        }
+
+        public UpdateFacultyProfileRequest(
+                String highestDegree,
+                String academicRank,
+                String prcLicenseNo,
+                String employmentStatus,
+                boolean isTenured,
+                Long collegeId,
+                Long programId) {
+            this(null, null, null, null, highestDegree, academicRank, prcLicenseNo, employmentStatus, isTenured, collegeId, programId);
         }
     }
 

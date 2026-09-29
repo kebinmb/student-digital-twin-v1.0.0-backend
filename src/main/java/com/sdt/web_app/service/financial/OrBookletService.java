@@ -77,6 +77,12 @@ public class OrBookletService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<OrBookletDto> getCashierBooklets(Long cashierUserId, org.springframework.data.domain.Pageable pageable) {
+        return bookletRepository.findByAssignedCashierId(cashierUserId, pageable)
+                .map(this::mapToBookletDto);
+    }
+
     @Transactional
     public String consumeNextOrNumber(Long cashierUserId) {
         OrBooklet booklet = bookletRepository.findActiveBookletByCashierId(cashierUserId).orElse(null);
