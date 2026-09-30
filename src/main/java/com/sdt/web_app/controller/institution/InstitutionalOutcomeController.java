@@ -18,11 +18,13 @@ public class InstitutionalOutcomeController {
 
     private final InstitutionalOutcomeService service;
 
+    @Auditable(action = "READ_ACTIVE_IILO", entityName = "InstitutionalOutcome")
     @GetMapping
     public ResponseEntity<List<InstitutionalOutcome>> getAllActiveOutcomes() {
         return ResponseEntity.ok(service.getAllActiveOutcomes());
     }
 
+    @Auditable(action = "READ_IILO", entityName = "InstitutionalOutcome", entityId = "#id")
     @GetMapping("/{id}")
     public ResponseEntity<InstitutionalOutcome> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));

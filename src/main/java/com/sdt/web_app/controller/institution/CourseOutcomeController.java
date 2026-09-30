@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.institution;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.institution.CourseOutcomeDtos.*;
 import com.sdt.web_app.service.institution.CourseOutcomeService;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ public class CourseOutcomeController {
 
     private final CourseOutcomeService courseOutcomeService;
 
+    @Auditable(action = "CREATE_COURSE_OUTCOME", entityName = "CourseOutcome", entityId = "#courseId")
     @PostMapping("/api/v1/courses/{courseId}/outcomes")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<CourseOutcomeResponse> createCourseOutcome(
@@ -28,12 +30,14 @@ public class CourseOutcomeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Auditable(action = "READ_COURSE_OUTCOMES_BY_COURSE", entityName = "CourseOutcome", entityId = "#courseId")
     @GetMapping("/api/v1/courses/{courseId}/outcomes")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CourseOutcomeResponse>> getOutcomesByCourseId(@PathVariable Long courseId) {
         return ResponseEntity.ok(courseOutcomeService.getOutcomesByCourseId(courseId));
     }
 
+    @Auditable(action = "READ_COURSE_OUTCOME", entityName = "CourseOutcome", entityId = "#outcomeId")
     @GetMapping({"/api/v1/courses/{courseId}/outcomes/{outcomeId}", "/api/v1/course-outcomes/{outcomeId}"})
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<CourseOutcomeResponse> getOutcomeById(
@@ -42,6 +46,7 @@ public class CourseOutcomeController {
         return ResponseEntity.ok(courseOutcomeService.getCourseOutcomeById(outcomeId));
     }
 
+    @Auditable(action = "UPDATE_COURSE_OUTCOME", entityName = "CourseOutcome", entityId = "#outcomeId")
     @PutMapping({"/api/v1/courses/{courseId}/outcomes/{outcomeId}", "/api/v1/course-outcomes/{outcomeId}"})
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<CourseOutcomeResponse> updateCourseOutcome(
@@ -51,6 +56,7 @@ public class CourseOutcomeController {
         return ResponseEntity.ok(courseOutcomeService.updateCourseOutcome(outcomeId, request));
     }
 
+    @Auditable(action = "DELETE_COURSE_OUTCOME", entityName = "CourseOutcome", entityId = "#outcomeId")
     @DeleteMapping({"/api/v1/courses/{courseId}/outcomes/{outcomeId}", "/api/v1/course-outcomes/{outcomeId}"})
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<Void> deleteCourseOutcome(

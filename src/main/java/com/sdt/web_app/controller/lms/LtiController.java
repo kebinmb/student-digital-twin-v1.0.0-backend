@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.lms;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.lms.LmsDtos.*;
 import com.sdt.web_app.service.lms.Lti13AdvantageService;
 import jakarta.validation.Valid;
@@ -18,18 +19,21 @@ public class LtiController {
 
     private final Lti13AdvantageService ltiService;
 
+    @Auditable(action = "CREATE_LTI_DEPLOYMENT", entityName = "LtiDeployment")
     @PostMapping("/deployments")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LtiDeploymentResponse> createDeployment(@Valid @RequestBody LtiDeploymentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ltiService.createDeployment(request));
     }
 
+    @Auditable(action = "READ_LTI_DEPLOYMENTS", entityName = "LtiDeployment")
     @GetMapping("/deployments")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<LtiDeploymentResponse>> getDeployments() {
         return ResponseEntity.ok(ltiService.getDeployments());
     }
 
+    @Auditable(action = "INITIATE_LTI_LOGIN", entityName = "LtiDeployment")
     @GetMapping("/login")
     public ResponseEntity<String> initiateOidcLogin(
             @RequestParam("client_id") String clientId,
@@ -38,6 +42,7 @@ public class LtiController {
         return ResponseEntity.ok(ltiService.initiateOidcHandshake(clientId, deploymentId, targetLinkUri));
     }
 
+    @Auditable(action = "VALIDATE_LTI_LAUNCH", entityName = "LtiDeployment")
     @PostMapping("/launch")
     public ResponseEntity<LtiLaunchResponse> validateLaunchToken(@Valid @RequestBody LtiLaunchRequest request) {
         return ResponseEntity.ok(ltiService.validateLaunchToken(request));

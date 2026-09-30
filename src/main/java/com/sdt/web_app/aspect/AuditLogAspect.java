@@ -27,12 +27,14 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
+import com.sdt.web_app.service.security.SecurityUtils;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -57,6 +59,7 @@ public class AuditLogAspect {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final SecurityUtils securityUtils;
     private final ObjectMapper objectMapper;
 
     @Around("@annotation(auditable)")
@@ -65,8 +68,9 @@ public class AuditLogAspect {
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 
-        // 1. Capture SecurityContext username BEFORE execution
-        String preAuthUsername = extractCurrentUsername();
+        // 1. Capture SecurityContext username and authentication BEFORE execution
+        Authentication preAuth = extractAuthentication(joinPoint);
+        String preAuthUsername = extractUsername(preAuth);
 
         // 2. Extract RAW metadata BEFORE execution (before token is invalidated/deleted)
         String rawRefreshToken = extractRawRefreshToken(joinPoint, signature);
@@ -85,7 +89,7 @@ public class AuditLogAspect {
         } finally {
             long executionTime = System.currentTimeMillis() - startTime;
             recordAuditLog(joinPoint, auditable, result, exception, executionTime,
-                    preAuthUsername, rawRefreshToken, rawAttemptedIdentifier, preResolvedTokenIdentity);
+                    preAuth, preAuthUsername, rawRefreshToken, rawAttemptedIdentifier, preResolvedTokenIdentity);
         }
     }
 
@@ -94,6 +98,7 @@ public class AuditLogAspect {
                                 Object result,
                                 Throwable exception,
                                 long executionTimeMs,
+                                Authentication preAuth,
                                 String preAuthUsername,
                                 String rawRefreshToken,
                                 String rawAttemptedIdentifier,
@@ -122,12 +127,15 @@ public class AuditLogAspect {
             }
 
             // 2. Resolve User Identity (Security Context -> Pre-resolved Reset Token -> Execution Result -> Refresh Token -> Attempted DTO)
-            UserIdentity identity = resolveUserIdentity(preAuthUsername, rawRefreshToken, rawAttemptedIdentifier, preResolvedTokenIdentity, result);
+            UserIdentity identity = resolveUserIdentity(joinPoint, preAuth, preAuthUsername, rawRefreshToken, rawAttemptedIdentifier, preResolvedTokenIdentity, result);
 
             // 3. Resolve Dynamic Entity ID
             String entityId = resolveEntityId(auditable.entityId(), joinPoint, signature, result);
             if (entityId == null && identity.userId() != null && ("User".equalsIgnoreCase(auditable.entityName()) || "PasswordResetToken".equalsIgnoreCase(auditable.entityName()))) {
                 entityId = String.valueOf(identity.userId());
+            }
+            if (entityId != null) {
+                detailsMap.put("entityId", entityId);
             }
 
             String detailsJson;
@@ -166,12 +174,32 @@ public class AuditLogAspect {
 
     public record UserIdentity(Long userId, String username) {}
 
-    private String extractCurrentUsername() {
+    private Authentication extractAuthentication(ProceedingJoinPoint joinPoint) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-            return auth.getName();
+            return auth;
+        }
+        if (joinPoint != null && joinPoint.getArgs() != null) {
+            for (Object arg : joinPoint.getArgs()) {
+                if (arg instanceof Authentication a && a.isAuthenticated() && !"anonymousUser".equals(a.getPrincipal())) {
+                    return a;
+                }
+            }
         }
         return null;
+    }
+
+    private String extractUsername(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        if (auth.getPrincipal() instanceof Jwt jwt) {
+            String pref = jwt.getClaimAsString("preferred_username");
+            if (pref != null && !pref.isBlank()) {
+                return pref;
+            }
+        }
+        return auth.getName();
     }
 
     private UserIdentity preResolveResetTokenUser(ProceedingJoinPoint joinPoint, MethodSignature signature) {
@@ -192,13 +220,53 @@ public class AuditLogAspect {
         return null;
     }
 
-    private UserIdentity resolveUserIdentity(String preAuthUsername,
+    private UserIdentity resolveUserIdentity(ProceedingJoinPoint joinPoint,
+                                              Authentication preAuth,
+                                              String preAuthUsername,
                                               String rawRefreshToken,
                                               String rawAttemptedIdentifier,
                                               UserIdentity preResolvedTokenIdentity,
                                               Object result) {
-        String username = preAuthUsername != null ? preAuthUsername : "ANONYMOUS";
+        Authentication auth = preAuth != null ? preAuth : extractAuthentication(joinPoint);
         Long userId = null;
+        String username = preAuthUsername != null ? preAuthUsername : "ANONYMOUS";
+
+        if (auth != null) {
+            try {
+                if (securityUtils != null) {
+                    Long resolvedId = securityUtils.resolveUserId(auth);
+                    if (resolvedId != null) {
+                        userId = resolvedId;
+                    }
+                }
+            } catch (Exception ex) {
+                log.debug("SecurityUtils failed to resolve user ID: {}", ex.getMessage());
+            }
+
+            if (auth.getPrincipal() instanceof Jwt jwt) {
+                String pref = jwt.getClaimAsString("preferred_username");
+                if (pref != null && !pref.isBlank()) {
+                    username = pref;
+                }
+            } else if (auth.getName() != null && !auth.getName().isBlank() && !"anonymousUser".equals(auth.getName())) {
+                username = auth.getName();
+            }
+        }
+
+        // If we found a valid userId, look up the canonical user
+        if (userId != null) {
+            try {
+                Optional<User> userOpt = userRepository.findById(userId);
+                if (userOpt.isPresent()) {
+                    return new UserIdentity(userId, userOpt.get().getUsername());
+                }
+            } catch (Exception ex) {
+                log.debug("Unable to fetch user by id {}: {}", userId, ex.getMessage());
+            }
+            if (username != null && !"ANONYMOUS".equals(username)) {
+                return new UserIdentity(userId, username);
+            }
+        }
 
         // Strategy A: Use Pre-Resolved Reset Token Identity (for RESET_PASSWORD before token deletion)
         if ("ANONYMOUS".equals(username) && preResolvedTokenIdentity != null && preResolvedTokenIdentity.userId() != null) {
@@ -237,9 +305,17 @@ public class AuditLogAspect {
             username = rawAttemptedIdentifier;
         }
 
-        // Strategy E: Database lookup by username or email for user ID resolution
+        // Strategy E: Database lookup by numeric ID, username, or email
         if (!"ANONYMOUS".equals(username)) {
             try {
+                try {
+                    Long parsedId = Long.parseLong(username);
+                    Optional<User> userOpt = userRepository.findById(parsedId);
+                    if (userOpt.isPresent()) {
+                        return new UserIdentity(userOpt.get().getId(), userOpt.get().getUsername());
+                    }
+                } catch (NumberFormatException ignored) {}
+
                 Optional<User> userOpt = userRepository.findByUsername(username);
                 if (userOpt.isEmpty()) {
                     userOpt = userRepository.findByEmail(username);
@@ -392,6 +468,21 @@ public class AuditLogAspect {
                 if (("id".equals(name) || "entityid".equals(name) || name.endsWith("id")) && args[i] != null) {
                     return args[i].toString();
                 }
+            }
+        }
+
+        // Automatic fallback: inspect result payload for common ID properties
+        Object payload = result instanceof ResponseEntity<?> re ? re.getBody() : result;
+        if (payload != null && !isNonSerializableWebObject(payload)) {
+            try {
+                Map<String, Object> map = objectMapper.convertValue(payload, Map.class);
+                if (map != null) {
+                    if (map.get("sessionId") != null) return String.valueOf(map.get("sessionId"));
+                    if (map.get("recordId") != null) return String.valueOf(map.get("recordId"));
+                    if (map.get("id") != null) return String.valueOf(map.get("id"));
+                    if (map.get("entityId") != null) return String.valueOf(map.get("entityId"));
+                }
+            } catch (Exception ignored) {
             }
         }
 

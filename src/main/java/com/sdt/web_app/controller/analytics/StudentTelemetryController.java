@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.analytics;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.StudentSelfTelemetryDto;
 import com.sdt.web_app.service.analytics.DigitalTwinRiskService;
 import com.sdt.web_app.service.security.SecurityUtils;
@@ -17,6 +18,7 @@ public class StudentTelemetryController {
     private final DigitalTwinRiskService riskService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "READ_SELF_TELEMETRY", entityName = "StudentTelemetry")
     @GetMapping("/me")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<StudentSelfTelemetryDto> getStudentSelfTelemetry(Authentication authentication) {
@@ -27,6 +29,7 @@ public class StudentTelemetryController {
         return ResponseEntity.ok(riskService.getStudentSelfTelemetry(studentUserId));
     }
 
+    @Auditable(action = "ACKNOWLEDGE_INTERVENTION", entityName = "StudentIntervention", entityId = "#interventionId")
     @PostMapping("/interventions/{id}/acknowledge")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<Void> acknowledgeIntervention(

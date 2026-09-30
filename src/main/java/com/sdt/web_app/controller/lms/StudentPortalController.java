@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.lms;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.lms.LmsDtos.StudentSelfServiceSummaryDto;
 import com.sdt.web_app.service.lms.StudentPortalService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ public class StudentPortalController {
 
     private final StudentPortalService portalService;
 
+    @Auditable(action = "READ_STUDENT_PORTAL_SUMMARY", entityName = "StudentPortalSummary", entityId = "#studentId")
     @GetMapping("/summary/{studentId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'FACULTY', 'STUDENT')")
     public ResponseEntity<StudentSelfServiceSummaryDto> getStudentPortalSummary(@PathVariable("studentId") Long studentId) {

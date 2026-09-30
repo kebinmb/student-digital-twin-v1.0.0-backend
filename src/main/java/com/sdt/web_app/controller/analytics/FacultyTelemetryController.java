@@ -1,7 +1,9 @@
 package com.sdt.web_app.controller.analytics;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.FacultySectionOptionDto;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.StudentTelemetrySummaryDto;
+import com.sdt.web_app.dto.analytics.AnalyticsDtos.TelemetryKpiSummaryDto;
 import com.sdt.web_app.service.analytics.DigitalTwinRiskService;
 import com.sdt.web_app.service.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class FacultyTelemetryController {
     private final DigitalTwinRiskService riskService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "READ_FACULTY_TELEMETRY", entityName = "StudentTelemetry")
     @GetMapping("/students")
     @PreAuthorize("hasAnyRole('FACULTY', 'CHAIRPERSON', 'DEAN', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Page<StudentTelemetrySummaryDto>> getFacultyStudentTelemetry(
@@ -42,6 +45,27 @@ public class FacultyTelemetryController {
         return ResponseEntity.ok(telemetryPage);
     }
 
+    @Auditable(action = "READ_FACULTY_TELEMETRY_KPI", entityName = "StudentTelemetry")
+    @GetMapping("/kpi")
+    @PreAuthorize("hasAnyRole('FACULTY', 'CHAIRPERSON', 'DEAN', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<TelemetryKpiSummaryDto> getFacultyTelemetryKpi(
+            Authentication authentication,
+            @RequestParam(name = "searchQuery", required = false) String searchQuery,
+            @RequestParam(name = "riskLevel", required = false) String riskLevel,
+            @RequestParam(name = "interventionStatus", required = false) String interventionStatus,
+            @RequestParam(name = "sectionId", required = false) Long sectionId) {
+
+        Long facultyUserId = securityUtils.resolveUserId(authentication);
+        if (facultyUserId == null) {
+            throw new IllegalStateException("Cannot resolve authenticated faculty user identity.");
+        }
+
+        TelemetryKpiSummaryDto kpi = riskService.getFacultyTelemetryKpi(
+                facultyUserId, searchQuery, riskLevel, interventionStatus, sectionId);
+        return ResponseEntity.ok(kpi);
+    }
+
+    @Auditable(action = "READ_FACULTY_SECTIONS", entityName = "Section")
     @GetMapping("/sections")
     @PreAuthorize("hasAnyRole('FACULTY', 'CHAIRPERSON', 'DEAN', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<List<FacultySectionOptionDto>> getFacultyAssignedSections(Authentication authentication) {

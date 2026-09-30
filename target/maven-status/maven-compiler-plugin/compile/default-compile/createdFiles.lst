@@ -612,6 +612,7 @@ com\sdt\web_app\dto\institution\FinancialDtos$CreateScholarshipDiscountRequest.c
 com\sdt\web_app\entities\scheduling\FacultyWorkload$FacultyWorkloadBuilder.class
 com\sdt\web_app\dto\admission\AdmissionDtos$EmailAvailabilityResponse.class
 com\sdt\web_app\service\compliance\ClearanceWorkflowService.class
+com\sdt\web_app\dto\analytics\AnalyticsDtos$TelemetryKpiSummaryDto.class
 com\sdt\web_app\dto\institution\ProgramDtos$ProgramResponse.class
 com\sdt\web_app\repositories\institution\AcademicYearRepository.class
 com\sdt\web_app\service\admission\AdmissionQueueService$TokenEntry.class

@@ -349,8 +349,8 @@ public class DigitalTwinRiskService {
     }
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<StudentTelemetryAdminSummaryDto> getAdminStudentTelemetry(
-            int page, int size, String searchQuery, String riskLevelFilter, String interventionStatusFilter) {
+    public List<StudentTelemetryAdminSummaryDto> getAdminStudentTelemetryList(
+            String searchQuery, String riskLevelFilter, String interventionStatusFilter) {
 
         List<StudentProfile> allStudents = profileRepository.searchStudents(searchQuery);
         List<StudentTelemetryAdminSummaryDto> summaries = new ArrayList<>();
@@ -409,6 +409,14 @@ public class DigitalTwinRiskService {
             ));
         }
 
+        return summaries;
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<StudentTelemetryAdminSummaryDto> getAdminStudentTelemetry(
+            int page, int size, String searchQuery, String riskLevelFilter, String interventionStatusFilter) {
+
+        List<StudentTelemetryAdminSummaryDto> summaries = getAdminStudentTelemetryList(searchQuery, riskLevelFilter, interventionStatusFilter);
         int totalElements = summaries.size();
         int fromIndex = Math.min(page * size, totalElements);
         int toIndex = Math.min(fromIndex + size, totalElements);
@@ -416,6 +424,13 @@ public class DigitalTwinRiskService {
 
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
         return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, totalElements);
+    }
+
+    @Transactional(readOnly = true)
+    public TelemetryKpiSummaryDto getAdminTelemetryKpi(
+            String searchQuery, String riskLevelFilter, String interventionStatusFilter) {
+        List<StudentTelemetryAdminSummaryDto> summaries = getAdminStudentTelemetryList(searchQuery, riskLevelFilter, interventionStatusFilter);
+        return computeAdminKpiSummary(summaries);
     }
 
     @Transactional(readOnly = true)
@@ -436,18 +451,18 @@ public class DigitalTwinRiskService {
     }
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<StudentTelemetrySummaryDto> getFacultyStudentTelemetry(
-            Long facultyUserId, int page, int size, String searchQuery, String riskLevelFilter, String interventionStatusFilter, Long sectionIdFilter) {
+    public List<StudentTelemetrySummaryDto> getFacultyStudentTelemetryList(
+            Long facultyUserId, String searchQuery, String riskLevelFilter, String interventionStatusFilter, Long sectionIdFilter) {
 
         List<Long> assignedSectionIds = classSectionRepository.findAssignedSectionIdsByInstructor(facultyUserId);
         if (assignedSectionIds == null || assignedSectionIds.isEmpty()) {
-            return org.springframework.data.domain.Page.empty(org.springframework.data.domain.PageRequest.of(page, size));
+            return List.of();
         }
 
         List<Long> targetSectionIds;
         if (sectionIdFilter != null && sectionIdFilter > 0) {
             if (!assignedSectionIds.contains(sectionIdFilter)) {
-                return org.springframework.data.domain.Page.empty(org.springframework.data.domain.PageRequest.of(page, size));
+                return List.of();
             }
             targetSectionIds = List.of(sectionIdFilter);
         } else {
@@ -535,6 +550,14 @@ public class DigitalTwinRiskService {
             ));
         }
 
+        return summaries;
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<StudentTelemetrySummaryDto> getFacultyStudentTelemetry(
+            Long facultyUserId, int page, int size, String searchQuery, String riskLevelFilter, String interventionStatusFilter, Long sectionIdFilter) {
+
+        List<StudentTelemetrySummaryDto> summaries = getFacultyStudentTelemetryList(facultyUserId, searchQuery, riskLevelFilter, interventionStatusFilter, sectionIdFilter);
         int totalElements = summaries.size();
         int fromIndex = Math.min(page * size, totalElements);
         int toIndex = Math.min(fromIndex + size, totalElements);
@@ -542,6 +565,69 @@ public class DigitalTwinRiskService {
 
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
         return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, totalElements);
+    }
+
+    @Transactional(readOnly = true)
+    public TelemetryKpiSummaryDto getFacultyTelemetryKpi(
+            Long facultyUserId, String searchQuery, String riskLevelFilter, String interventionStatusFilter, Long sectionIdFilter) {
+        List<StudentTelemetrySummaryDto> summaries = getFacultyStudentTelemetryList(facultyUserId, searchQuery, riskLevelFilter, interventionStatusFilter, sectionIdFilter);
+        return computeFacultyKpiSummary(summaries);
+    }
+
+    private TelemetryKpiSummaryDto computeAdminKpiSummary(List<StudentTelemetryAdminSummaryDto> summaries) {
+        long totalMonitored = summaries.size();
+        long criticalRiskCount = summaries.stream().filter(s -> "CRITICAL".equalsIgnoreCase(s.riskLevel())).count();
+        long highRiskCount = summaries.stream().filter(s -> "HIGH".equalsIgnoreCase(s.riskLevel())).count();
+        long moderateRiskCount = summaries.stream().filter(s -> "MODERATE".equalsIgnoreCase(s.riskLevel())).count();
+        long lowRiskCount = summaries.stream().filter(s -> "LOW".equalsIgnoreCase(s.riskLevel())).count();
+        long totalActiveInterventions = summaries.stream()
+                .mapToLong(s -> s.activeInterventions() != null ? s.activeInterventions().size() : 0)
+                .sum();
+        double averageWellnessIndex = 100.0;
+        if (!summaries.isEmpty()) {
+            double totalWellness = summaries.stream()
+                    .mapToDouble(s -> 100.0 - (s.riskScore() != null ? s.riskScore() : 0.0))
+                    .sum();
+            averageWellnessIndex = Math.round((totalWellness / summaries.size()) * 10.0) / 10.0;
+        }
+
+        return new TelemetryKpiSummaryDto(
+                totalMonitored,
+                criticalRiskCount,
+                highRiskCount,
+                moderateRiskCount,
+                lowRiskCount,
+                totalActiveInterventions,
+                averageWellnessIndex
+        );
+    }
+
+    private TelemetryKpiSummaryDto computeFacultyKpiSummary(List<StudentTelemetrySummaryDto> summaries) {
+        long totalMonitored = summaries.size();
+        long criticalRiskCount = summaries.stream().filter(s -> "CRITICAL".equalsIgnoreCase(s.riskLevel())).count();
+        long highRiskCount = summaries.stream().filter(s -> "HIGH".equalsIgnoreCase(s.riskLevel())).count();
+        long moderateRiskCount = summaries.stream().filter(s -> "MODERATE".equalsIgnoreCase(s.riskLevel())).count();
+        long lowRiskCount = summaries.stream().filter(s -> "LOW".equalsIgnoreCase(s.riskLevel())).count();
+        long totalActiveInterventions = summaries.stream()
+                .mapToLong(s -> s.activeInterventions() != null ? s.activeInterventions().size() : 0)
+                .sum();
+        double averageWellnessIndex = 100.0;
+        if (!summaries.isEmpty()) {
+            double totalWellness = summaries.stream()
+                    .mapToDouble(s -> 100.0 - (s.riskScore() != null ? s.riskScore() : 0.0))
+                    .sum();
+            averageWellnessIndex = Math.round((totalWellness / summaries.size()) * 10.0) / 10.0;
+        }
+
+        return new TelemetryKpiSummaryDto(
+                totalMonitored,
+                criticalRiskCount,
+                highRiskCount,
+                moderateRiskCount,
+                lowRiskCount,
+                totalActiveInterventions,
+                averageWellnessIndex
+        );
     }
 
     @Transactional

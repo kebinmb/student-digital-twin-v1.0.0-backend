@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.institution;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.institution.FinancialDtos.*;
 import com.sdt.web_app.entities.institution.FeeCatalog;
 import com.sdt.web_app.entities.institution.FeeCategory;
@@ -25,6 +26,7 @@ public class FinancialController {
     // -------------------------------------------------------------------------
     // Fee Categories (/api/v1/fee-categories)
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_ALL_FEE_CATEGORIES", entityName = "FeeCategory")
     @GetMapping("/fee-categories")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<FeeCategoryResponse>> getAllFeeCategories() {
@@ -34,6 +36,7 @@ public class FinancialController {
         return ResponseEntity.ok(list);
     }
 
+    @Auditable(action = "CREATE_FEE_CATEGORY", entityName = "FeeCategory")
     @PostMapping("/fee-categories")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<FeeCategoryResponse> createFeeCategory(@Valid @RequestBody CreateFeeCategoryRequest request) {
@@ -41,6 +44,7 @@ public class FinancialController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToCategoryResponse(category));
     }
 
+    @Auditable(action = "UPDATE_FEE_CATEGORY", entityName = "FeeCategory", entityId = "#id")
     @PutMapping("/fee-categories/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<FeeCategoryResponse> updateFeeCategory(
@@ -51,6 +55,7 @@ public class FinancialController {
         return ResponseEntity.ok(mapToCategoryResponse(category));
     }
 
+    @Auditable(action = "DELETE_FEE_CATEGORY", entityName = "FeeCategory", entityId = "#id")
     @DeleteMapping("/fee-categories/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deleteFeeCategory(@PathVariable Long id) {
@@ -61,6 +66,7 @@ public class FinancialController {
     // -------------------------------------------------------------------------
     // Fee Catalog (/api/v1/fee-catalog)
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_ALL_FEE_CATALOG", entityName = "FeeCatalog")
     @GetMapping("/fee-catalog")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<FeeCatalogResponse>> getAllFeeCatalog() {
@@ -71,6 +77,7 @@ public class FinancialController {
         return ResponseEntity.ok(list);
     }
 
+    @Auditable(action = "READ_FEE_CATALOG_BY_CATEGORY", entityName = "FeeCatalog", entityId = "#categoryId")
     @GetMapping("/fee-catalog/category/{categoryId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<FeeCatalogResponse>> getFeeCatalogByCategory(@PathVariable Long categoryId) {
@@ -80,6 +87,7 @@ public class FinancialController {
         return ResponseEntity.ok(list);
     }
 
+    @Auditable(action = "CREATE_FEE_CATALOG", entityName = "FeeCatalog")
     @PostMapping("/fee-catalog")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<FeeCatalogResponse> createFeeCatalog(@Valid @RequestBody CreateFeeCatalogRequest request) {
@@ -95,6 +103,7 @@ public class FinancialController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToCatalogResponse(fee));
     }
 
+    @Auditable(action = "UPDATE_FEE_CATALOG", entityName = "FeeCatalog", entityId = "#id")
     @PutMapping("/fee-catalog/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<FeeCatalogResponse> updateFeeCatalog(
@@ -105,6 +114,7 @@ public class FinancialController {
         return ResponseEntity.ok(mapToCatalogResponse(fee));
     }
 
+    @Auditable(action = "DELETE_FEE_CATALOG", entityName = "FeeCatalog", entityId = "#id")
     @DeleteMapping("/fee-catalog/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deleteFeeCatalog(@PathVariable Long id) {
@@ -115,6 +125,7 @@ public class FinancialController {
     // -------------------------------------------------------------------------
     // Payment Term Templates (/api/v1/payment-term-templates)
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_ALL_PAYMENT_TERM_TEMPLATES", entityName = "PaymentTermTemplate")
     @GetMapping("/payment-term-templates")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<PaymentTermTemplateResponse>> getAllPaymentTermTemplates() {
@@ -124,6 +135,7 @@ public class FinancialController {
         return ResponseEntity.ok(list);
     }
 
+    @Auditable(action = "CREATE_PAYMENT_TERM_TEMPLATE", entityName = "PaymentTermTemplate")
     @PostMapping("/payment-term-templates")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<PaymentTermTemplateResponse> createPaymentTermTemplate(
@@ -140,6 +152,7 @@ public class FinancialController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToTemplateResponse(template));
     }
 
+    @Auditable(action = "DELETE_PAYMENT_TERM_TEMPLATE", entityName = "PaymentTermTemplate", entityId = "#id")
     @DeleteMapping("/payment-term-templates/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deletePaymentTermTemplate(@PathVariable Long id) {
@@ -150,6 +163,7 @@ public class FinancialController {
     // -------------------------------------------------------------------------
     // Scholarship Discounts (/api/v1/scholarship-discounts)
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_ALL_SCHOLARSHIP_DISCOUNTS", entityName = "ScholarshipDiscount")
     @GetMapping("/scholarship-discounts")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<ScholarshipDiscountResponse>> getAllScholarshipDiscounts() {
@@ -159,6 +173,7 @@ public class FinancialController {
         return ResponseEntity.ok(list);
     }
 
+    @Auditable(action = "CREATE_SCHOLARSHIP_DISCOUNT", entityName = "ScholarshipDiscount")
     @PostMapping("/scholarship-discounts")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<ScholarshipDiscountResponse> createScholarshipDiscount(
@@ -178,6 +193,7 @@ public class FinancialController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToScholarshipResponse(discount));
     }
 
+    @Auditable(action = "DELETE_SCHOLARSHIP_DISCOUNT", entityName = "ScholarshipDiscount", entityId = "#id")
     @DeleteMapping("/scholarship-discounts/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> deleteScholarshipDiscount(@PathVariable Long id) {

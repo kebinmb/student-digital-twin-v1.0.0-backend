@@ -36,12 +36,14 @@ public class ClearanceAndChedController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @Auditable(action = "READ_CLEARANCE_BY_STUDENT_AND_TERM", entityName = "ClearanceRequest")
     @GetMapping("/clearance/requests/student/{studentIdentifier}/term/{termId}")
     public ResponseEntity<ClearanceRequestDto> getClearanceByStudentAndTerm(@PathVariable String studentIdentifier, @PathVariable Long termId) {
         ClearanceRequestDto result = clearanceWorkflowService.getClearanceByStudentAndTerm(studentIdentifier, termId);
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_CLEARANCE_BY_ID", entityName = "ClearanceRequest", entityId = "#id")
     @GetMapping("/clearance/requests/{id}")
     public ResponseEntity<ClearanceRequestDto> getClearanceById(@PathVariable Long id) {
         ClearanceRequestDto result = clearanceWorkflowService.getClearanceById(id);
@@ -60,6 +62,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_PENDING_SIGNOFFS", entityName = "ClearanceSignoff")
     @GetMapping("/clearance/signoffs/pending/{departmentType}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'CHAIRPERSON', 'FACULTY')")
     public ResponseEntity<List<ClearanceSignoffDto>> getPendingSignoffsByDepartment(@PathVariable String departmentType) {
@@ -67,6 +70,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_CLEARANCE_STUDENT_SUGGESTIONS", entityName = "ClearanceRequest")
     @GetMapping("/clearance/requests/students/suggestions")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'FACULTY')")
     public ResponseEntity<List<ClearanceStudentSuggestionDto>> getClearanceStudentSuggestions(
@@ -76,6 +80,7 @@ public class ClearanceAndChedController {
     }
 
     // Degree Audit & Graduation
+    @Auditable(action = "EVALUATE_DEGREE_AUDIT", entityName = "DegreeAudit", entityId = "#studentProfileId")
     @GetMapping("/graduation/audit/{studentProfileId}")
     public ResponseEntity<DegreeAuditResultDto> evaluateDegreeAudit(@PathVariable Long studentProfileId) {
         DegreeAuditResultDto result = degreeAuditService.evaluateDegreeAudit(studentProfileId);
@@ -103,6 +108,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_GRADUATION_APPLICATIONS_BY_TERM", entityName = "GraduationApplication", entityId = "#termId")
     @GetMapping("/graduation/applications/term/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
     public ResponseEntity<List<GraduationApplicationDto>> getGraduationApplicationsByTerm(@PathVariable Long termId) {
@@ -111,6 +117,7 @@ public class ClearanceAndChedController {
     }
 
     // CHED Regulatory Reporting
+    @Auditable(action = "EXPORT_CHED_FORM_E1", entityName = "ChedFormE1", entityId = "#campusId")
     @GetMapping("/compliance/ched/e1/{campusId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
     public ResponseEntity<ChedFormE1InstitutionalDto> exportFormE1Institutional(@PathVariable Long campusId) {
@@ -118,6 +125,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "EXPORT_CHED_FORM_E2", entityName = "ChedFormE2", entityId = "#campusId")
     @GetMapping("/compliance/ched/e2/{campusId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
     public ResponseEntity<List<ChedFormE2ProgramDto>> exportFormE2Programs(@PathVariable Long campusId) {
@@ -125,6 +133,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "EXPORT_CHED_FORM_E3", entityName = "ChedFormE3", entityId = "#termId")
     @GetMapping("/compliance/ched/e3/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
     public ResponseEntity<List<ChedFormE3EnrolmentDto>> exportFormE3Enrolment(@PathVariable Long termId) {
@@ -132,6 +141,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "EXPORT_CHED_FORM_E4", entityName = "ChedFormE4", entityId = "#termId")
     @GetMapping("/compliance/ched/e4/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
     public ResponseEntity<List<ChedFormE4GraduateDto>> exportFormE4Graduates(@PathVariable Long termId) {
@@ -139,6 +149,7 @@ public class ClearanceAndChedController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "EXPORT_CHED_FORM_E5", entityName = "ChedFormE5", entityId = "#termId")
     @GetMapping("/compliance/ched/e5/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN')")
     public ResponseEntity<List<ChedFormE5FacultyDto>> exportFormE5Faculty(@PathVariable Long termId) {

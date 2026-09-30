@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.compliance;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.dto.compliance.EquityDtos.*;
 import com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus;
@@ -24,6 +25,7 @@ public class StudentEquityProfileController {
     private final StudentEquityProfileService equityProfileService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "READ_MY_EQUITY_PROFILE", entityName = "StudentEquityProfile")
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('STUDENT', 'ADMIN', 'SUPER_ADMIN', 'REGISTRAR')")
     public ResponseEntity<StudentEquityProfileDto> getMyEquityProfile(Authentication authentication) {
@@ -32,6 +34,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "UPDATE_MY_EQUITY_PROFILE", entityName = "StudentEquityProfile")
     @PutMapping("/me")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('STUDENT', 'ADMIN', 'SUPER_ADMIN', 'REGISTRAR')")
     public ResponseEntity<StudentEquityProfileDto> updateMyEquityProfile(
@@ -42,6 +45,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_STUDENT_EQUITY_PROFILE", entityName = "StudentEquityProfile", entityId = "#studentProfileId")
     @GetMapping("/student/{studentProfileId}")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<StudentEquityProfileDto> getEquityProfileByStudentProfileId(@PathVariable Long studentProfileId) {
@@ -49,6 +53,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "VERIFY_EQUITY_PROFILE", entityName = "StudentEquityProfile", entityId = "#profileId")
     @PutMapping("/{profileId}/verify")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE')")
     public ResponseEntity<StudentEquityProfileDto> verifyEquityProfile(
@@ -60,6 +65,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "SEARCH_EQUITY_PROFILES", entityName = "StudentEquityProfile")
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE')")
     public ResponseEntity<Page<StudentEquityProfileDto>> searchEquityProfiles(
@@ -84,6 +90,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "SEARCH_EQUITY_PROFILES_SLICE", entityName = "StudentEquityProfile")
     @GetMapping("/search-slice")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE')")
     public ResponseEntity<SliceResponse<StudentEquityProfileDto>> searchEquityProfilesSlice(
@@ -108,6 +115,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_EQUITY_STATISTICS", entityName = "StudentEquityProfile")
     @GetMapping("/statistics")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'ACCOUNTANT')")
     public ResponseEntity<EquityStatisticsSummaryDto> getEquityStatisticsSummary() {
@@ -115,6 +123,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "SEARCH_APPLICANT_EQUITY", entityName = "ApplicantEquityAudit")
     @GetMapping("/admission-applicants")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE')")
     public ResponseEntity<Page<ApplicantEquityAuditDto>> searchAdmissionApplicants(
@@ -139,6 +148,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_APPLICANT_EQUITY_STATS", entityName = "ApplicantEquityAudit")
     @GetMapping("/admission-applicants/statistics")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE')")
     public ResponseEntity<ApplicantEquityStatsDto> getAdmissionApplicantEquityStats() {
@@ -146,6 +156,7 @@ public class StudentEquityProfileController {
         return ResponseEntity.ok(stats);
     }
 
+    @Auditable(action = "READ_APPLICANT_EQUITY_DOSSIER", entityName = "ApplicantEquityAudit", entityId = "#applicationNumber")
     @GetMapping("/admission-applicants/{applicationNumber}")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE')")
     public ResponseEntity<ApplicantEquityAuditDto> getAdmissionApplicantDossier(@PathVariable String applicationNumber) {

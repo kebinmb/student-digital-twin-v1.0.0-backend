@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.institution;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.institution.TermDtos.*;
 import com.sdt.web_app.entities.institution.Term;
 import com.sdt.web_app.service.institution.TermLifecycleService;
@@ -21,6 +22,7 @@ public class TermController {
     private final TermService termService;
     private final TermLifecycleService termLifecycleService;
 
+    @Auditable(action = "READ_ALL_TERMS", entityName = "Term")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<TermResponse>> getAllTerms() {
@@ -30,12 +32,14 @@ public class TermController {
         return ResponseEntity.ok(responses);
     }
 
+    @Auditable(action = "READ_ACTIVE_TERM", entityName = "Term")
     @GetMapping("/active")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<TermResponse> getActiveTerm() {
         return ResponseEntity.ok(mapToResponse(termService.getActiveTerm()));
     }
 
+    @Auditable(action = "READ_TERMS_BY_ACADEMIC_YEAR", entityName = "Term", entityId = "#academicYearId")
     @GetMapping("/academic-year/{academicYearId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<TermResponse>> getTermsByAcademicYear(@PathVariable Long academicYearId) {
@@ -45,12 +49,14 @@ public class TermController {
         return ResponseEntity.ok(responses);
     }
 
+    @Auditable(action = "READ_TERM", entityName = "Term", entityId = "#id")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<TermResponse> getTermById(@PathVariable Long id) {
         return ResponseEntity.ok(mapToResponse(termService.getTermById(id)));
     }
 
+    @Auditable(action = "CREATE_TERM", entityName = "Term")
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<TermResponse> createTerm(@Valid @RequestBody CreateTermRequest request) {
@@ -63,6 +69,7 @@ public class TermController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(term));
     }
 
+    @Auditable(action = "UPDATE_TERM_SCHEDULE", entityName = "Term", entityId = "#id")
     @PutMapping("/{id}/schedule")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<TermResponse> updateTermSchedule(
@@ -73,6 +80,7 @@ public class TermController {
         return ResponseEntity.ok(mapToResponse(term));
     }
 
+    @Auditable(action = "ACTIVATE_TERM", entityName = "Term", entityId = "#id")
     @PutMapping("/{id}/activate")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<TermResponse> activateTerm(@PathVariable Long id) {
@@ -80,6 +88,7 @@ public class TermController {
         return ResponseEntity.ok(mapToResponse(term));
     }
 
+    @Auditable(action = "UPDATE_ENROLLMENT_WINDOW", entityName = "Term", entityId = "#id")
     @PutMapping("/{id}/enrollment-window")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<TermResponse> toggleEnrollmentWindow(
@@ -90,6 +99,7 @@ public class TermController {
         return ResponseEntity.ok(mapToResponse(term));
     }
 
+    @Auditable(action = "UPDATE_GRADING_WINDOW", entityName = "Term", entityId = "#id")
     @PutMapping("/{id}/grading-window")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<TermResponse> toggleGradingWindow(
@@ -100,6 +110,7 @@ public class TermController {
         return ResponseEntity.ok(mapToResponse(term));
     }
 
+    @Auditable(action = "UPDATE_ADD_DROP_WINDOW", entityName = "Term", entityId = "#id")
     @PutMapping("/{id}/add-drop-window")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<TermResponse> toggleAddDropWindow(
@@ -110,8 +121,9 @@ public class TermController {
         return ResponseEntity.ok(mapToResponse(term));
     }
 
+    @Auditable(action = "DELETE_TERM", entityName = "Term", entityId = "#id")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTerm(@PathVariable Long id) {
         termService.deleteTerm(id);
         return ResponseEntity.noContent().build();

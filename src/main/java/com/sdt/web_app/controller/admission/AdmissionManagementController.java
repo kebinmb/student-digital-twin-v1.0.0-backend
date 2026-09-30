@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.admission;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.admission.AdmissionDtos.*;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.repositories.authentication.UserRepository;
@@ -25,6 +26,7 @@ public class AdmissionManagementController {
     private final SecurityUtils securityUtils;
     private final com.sdt.web_app.service.security.DataScopingService dataScopingService;
 
+    @Auditable(action = "READ_CONFIG", entityName = "AdmissionConfig")
     @GetMapping("/config")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<AdmissionConfigDto> getAdmissionConfig(
@@ -32,6 +34,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(admissionService.getAdmissionConfig(termId));
     }
 
+    @Auditable(action = "UPDATE_CONFIG", entityName = "AdmissionConfig")
     @PutMapping("/config")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<AdmissionConfigDto> updateAdmissionConfig(
@@ -39,6 +42,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(admissionService.updateAdmissionConfig(request));
     }
 
+    @Auditable(action = "READ_ALL_EXAM_SLOTS", entityName = "EntranceExamSlot")
     @GetMapping("/exam-slots")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<List<EntranceExamSlotResponse>> getAllExamSlots(
@@ -46,6 +50,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(admissionService.getAllExamSlotsForAdmin(termId));
     }
 
+    @Auditable(action = "CREATE_EXAM_SLOT", entityName = "EntranceExamSlot")
     @PostMapping("/exam-slots")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<EntranceExamSlotResponse> createExamSlot(
@@ -54,6 +59,7 @@ public class AdmissionManagementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @Auditable(action = "UPDATE_EXAM_SLOT_STATUS", entityName = "EntranceExamSlot", entityId = "#id")
     @PutMapping("/exam-slots/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<EntranceExamSlotResponse> updateExamSlotStatus(
@@ -63,6 +69,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(updated);
     }
 
+    @Auditable(action = "DELETE_EXAM_SLOT", entityName = "EntranceExamSlot", entityId = "#id")
     @DeleteMapping("/exam-slots/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<Void> deleteExamSlot(@PathVariable("id") Long id) {
@@ -70,6 +77,7 @@ public class AdmissionManagementController {
         return ResponseEntity.noContent().build();
     }
 
+    @Auditable(action = "READ_ALL_APPLICATIONS", entityName = "AdmissionApplication")
     @GetMapping("/applications")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<List<AdmissionApplicationResponse>> getAllApplications(
@@ -81,6 +89,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(apps);
     }
 
+    @Auditable(action = "READ_UNCLAIMED_APPLICATIONS", entityName = "AdmissionApplication")
     @GetMapping("/applications/unclaimed")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<List<AdmissionApplicationResponse>> getUnclaimedApplications(
@@ -89,6 +98,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(apps);
     }
 
+    @Auditable(action = "READ_PROGRAM_APPLICATIONS", entityName = "AdmissionApplication", entityId = "#programId")
     @GetMapping("/applications/program/{programId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<List<AdmissionApplicationResponse>> getApplicationsForProgram(
@@ -103,12 +113,14 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(apps);
     }
 
+    @Auditable(action = "READ_APPLICATION", entityName = "AdmissionApplication", entityId = "#id")
     @GetMapping("/applications/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<AdmissionApplicationResponse> getApplicationById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(admissionService.getApplicationById(id));
     }
 
+    @Auditable(action = "EVALUATE_EXAM", entityName = "AdmissionApplication", entityId = "#id")
     @PostMapping("/applications/{id}/evaluate-exam")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<AdmissionApplicationResponse> evaluateExam(
@@ -121,6 +133,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(updated);
     }
 
+    @Auditable(action = "EVALUATE_INTERVIEW", entityName = "AdmissionApplication", entityId = "#id")
     @PostMapping("/applications/{id}/evaluate-interview")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<AdmissionApplicationResponse> evaluateInterview(
@@ -140,6 +153,7 @@ public class AdmissionManagementController {
         return ResponseEntity.ok(updated);
     }
 
+    @Auditable(action = "UPDATE_STATUS", entityName = "AdmissionApplication", entityId = "#id")
     @PutMapping("/applications/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'GUIDANCE')")
     public ResponseEntity<AdmissionApplicationResponse> updateStatus(

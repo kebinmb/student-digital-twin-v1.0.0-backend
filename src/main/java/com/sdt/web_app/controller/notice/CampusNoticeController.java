@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.notice;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.notice.NoticeDtos.*;
 import com.sdt.web_app.service.notice.CampusNoticeService;
 import com.sdt.web_app.service.security.SecurityUtils;
@@ -22,6 +23,7 @@ public class CampusNoticeController {
     private final CampusNoticeService noticeService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "READ_ACTIVE_NOTICES", entityName = "CampusNotice")
     @GetMapping("/active")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<NoticeDto>> getActiveNotices(Authentication authentication) {
@@ -29,6 +31,7 @@ public class CampusNoticeController {
         return ResponseEntity.ok(noticeService.getActiveNotices(userId));
     }
 
+    @Auditable(action = "READ_NOTICES_PAGINATED", entityName = "CampusNotice")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<org.springframework.data.domain.Page<NoticeDto>> getActiveNoticesPaginated(
@@ -39,6 +42,7 @@ public class CampusNoticeController {
         return ResponseEntity.ok(noticeService.getActiveNotices(userId, org.springframework.data.domain.PageRequest.of(page, size)));
     }
 
+    @Auditable(action = "CREATE_CAMPUS_NOTICE", entityName = "CampusNotice")
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'ACCOUNTANT')")
     public ResponseEntity<NoticeDto> createNotice(@Valid @RequestBody CreateNoticeRequest request, Authentication authentication) {
@@ -57,6 +61,7 @@ public class CampusNoticeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @Auditable(action = "ACKNOWLEDGE_CAMPUS_NOTICE", entityName = "CampusNotice", entityId = "#id")
     @PostMapping("/{id}/acknowledge")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> acknowledgeNotice(@PathVariable("id") Long id, Authentication authentication) {
@@ -65,6 +70,7 @@ public class CampusNoticeController {
         return ResponseEntity.noContent().build();
     }
 
+    @Auditable(action = "DELETE_CAMPUS_NOTICE", entityName = "CampusNotice", entityId = "#id")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'ACCOUNTANT')")
     public ResponseEntity<Void> deleteNotice(@PathVariable("id") Long id, Authentication authentication) {

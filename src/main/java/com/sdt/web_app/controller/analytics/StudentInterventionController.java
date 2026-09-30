@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.analytics;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.*;
 import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.service.analytics.StudentInterventionService;
@@ -23,6 +24,7 @@ public class StudentInterventionController {
 
     private final StudentInterventionService interventionService;
 
+    @Auditable(action = "READ_INTERVENTION_TYPES", entityName = "StudentIntervention")
     @GetMapping("/types")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<String>> getInterventionTypes() {
@@ -33,12 +35,14 @@ public class StudentInterventionController {
         );
     }
 
+    @Auditable(action = "DISPATCH_INTERVENTION", entityName = "StudentIntervention", entityId = "#result?.id()")
     @PostMapping("/dispatch")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
     public ResponseEntity<StudentInterventionDto> dispatchIntervention(@Valid @RequestBody DispatchInterventionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(interventionService.dispatchIntervention(request));
     }
 
+    @Auditable(action = "UPDATE_INTERVENTION_STATUS", entityName = "StudentIntervention", entityId = "#id")
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
     public ResponseEntity<StudentInterventionDto> updateInterventionStatus(
@@ -47,12 +51,14 @@ public class StudentInterventionController {
         return ResponseEntity.ok(interventionService.updateInterventionStatus(id, request));
     }
 
+    @Auditable(action = "READ_STUDENT_INTERVENTIONS", entityName = "StudentIntervention", entityId = "#studentId")
     @GetMapping("/student/{studentId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT')")
     public ResponseEntity<List<StudentInterventionDto>> getStudentInterventions(@PathVariable("studentId") Long studentId) {
         return ResponseEntity.ok(interventionService.getInterventionsByStudent(studentId));
     }
 
+    @Auditable(action = "READ_STUDENT_INTERVENTIONS_SLICE", entityName = "StudentIntervention", entityId = "#studentId")
     @GetMapping("/student/{studentId}/slice")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT')")
     public ResponseEntity<SliceResponse<StudentInterventionDto>> getStudentInterventionsSlice(
@@ -63,6 +69,7 @@ public class StudentInterventionController {
                 studentId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dispatchedAt"))));
     }
 
+    @Auditable(action = "READ_ALL_INTERVENTIONS", entityName = "StudentIntervention")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
     public ResponseEntity<Page<StudentInterventionDto>> getAllInterventions(

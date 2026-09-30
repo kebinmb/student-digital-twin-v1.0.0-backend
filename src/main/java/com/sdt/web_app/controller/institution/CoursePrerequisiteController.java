@@ -34,6 +34,7 @@ public class CoursePrerequisiteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Auditable(action = "READ_PREREQUISITES_BY_COURSE", entityName = "CoursePrerequisite", entityId = "#courseId")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CoursePrerequisiteResponse>> getPrerequisitesByCourseId(@PathVariable Long courseId) {

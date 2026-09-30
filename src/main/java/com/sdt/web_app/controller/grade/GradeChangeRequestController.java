@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.grade;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.grade.GradeChangeDtos.*;
 import com.sdt.web_app.service.grade.GradeChangeService;
 import com.sdt.web_app.service.security.SecurityUtils;
@@ -21,6 +22,7 @@ public class GradeChangeRequestController {
     private final GradeChangeService gradeChangeService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "SUBMIT_GRADE_CHANGE_REQUEST", entityName = "GradeChangeRequest")
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<GradeChangeResponse> submitRequest(
@@ -30,12 +32,14 @@ public class GradeChangeRequestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(gradeChangeService.submitRequest(request, actorUserId));
     }
 
+    @Auditable(action = "READ_PENDING_GRADE_CHANGE_REQUESTS", entityName = "GradeChangeRequest")
     @GetMapping("/pending")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<List<GradeChangeResponse>> getPendingRequests() {
         return ResponseEntity.ok(gradeChangeService.getPendingRequests());
     }
 
+    @Auditable(action = "APPROVE_GRADE_CHANGE_REQUEST", entityName = "GradeChangeRequest", entityId = "#id")
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<GradeChangeResponse> approveRequest(
@@ -45,6 +49,7 @@ public class GradeChangeRequestController {
         return ResponseEntity.ok(gradeChangeService.approveRequest(id, approverUserId));
     }
 
+    @Auditable(action = "REJECT_GRADE_CHANGE_REQUEST", entityName = "GradeChangeRequest", entityId = "#id")
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<GradeChangeResponse> rejectRequest(

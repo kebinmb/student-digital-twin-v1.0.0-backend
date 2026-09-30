@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.lms;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.lms.LmsDtos.LmsRosterSyncResponse;
 import com.sdt.web_app.service.lms.LmsRosterSyncService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ public class LmsSyncController {
 
     private final LmsRosterSyncService lmsRosterSyncService;
 
+    @Auditable(action = "SYNC_ROSTER_TO_LMS", entityName = "ClassSection", entityId = "#sectionId")
     @PostMapping("/sync/roster/{sectionId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN')")
     public ResponseEntity<LmsRosterSyncResponse> syncRosterToLms(@PathVariable("sectionId") Long sectionId) {

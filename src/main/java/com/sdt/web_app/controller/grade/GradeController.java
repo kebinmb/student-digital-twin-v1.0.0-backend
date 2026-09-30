@@ -19,6 +19,7 @@ public class GradeController {
     private final GradeService gradeService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "READ_SECTION_ROSTER", entityName = "ClassSection", entityId = "#id")
     @GetMapping("/{id}/roster")
     @PreAuthorize("@sectionSecurity.canAccessSection(#id, authentication)")
     public ResponseEntity<SectionRosterResponse> getSectionRoster(@PathVariable("id") Long id) {

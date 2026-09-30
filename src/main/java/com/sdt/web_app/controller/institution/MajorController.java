@@ -21,6 +21,7 @@ public class MajorController {
 
     private final MajorService majorService;
 
+    @Auditable(action = "READ_MAJORS_BY_PROGRAM", entityName = "Major", entityId = "#programId")
     @GetMapping("/program/{programId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<MajorSummaryResponse>> getMajorsByProgram(
@@ -32,6 +33,7 @@ public class MajorController {
         return ResponseEntity.ok(majorService.getMajorsByProgram(programId));
     }
 
+    @Auditable(action = "READ_MAJOR", entityName = "Major", entityId = "#id")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<MajorDetailResponse> getMajorById(@PathVariable Long id) {

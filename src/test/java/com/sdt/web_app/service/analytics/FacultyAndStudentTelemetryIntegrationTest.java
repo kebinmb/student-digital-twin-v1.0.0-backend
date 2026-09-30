@@ -53,4 +53,22 @@ public class FacultyAndStudentTelemetryIntegrationTest extends BaseIntegrationTe
                 .andExpect(jsonPath("$.wellnessScore").exists())
                 .andExpect(jsonPath("$.dimensionScores").isMap());
     }
+
+    @Test
+    @DisplayName("ROLE_FACULTY can retrieve section telemetry KPI summary")
+    @WithMockUser(username = "1", roles = {"FACULTY"})
+    void testFacultyGetTelemetryKpiSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/faculty/telemetry/kpi"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalMonitored").exists())
+                .andExpect(jsonPath("$.averageWellnessIndex").exists());
+    }
+
+    @Test
+    @DisplayName("ROLE_STUDENT is forbidden from accessing faculty telemetry KPI endpoint")
+    @WithMockUser(username = "2", roles = {"STUDENT"})
+    void testStudentForbiddenFromFacultyKpiEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/faculty/telemetry/kpi"))
+                .andExpect(status().isForbidden());
+    }
 }

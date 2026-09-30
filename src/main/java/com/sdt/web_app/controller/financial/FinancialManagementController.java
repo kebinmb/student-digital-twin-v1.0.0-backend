@@ -37,6 +37,7 @@ public class FinancialManagementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @Auditable(action = "READ_ACTIVE_FEE_TEMPLATE", entityName = "FeeTemplate")
     @GetMapping("/fee-templates/active")
     public ResponseEntity<FeeTemplateDto> getActiveFeeTemplate(@RequestParam(name = "academicYearId", required = false) Long academicYearId) {
         FeeTemplateDto result = feeAssessmentService.getActiveFeeTemplate(academicYearId);
@@ -61,12 +62,14 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_INVOICE_BY_ENROLLMENT", entityName = "StudentAssessmentInvoice", entityId = "#enrollmentId")
     @GetMapping("/invoices/enrollment/{enrollmentId}")
     public ResponseEntity<StudentAssessmentInvoiceDto> getInvoiceByEnrollmentId(@PathVariable Long enrollmentId) {
         StudentAssessmentInvoiceDto result = feeAssessmentService.getInvoiceByEnrollmentId(enrollmentId);
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_INVOICE_BY_STUDENT_TERM", entityName = "StudentAssessmentInvoice", entityId = "#studentProfileId")
     @GetMapping("/invoices/student/{studentProfileId}/term/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<StudentAssessmentInvoiceDto> getInvoiceByStudentAndTerm(
@@ -76,6 +79,7 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_STUDENT_LEDGER", entityName = "StudentAccountLedger", entityId = "#studentProfileId")
     @GetMapping("/ledgers/student/{studentProfileId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<List<StudentAccountLedgerDto>> getStudentLedgerHistory(@PathVariable Long studentProfileId) {
@@ -92,12 +96,14 @@ public class FinancialManagementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @Auditable(action = "READ_RECEIPT_BY_OR", entityName = "CashierReceipt", entityId = "#orNumber")
     @GetMapping("/receipts/{orNumber}")
     public ResponseEntity<CashierReceiptDto> getReceiptByOrNumber(@PathVariable String orNumber) {
         CashierReceiptDto result = cashieringService.getReceiptByOrNumber(orNumber);
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_RECEIPTS_BY_STUDENT", entityName = "CashierReceipt", entityId = "#studentProfileId")
     @GetMapping("/receipts/student/{studentProfileId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<List<CashierReceiptDto>> getReceiptsByStudentProfile(@PathVariable Long studentProfileId) {
@@ -105,6 +111,7 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_RECEIPTS_BY_STUDENT_SLICE", entityName = "CashierReceipt", entityId = "#studentProfileId")
     @GetMapping("/receipts/student/{studentProfileId}/slice")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<CashierReceiptDto>> getReceiptsByStudentProfileSlice(
@@ -124,6 +131,7 @@ public class FinancialManagementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @Auditable(action = "READ_ACTIVE_OR_BOOKLET", entityName = "OrBooklet")
     @GetMapping("/or-booklets/active")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
     public ResponseEntity<OrBookletDto> getActiveBookletForCashier(Authentication authentication) {
@@ -132,6 +140,7 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_CASHIER_OR_BOOKLETS", entityName = "OrBooklet")
     @GetMapping("/or-booklets")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
     public ResponseEntity<?> getCashierBooklets(
@@ -155,6 +164,7 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "GENERATE_EOD_RCD_REPORT", entityName = "EodRcdReport")
     @GetMapping("/cashier/eod-rcd")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER')")
     public ResponseEntity<EodRcdReportDto> generateEodRcdReport(@RequestParam(name = "date", required = false) String date, Authentication authentication) {
@@ -172,6 +182,7 @@ public class FinancialManagementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @Auditable(action = "READ_UNIFAST_CLAIMS_BY_TERM", entityName = "UnifastFheClaim", entityId = "#termId")
     @GetMapping("/unifast/claims/term/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
     public ResponseEntity<List<UnifastFheClaimDto>> getClaimsByTerm(@PathVariable Long termId) {
@@ -179,6 +190,7 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "READ_UNIFAST_CLAIM_BATCH", entityName = "UnifastFheClaim", entityId = "#claimBatchId")
     @GetMapping("/unifast/claims/{claimBatchId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
     public ResponseEntity<UnifastFheClaimDto> getClaimBatchDetails(@PathVariable Long claimBatchId) {
@@ -195,6 +207,7 @@ public class FinancialManagementController {
         return ResponseEntity.ok(result);
     }
 
+    @Auditable(action = "EXPORT_UNIFAST_FORM2_CSV", entityName = "UnifastFheClaim", entityId = "#claimBatchId")
     @GetMapping(value = "/unifast/claims/{claimBatchId}/form2/export", produces = "text/csv")
     @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
     public ResponseEntity<String> exportForm2Csv(@PathVariable Long claimBatchId) {
@@ -204,6 +217,7 @@ public class FinancialManagementController {
                 .body(csvContent);
     }
 
+    @Auditable(action = "PROCESS_LINKBIZ_WEBHOOK", entityName = "CashierReceipt")
     @PostMapping("/gateways/linkbiz/webhook")
     public ResponseEntity<LinkBizWebhookResponse> processLinkBizWebhook(@Valid @RequestBody LinkBizWebhookRequest request) {
         LinkBizWebhookResponse response = cashieringService.processLinkBizPayment(request);

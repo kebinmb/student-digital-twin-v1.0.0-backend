@@ -34,4 +34,27 @@ public class AdminTelemetryIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/v1/admin/telemetry/students"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("ROLE_ADMIN can retrieve total telemetry KPI summary")
+    @WithMockUser(username = "admin_user", roles = {"ADMIN"})
+    void testAdminGetTelemetryKpiSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/telemetry/kpi"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalMonitored").exists())
+                .andExpect(jsonPath("$.criticalRiskCount").exists())
+                .andExpect(jsonPath("$.highRiskCount").exists())
+                .andExpect(jsonPath("$.moderateRiskCount").exists())
+                .andExpect(jsonPath("$.lowRiskCount").exists())
+                .andExpect(jsonPath("$.totalActiveInterventions").exists())
+                .andExpect(jsonPath("$.averageWellnessIndex").exists());
+    }
+
+    @Test
+    @DisplayName("ROLE_STUDENT is forbidden from accessing administrative telemetry KPI endpoint")
+    @WithMockUser(username = "student_user", roles = {"STUDENT"})
+    void testStudentAccessKpiForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/telemetry/kpi"))
+                .andExpect(status().isForbidden());
+    }
 }

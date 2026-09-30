@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.enrollment;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.enrollment.EnrollmentDtos.*;
 import com.sdt.web_app.service.enrollment.StudentService;
 import com.sdt.web_app.service.enrollment.TransfereeCreditingService;
@@ -24,6 +25,7 @@ public class StudentController {
     private final SecurityUtils securityUtils;
     private final com.sdt.web_app.service.security.DataScopingService dataScopingService;
 
+    @Auditable(action = "CREATE_STUDENT", entityName = "Student")
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<StudentProfileResponse> createStudent(@Valid @RequestBody CreateStudentRequest request) {
@@ -31,12 +33,14 @@ public class StudentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Auditable(action = "READ_STUDENT", entityName = "Student", entityId = "#id")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
     public ResponseEntity<StudentProfileResponse> getStudentById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
     }
 
+    @Auditable(action = "SEARCH_STUDENTS", entityName = "Student")
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<StudentSearchResultDto>> searchStudents(
@@ -46,6 +50,7 @@ public class StudentController {
         return ResponseEntity.ok(studentService.searchStudents(query, scopedPrograms));
     }
 
+    @Auditable(action = "CREDIT_TRANSFEREE_COURSES", entityName = "Student", entityId = "#id")
     @PostMapping("/{id}/credit-courses")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<TransfereeCreditingSummaryResponse> creditTransfereeCourses(
@@ -56,12 +61,14 @@ public class StudentController {
         return ResponseEntity.ok(creditingService.creditTransfereeCourses(id, request, approverUserId));
     }
 
+    @Auditable(action = "READ_CREDITED_COURSES", entityName = "Student", entityId = "#id")
     @GetMapping("/{id}/credited-courses")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
     public ResponseEntity<List<CourseEquivalencyDto>> getCreditedCourses(@PathVariable("id") Long id) {
         return ResponseEntity.ok(creditingService.getStudentCourseEquivalencies(id));
     }
 
+    @Auditable(action = "READ_CURRENT_STUDENT_PROFILE", entityName = "Student")
     @GetMapping("/me")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<StudentProfileResponse> getCurrentStudentProfile(Authentication authentication) {
@@ -72,6 +79,7 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentByUserId(userId));
     }
 
+    @Auditable(action = "UPDATE_STUDENT_CLEARANCE", entityName = "Student", entityId = "#id")
     @PatchMapping("/{id}/clearance")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'CASHIER')")
     public ResponseEntity<StudentProfileResponse> updateClearance(

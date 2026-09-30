@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.analytics;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.*;
 import com.sdt.web_app.service.analytics.QrAttendanceService;
 import jakarta.validation.Valid;
@@ -20,6 +21,11 @@ public class AttendanceController {
     private final com.sdt.web_app.service.enrollment.StudentService studentService;
     private final com.sdt.web_app.service.security.SecurityUtils securityUtils;
 
+    @Auditable(
+        action = "GENERATE_ATTENDANCE_QR",
+        entityName = "AttendanceSession",
+        entityId = "#result?.sessionId != null ? #result.sessionId : #request.sectionScheduleId"
+    )
     @PostMapping("/session/start")
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY')")
     public ResponseEntity<AttendanceSessionResponse> startSession(
@@ -29,6 +35,11 @@ public class AttendanceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(attendanceService.startSession(request, creatorUserId));
     }
 
+    @Auditable(
+        action = "VERIFY_CREATOR_ATTENDANCE",
+        entityName = "FacultyAttendanceRecord",
+        entityId = "#result?.recordId != null ? #result.recordId : #result?.sessionId"
+    )
     @PostMapping("/creator/verify")
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY')")
     public ResponseEntity<FacultyAttendanceRecordResponse> verifyCreatorAttendance(
@@ -41,6 +52,7 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.verifyCreatorAttendance(request, creatorUserId));
     }
 
+    @Auditable(action = "READ_DAILY_FACULTY_ATTENDANCE", entityName = "FacultyAttendanceRecord", entityId = "#sectionId")
     @GetMapping("/creator/daily")
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<java.util.List<FacultyAttendanceRecordResponse>> getDailyFacultyAttendance(
@@ -49,6 +61,11 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.getDailyFacultyAttendance(date, sectionId));
     }
 
+    @Auditable(
+        action = "SCAN_ATTENDANCE",
+        entityName = "AttendanceRecord",
+        entityId = "#result?.recordId != null ? #result.recordId : #request.studentId"
+    )
     @PostMapping("/scan")
     @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'FACULTY')")
     public ResponseEntity<AttendanceRecordResponse> scanAttendance(
@@ -97,6 +114,7 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.scanAttendance(effectiveRequest));
     }
 
+    @Auditable(action = "READ_SELF_ATTENDANCE_SLICE", entityName = "AttendanceRecord")
     @GetMapping("/student/me/slice")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<SliceResponse<AttendanceRecordResponse>> getCurrentStudentAttendanceSlice(
@@ -113,6 +131,7 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.getStudentAttendanceSlice(student.id(), page, size, sortBy, sortDir));
     }
 
+    @Auditable(action = "READ_STUDENT_ATTENDANCE_SLICE", entityName = "AttendanceRecord", entityId = "#studentId")
     @GetMapping("/student/{studentId:[0-9]+}/slice")
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
     public ResponseEntity<SliceResponse<AttendanceRecordResponse>> getStudentAttendanceSlice(
@@ -124,6 +143,7 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.getStudentAttendanceSlice(studentId, page, size, sortBy, sortDir));
     }
 
+    @Auditable(action = "READ_DAILY_ATTENDANCE", entityName = "AttendanceRecord", entityId = "#sectionId")
     @GetMapping("/daily")
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<java.util.List<AttendanceRecordResponse>> getDailyAttendance(
@@ -132,6 +152,7 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.getDailyAttendance(date, sectionId));
     }
 
+    @Auditable(action = "SUBSCRIBE_ATTENDANCE_STREAM", entityName = "AttendanceSession", entityId = "#sessionId")
     @GetMapping(value = "/stream/{sessionId}", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON', 'STUDENT')")
     public org.springframework.web.servlet.mvc.method.annotation.SseEmitter streamSessionAttendance(@PathVariable("sessionId") Long sessionId) {

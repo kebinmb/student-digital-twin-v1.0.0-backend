@@ -23,6 +23,7 @@ public class EnrollmentController {
     private final EnrollmentService enrollmentService;
     private final AdmissionService admissionService;
 
+    @Auditable(action = "READ_APPROVED_ADMISSIONS", entityName = "AdmissionApplication")
     @GetMapping("/admissions/approved")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<List<AdmissionApplicationResponse>> getApprovedAdmissions(
@@ -33,6 +34,7 @@ public class EnrollmentController {
     // -------------------------------------------------------------------------
     // Gate 3: Student Advising & Eligibility
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_ADVISING_ELIGIBILITY", entityName = "StudentEnrollment", entityId = "#studentId")
     @GetMapping("/advising/student/{studentId}/term/{termId}")
     @PreAuthorize("@enrollmentSecurity.canAccessStudentAdvising(authentication, #studentId)")
     public ResponseEntity<AdvisingEligibilityResponse> getAdvisingEligibility(
@@ -75,6 +77,7 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.confirmEnrollment(studentId, request));
     }
 
+    @Auditable(action = "READ_ENROLLMENT", entityName = "StudentEnrollment", entityId = "#studentId")
     @GetMapping("/student/{studentId}/term/{termId}")
     @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<StudentEnrollmentResponse> getEnrollment(
@@ -86,6 +89,7 @@ public class EnrollmentController {
     // -------------------------------------------------------------------------
     // Registrar & Admin Audit & Oversight Endpoints
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_ENROLLMENTS_BY_TERM", entityName = "StudentEnrollment", entityId = "#termId")
     @GetMapping("/term/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<java.util.List<StudentEnrollmentResponse>> getEnrollmentsByTerm(

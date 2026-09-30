@@ -30,6 +30,7 @@ public class CiloPiloMappingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Auditable(action = "READ_MATRIX_MAPPINGS", entityName = "CiloPiloMapping")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CiloPiloMappingResponse>> getMatrixMappings(
@@ -38,30 +39,35 @@ public class CiloPiloMappingController {
         return ResponseEntity.ok(mappingService.getMatrixMappings(courseId, programId));
     }
 
+    @Auditable(action = "READ_MAPPINGS_BY_COURSE", entityName = "CiloPiloMapping", entityId = "#courseId")
     @GetMapping("/course/{courseId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CiloPiloMappingResponse>> getMappingsByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(mappingService.getMappingsByCourseId(courseId));
     }
 
+    @Auditable(action = "READ_MAPPINGS_BY_PROGRAM", entityName = "CiloPiloMapping", entityId = "#programId")
     @GetMapping("/program/{programId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CiloPiloMappingResponse>> getMappingsByProgram(@PathVariable Long programId) {
         return ResponseEntity.ok(mappingService.getMappingsByProgramId(programId));
     }
 
+    @Auditable(action = "READ_MAPPINGS_BY_CILO", entityName = "CiloPiloMapping", entityId = "#ciloId")
     @GetMapping("/course-outcome/{ciloId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CiloPiloMappingResponse>> getMappingsByCourseOutcome(@PathVariable Long ciloId) {
         return ResponseEntity.ok(mappingService.getMappingsByCourseOutcomeId(ciloId));
     }
 
+    @Auditable(action = "READ_MAPPINGS_BY_PILO", entityName = "CiloPiloMapping", entityId = "#piloId")
     @GetMapping("/program-outcome/{piloId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<CiloPiloMappingResponse>> getMappingsByProgramOutcome(@PathVariable Long piloId) {
         return ResponseEntity.ok(mappingService.getMappingsByProgramOutcomeId(piloId));
     }
 
+    @Auditable(action = "DELETE_CILO_PILO_MAPPING", entityName = "CiloPiloMapping", entityId = "#id")
     @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<Void> deleteMapping(@PathVariable Long id) {

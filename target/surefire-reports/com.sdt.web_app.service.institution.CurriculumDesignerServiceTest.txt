@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.service.institution.CurriculumDesignerServiceTest
 -------------------------------------------------------------------------------
-Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.150 s -- in com.sdt.web_app.service.institution.CurriculumDesignerServiceTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.098 s -- in com.sdt.web_app.service.institution.CurriculumDesignerServiceTest

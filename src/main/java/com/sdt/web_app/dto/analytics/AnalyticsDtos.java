@@ -211,4 +211,14 @@ public class AnalyticsDtos {
             List<MilestoneDto> milestones,
             Instant lastSync
     ) {}
+
+    public record TelemetryKpiSummaryDto(
+            long totalMonitored,
+            long criticalRiskCount,
+            long highRiskCount,
+            long moderateRiskCount,
+            long lowRiskCount,
+            long totalActiveInterventions,
+            double averageWellnessIndex
+    ) {}
 }

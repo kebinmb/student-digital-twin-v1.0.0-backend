@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.faculty;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.faculty.FacultyDtos.*;
 import com.sdt.web_app.service.faculty.FacultyProfileService;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ public class FacultyProfileController {
 
     private final FacultyProfileService facultyProfileService;
 
+    @Auditable(action = "CREATE_FACULTY_ACCOUNT", entityName = "FacultyProfile")
     @PostMapping("/faculty")
     @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<FacultyProfileResponse> createFacultyAccount(@Valid @RequestBody CreateFacultyAccountRequest request) {
@@ -24,6 +26,7 @@ public class FacultyProfileController {
                 .body(facultyProfileService.createFacultyAccount(request));
     }
 
+    @Auditable(action = "READ_ALL_FACULTY", entityName = "FacultyProfile")
     @GetMapping("/faculty")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR')")
     public ResponseEntity<?> getAllFaculty(
@@ -35,12 +38,14 @@ public class FacultyProfileController {
         return ResponseEntity.ok(facultyProfileService.getAllFacultyProfiles());
     }
 
+    @Auditable(action = "READ_FACULTY_PROFILE", entityName = "FacultyProfile", entityId = "#userId")
     @GetMapping("/faculty/{userId}/profile")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR') or @facultySecurity.isFacultySelf(#userId, authentication)")
     public ResponseEntity<FacultyProfileResponse> getFacultyProfile(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(facultyProfileService.getProfileByUserId(userId));
     }
 
+    @Auditable(action = "UPDATE_FACULTY_PROFILE", entityName = "FacultyProfile", entityId = "#userId")
     @PutMapping("/faculty/{userId}/profile")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<FacultyProfileResponse> updateFacultyProfile(
@@ -49,6 +54,7 @@ public class FacultyProfileController {
         return ResponseEntity.ok(facultyProfileService.updateProfile(userId, request));
     }
 
+    @Auditable(action = "GENERATE_CHED_E5_REPORT", entityName = "ChedE5Report", entityId = "#termId")
     @GetMapping("/reports/ched-e5")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<ChedE5ReportResponse> generateChedE5Report(@RequestParam("termId") Long termId) {

@@ -41,7 +41,7 @@ public class AuditLogService {
 
     @Transactional(readOnly = true)
     public java.util.List<AuditLog> getAllLogs() {
-        return auditLogRepository.findAll();
+        return auditLogRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "createdAt", "id"));
     }
 
     @Transactional(readOnly = true)

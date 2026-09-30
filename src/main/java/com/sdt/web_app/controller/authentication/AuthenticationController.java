@@ -41,6 +41,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(new AuthDtos.AuthResponse(result.accessToken(), "Bearer", result.expiresInSeconds()));
     }
 
+    @Auditable(action = "REFRESH_TOKEN", entityName = "User")
     @PostMapping("/refresh")
     public ResponseEntity<AuthDtos.AuthResponse> refresh(
             @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,

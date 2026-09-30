@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.analytics;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.*;
 import com.sdt.web_app.dto.enrollment.EnrollmentDtos.StudentProfileResponse;
 import com.sdt.web_app.service.analytics.DigitalTwinRiskService;
@@ -22,6 +23,7 @@ public class DigitalTwinAnalyticsController {
     private final StudentService studentService;
     private final SecurityUtils securityUtils;
 
+    @Auditable(action = "READ_SELF_RISK_PROFILE", entityName = "DigitalTwinRiskProfile")
     @GetMapping("/risk/me")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<DigitalTwinRiskProfileDto> getCurrentStudentRiskProfile(Authentication authentication) {
@@ -33,18 +35,21 @@ public class DigitalTwinAnalyticsController {
         return ResponseEntity.ok(riskService.evaluateStudentRiskProfile(student.id()));
     }
 
+    @Auditable(action = "READ_STUDENT_RISK_PROFILE", entityName = "DigitalTwinRiskProfile", entityId = "#studentId")
     @GetMapping("/risk/{studentId:[0-9]+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'STUDENT')")
     public ResponseEntity<DigitalTwinRiskProfileDto> getStudentRiskProfile(@PathVariable("studentId") Long studentId) {
         return ResponseEntity.ok(riskService.evaluateStudentRiskProfile(studentId));
     }
 
+    @Auditable(action = "READ_EARLY_WARNING_RADAR", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/radar")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
     public ResponseEntity<List<EarlyWarningRadarItemDto>> getEarlyWarningRadar() {
         return ResponseEntity.ok(riskService.getEarlyWarningRadar());
     }
 
+    @Auditable(action = "READ_EARLY_WARNING_RADAR_SLICE", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/slice")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
     public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<DigitalTwinRiskProfileDto>> getEarlyWarningRadarSlice(

@@ -1,5 +1,6 @@
 package com.sdt.web_app.controller.scheduling;
 
+import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.scheduling.SchedulingDtos.*;
 import com.sdt.web_app.service.scheduling.SchedulingService;
 import com.sdt.web_app.service.security.SecurityUtils;
@@ -29,6 +30,7 @@ public class SchedulingController {
     // -------------------------------------------------------------------------
     // Room Endpoints
     // -------------------------------------------------------------------------
+    @Auditable(action = "CREATE_ROOM", entityName = "Room")
     @PostMapping("/rooms")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
     public ResponseEntity<RoomResponse> createRoom(@Valid @RequestBody CreateRoomRequest request) {
@@ -36,12 +38,14 @@ public class SchedulingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Auditable(action = "READ_ALL_ROOMS", entityName = "Room")
     @GetMapping("/rooms")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<RoomResponse>> getAllRooms() {
         return ResponseEntity.ok(schedulingService.getAllRooms());
     }
 
+    @Auditable(action = "READ_ROOMS_BY_CAMPUS", entityName = "Room", entityId = "#campusId")
     @GetMapping("/rooms/campus/{campusId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<RoomResponse>> getRoomsByCampus(@PathVariable("campusId") Long campusId) {
@@ -51,6 +55,7 @@ public class SchedulingController {
     // -------------------------------------------------------------------------
     // Class Section & Timetable Endpoints (Gate 1 & Gate 2)
     // -------------------------------------------------------------------------
+    @Auditable(action = "CREATE_SECTION", entityName = "ClassSection")
     @PostMapping("/sections")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<SectionDetailResponse> createSection(@Valid @RequestBody CreateSectionRequest request) {
@@ -58,6 +63,7 @@ public class SchedulingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Auditable(action = "READ_SECTIONS_BY_TERM", entityName = "ClassSection", entityId = "#termId")
     @GetMapping("/sections/term/{termId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<SectionDetailResponse>> getSectionsByTerm(
@@ -76,12 +82,14 @@ public class SchedulingController {
         return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.empty(), null));
     }
 
+    @Auditable(action = "READ_SECTION", entityName = "ClassSection", entityId = "#id")
     @GetMapping("/sections/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<SectionDetailResponse> getSectionById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(schedulingService.getSectionById(id));
     }
 
+    @Auditable(action = "UPDATE_SECTION", entityName = "ClassSection", entityId = "#id")
     @PutMapping("/sections/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<SectionDetailResponse> updateSection(
@@ -91,6 +99,7 @@ public class SchedulingController {
         return ResponseEntity.ok(response);
     }
 
+    @Auditable(action = "DELETE_SECTION", entityName = "ClassSection", entityId = "#id")
     @DeleteMapping("/sections/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<Void> deleteSection(@PathVariable("id") Long id) {
@@ -98,6 +107,7 @@ public class SchedulingController {
         return ResponseEntity.noContent().build();
     }
 
+    @Auditable(action = "CREATE_SCHEDULE_SLOT", entityName = "ScheduleSlot", entityId = "#sectionId")
     @PostMapping("/sections/{sectionId}/slots")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<SectionDetailResponse> addScheduleSlots(
@@ -113,6 +123,7 @@ public class SchedulingController {
     // -------------------------------------------------------------------------
     // Faculty Workload Endpoints
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_FACULTY_WORKLOAD", entityName = "FacultyLoadSummary", entityId = "#facultyId")
     @GetMapping("/faculty-workload/term/{termId}/faculty/{facultyId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
     public ResponseEntity<FacultyLoadSummaryResponse> getFacultyWorkload(
@@ -121,6 +132,7 @@ public class SchedulingController {
         return ResponseEntity.ok(schedulingService.getFacultyWorkload(termId, facultyId));
     }
 
+    @Auditable(action = "APPROVE_FACULTY_OVERLOAD", entityName = "FacultyLoadSummary")
     @PostMapping("/faculty-workload/approve-overload")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<Void> approveOverload(
@@ -135,6 +147,7 @@ public class SchedulingController {
         return ResponseEntity.ok().build();
     }
 
+    @Auditable(action = "UPDATE_FACULTY_WORKLOAD_LIMIT", entityName = "FacultyLoadSummary", entityId = "#facultyUserId")
     @PutMapping("/faculty/{id}/workload-limit")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN')")
     public ResponseEntity<FacultyLoadSummaryResponse> updateFacultyWorkloadLimit(
@@ -154,12 +167,14 @@ public class SchedulingController {
     // -------------------------------------------------------------------------
     // Scheduling Reference Data (Terms & Instructors)
     // -------------------------------------------------------------------------
+    @Auditable(action = "READ_SCHEDULING_TERMS", entityName = "Term")
     @GetMapping("/terms")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<SchedulingTermDto>> getSchedulingTerms() {
         return ResponseEntity.ok(schedulingService.getSchedulingTerms());
     }
 
+    @Auditable(action = "UPDATE_TERM_MAX_HOURS_PER_CLASS", entityName = "Term", entityId = "#termId")
     @PutMapping("/terms/{termId}/max-class-hours")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SchedulingTermDto> updateTermMaxHoursPerClass(
@@ -169,6 +184,7 @@ public class SchedulingController {
         return ResponseEntity.ok(response);
     }
 
+    @Auditable(action = "READ_AVAILABLE_INSTRUCTORS", entityName = "InstructorOption")
     @GetMapping("/instructors")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<InstructorOptionDto>> getAvailableInstructors() {
