@@ -31,7 +31,7 @@ public class WebSecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://sdt-webapp}")
     private List<String> expectedAudiences;
 
-    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:4200}")
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:4200,http://192.168.254.120:4200}")
     private List<String> allowedOrigins;
 
     @Bean

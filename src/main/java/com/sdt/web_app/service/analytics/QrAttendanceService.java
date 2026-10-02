@@ -79,7 +79,8 @@ public class QrAttendanceService {
             creatorUser = schedule.getInstructor();
         }
 
-        String qrSeed = "QR-ATT-" + UUID.randomUUID().toString();
+        String simpleCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
+        String qrSeed = "ATT-" + simpleCode;
         String secretKey = UUID.randomUUID().toString().replace("-", "");
         Instant expiresAt = Instant.now().plus(15, ChronoUnit.MINUTES);
 
@@ -186,32 +187,60 @@ public class QrAttendanceService {
     }
 
     public AttendanceSession resolveSessionBySeed(String rawSeed) {
-        if (rawSeed != null && rawSeed.contains(":TOTP:")) {
-            String[] parts = rawSeed.split(":TOTP:");
-            String baseSeed = parts[0];
-            String token = parts.length > 1 ? parts[1] : "";
-            AttendanceSession session = sessionRepository.findByQrSeed(baseSeed)
-                    .orElseThrow(() -> new EntityNotFoundException("Invalid or expired QR attendance seed."));
+        if (rawSeed == null || rawSeed.isBlank()) {
+            throw new EntityNotFoundException("QR attendance code cannot be empty.");
+        }
+        String cleanedSeed = rawSeed.trim();
+        String totpToken = null;
+        if (cleanedSeed.contains(":TOTP:")) {
+            String[] parts = cleanedSeed.split(":TOTP:");
+            cleanedSeed = parts[0];
+            totpToken = parts.length > 1 ? parts[1] : "";
+        }
 
-            if (session.getSecretKey() != null) {
-                long currentWindow = Instant.now().getEpochSecond() / 30;
-                boolean tokenMatch = false;
-                for (long window : List.of(currentWindow, currentWindow - 1)) {
-                    String expected = computeHmacToken(session.getId(), window, session.getSecretKey());
-                    if (expected.equals(token)) {
-                        tokenMatch = true;
-                        break;
-                    }
-                }
-                if (!tokenMatch) {
-                    throw new SecurityException("Expired or invalid rotating QR security token. Please scan the current live QR board.");
+        final String searchSeed = cleanedSeed;
+        final String searchUpper = searchSeed.toUpperCase();
+        final String searchDigits = searchSeed.replaceAll("[^0-9]", "");
+
+        // 1. Direct lookup
+        Optional<AttendanceSession> sessionOpt = sessionRepository.findByQrSeed(searchSeed);
+        if (sessionOpt.isEmpty() && !searchSeed.equals(searchUpper)) {
+            sessionOpt = sessionRepository.findByQrSeed(searchUpper);
+        }
+
+        // 2. Flexible lookup for manually encoded simple codes (e.g., student inputs "849201" or "att-849201" or "ATT-849201")
+        if (sessionOpt.isEmpty()) {
+            sessionOpt = sessionRepository.findAll().stream()
+                    .filter(s -> s.getQrExpiresAt() == null || s.getQrExpiresAt().isAfter(Instant.now()))
+                    .filter(s -> {
+                        if (s.getQrSeed() == null) return false;
+                        String seedUpper = s.getQrSeed().toUpperCase();
+                        if (seedUpper.equals(searchUpper)) return true;
+                        if (seedUpper.endsWith("-" + searchUpper)) return true;
+                        if (!searchDigits.isEmpty() && seedUpper.replaceAll("[^0-9]", "").endsWith(searchDigits)) return true;
+                        return false;
+                    })
+                    .findFirst();
+        }
+
+        AttendanceSession session = sessionOpt
+                .orElseThrow(() -> new EntityNotFoundException("Invalid or expired QR attendance seed: " + rawSeed));
+
+        if (totpToken != null && session.getSecretKey() != null) {
+            long currentWindow = Instant.now().getEpochSecond() / 30;
+            boolean tokenMatch = false;
+            for (long window : List.of(currentWindow, currentWindow - 1)) {
+                String expected = computeHmacToken(session.getId(), window, session.getSecretKey());
+                if (expected.equals(totpToken)) {
+                    tokenMatch = true;
+                    break;
                 }
             }
-            return session;
-        } else {
-            return sessionRepository.findByQrSeed(rawSeed)
-                    .orElseThrow(() -> new EntityNotFoundException("Invalid or expired QR attendance seed."));
+            if (!tokenMatch) {
+                throw new SecurityException("Expired or invalid rotating QR security token. Please scan the current live QR board.");
+            }
         }
+        return session;
     }
 
     @Transactional
