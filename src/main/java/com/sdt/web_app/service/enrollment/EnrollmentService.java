@@ -238,6 +238,9 @@ public class EnrollmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
 
         Term term = termService.getTermById(request.termId());
+        if (!term.isEnrollmentOpen()) {
+            throw new IllegalStateException("Enrollment period for term '" + term.getName() + "' is currently closed.");
+        }
 
         ClassSection section = sectionRepository.findByIdWithSchedules(request.sectionId())
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with id: " + request.sectionId()));
@@ -357,6 +360,11 @@ public class EnrollmentService {
         StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, termId)
                 .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + resolvedStudentId + " in term " + termId));
 
+        Term term = termService.getTermById(termId);
+        if (!term.isEnrollmentOpen() && !term.isAddDropOpen()) {
+            throw new IllegalStateException("Enrollment and add/drop period for term '" + term.getName() + "' is currently closed.");
+        }
+
         EnrollmentCourseItem itemToRemove = enrollment.getItems().stream()
                 .filter(item -> item.getSection().getId().equals(sectionId))
                 .findFirst()
@@ -380,6 +388,11 @@ public class EnrollmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
 
         verifyMultiDepartmentClearanceGate(student, request.termId());
+
+        Term term = termService.getTermById(request.termId());
+        if (!term.isEnrollmentOpen()) {
+            throw new IllegalStateException("Enrollment period for term '" + term.getName() + "' is currently closed.");
+        }
 
         StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, request.termId())
                 .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + resolvedStudentId + " in term " + request.termId()));

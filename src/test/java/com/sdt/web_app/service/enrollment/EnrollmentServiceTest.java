@@ -101,6 +101,8 @@ class EnrollmentServiceTest {
         term = Term.builder()
                 .academicYear(ay)
                 .termType(TermType.FIRST_SEM)
+                .enrollmentOpen(true)
+                .addDropOpen(true)
                 .build();
         ReflectionTestUtils.setField(term, "id", 20L);
 
@@ -432,6 +434,7 @@ class EnrollmentServiceTest {
         enrollment.addItem(item);
 
         given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
+        given(termService.getTermById(20L)).willReturn(term);
         given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L))
                 .willReturn(Optional.of(enrollment));
 
@@ -567,6 +570,7 @@ class EnrollmentServiceTest {
         enrollment.addItem(item);
 
         given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
+        given(termService.getTermById(20L)).willReturn(term);
         given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.of(enrollment));
 
         CoursePrerequisite coreq = CoursePrerequisite.builder()
@@ -619,6 +623,7 @@ class EnrollmentServiceTest {
         enrollment.addItem(item1);
 
         given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
+        given(termService.getTermById(20L)).willReturn(term);
         given(studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(50L, 20L)).willReturn(Optional.of(enrollment));
 
         CoursePrerequisite coreq = CoursePrerequisite.builder()
@@ -638,4 +643,33 @@ class EnrollmentServiceTest {
         assertThat(confirmation.status()).isEqualTo("ENROLLED");
         assertThat(enrollment.getStatus()).isEqualTo(StudentEnrollment.Status.ENROLLED);
     }
+
+    @Test
+    @DisplayName("Gate 3: Should reject enlistment when term enrollment is closed")
+    void shouldThrowExceptionWhenEnlistingInClosedTerm() {
+        term.closeEnrollment();
+        given(studentProfileRepository.findByIdWithProgramAndCurriculum(50L)).willReturn(Optional.of(student));
+        given(termService.getTermById(20L)).willReturn(term);
+
+        EnlistSectionRequest request = new EnlistSectionRequest(20L, 200L);
+
+        assertThatThrownBy(() -> enrollmentService.enlistSection(50L, request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("currently closed");
+    }
+
+    @Test
+    @DisplayName("Gate 4: Should reject enrollment confirmation when term enrollment is closed")
+    void shouldThrowExceptionWhenConfirmingInClosedTerm() {
+        term.closeEnrollment();
+        given(studentProfileRepository.findById(50L)).willReturn(Optional.of(student));
+        given(termService.getTermById(20L)).willReturn(term);
+
+        ConfirmEnrollmentRequest request = new ConfirmEnrollmentRequest(20L);
+
+        assertThatThrownBy(() -> enrollmentService.confirmEnrollment(50L, request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("currently closed");
+    }
 }
+

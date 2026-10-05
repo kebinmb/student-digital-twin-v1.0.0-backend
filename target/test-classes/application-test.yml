@@ -36,6 +36,11 @@ app:
   security:
     rate-limiting:
       enabled: false
+    cookie:
+      name: REFRESH_TOKEN
+      secure: true
+      same-site: Lax
+      path: /api/public/auth
 
 management:
   health:

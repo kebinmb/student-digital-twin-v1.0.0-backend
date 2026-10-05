@@ -17,6 +17,7 @@ com\sdt\web_app\dto\enrollment\EnrollmentDtos$TransfereeCreditingSummaryResponse
 com\sdt\web_app\entities\institution\TermType.class
 com\sdt\web_app\dto\analytics\AnalyticsDtos$UpdateInterventionStatusRequest.class
 com\sdt\web_app\service\institution\CampusService.class
+com\sdt\web_app\config\EncryptedStringConverter.class
 com\sdt\web_app\service\security\RequestScopeProfileCache.class
 com\sdt\web_app\repositories\enrollment\GradeChangeRequestRepository.class
 com\sdt\web_app\dto\institution\DepartmentDtos$DepartmentResponse.class
@@ -113,6 +114,7 @@ com\sdt\web_app\dto\grade\ClassRecordDtos$StudentScoreMatrixRowDto.class
 com\sdt\web_app\config\WebSecurityConfig.class
 com\sdt\web_app\dto\institution\ProgramDtos$UpdateProgramRequest.class
 com\sdt\web_app\entities\analytics\AttendanceSession$AttendanceSessionBuilder.class
+com\sdt\web_app\dto\authentication\AuthDtos$RefreshTokenRequest.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos.class
 com\sdt\web_app\entities\compliance\ClearanceSignoff.class
 com\sdt\web_app\repositories\institution\CourseOutcomeRepository.class

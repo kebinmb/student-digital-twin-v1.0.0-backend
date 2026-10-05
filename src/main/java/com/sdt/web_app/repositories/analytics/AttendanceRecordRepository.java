@@ -17,16 +17,16 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
     List<AttendanceRecord> findByStudentId(Long studentId);
     Slice<AttendanceRecord> findByStudentId(Long studentId, Pageable pageable);
     
-    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status = 'PRESENT'")
+    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status IN ('PRESENT', 'LATE')")
     long countPresentByStudentId(@Param("studentId") Long studentId);
 
-    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId")
+    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status != 'EXCUSED'")
     long countTotalByStudentId(@Param("studentId") Long studentId);
 
-    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status = 'PRESENT' AND ar.scannedAt >= :since")
+    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status IN ('PRESENT', 'LATE') AND ar.scannedAt >= :since")
     long countRecentPresentByStudentId(@Param("studentId") Long studentId, @Param("since") java.time.Instant since);
 
-    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.scannedAt >= :since")
+    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status != 'EXCUSED' AND ar.scannedAt >= :since")
     long countRecentTotalByStudentId(@Param("studentId") Long studentId, @Param("since") java.time.Instant since);
 
     boolean existsBySessionIdAndDeviceFingerprintAndStudentIdNot(Long sessionId, String deviceFingerprint, Long studentId);

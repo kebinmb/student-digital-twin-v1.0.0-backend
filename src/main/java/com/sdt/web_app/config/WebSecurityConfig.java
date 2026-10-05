@@ -31,7 +31,7 @@ public class WebSecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://sdt-webapp}")
     private List<String> expectedAudiences;
 
-    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:4200,http://192.168.254.120:4200}")
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:4200,http://192.168.254.120:4200,http://10.100.168.114:4200,http://136.158.184.122:4200}")
     private List<String> allowedOrigins;
 
     @Bean
@@ -39,7 +39,7 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "X-Refresh-Token", "x-refresh-token"));
         configuration.setExposedHeaders(List.of("Set-Cookie"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
@@ -48,9 +48,24 @@ public class WebSecurityConfig {
         return source;
     }
 
+    @Value("${app.security.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
+    @Value("${app.security.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.security.cookie.name:REFRESH_TOKEN}")
+    private String cookieName;
+
     @Bean
     public CookieSameSiteSupplier applicationCookieSameSiteSupplier() {
-        return CookieSameSiteSupplier.ofNone().whenHasName("REFRESH_TOKEN");
+        if ("None".equalsIgnoreCase(cookieSameSite) && cookieSecure) {
+            return CookieSameSiteSupplier.ofNone().whenHasName(cookieName);
+        } else if ("Strict".equalsIgnoreCase(cookieSameSite)) {
+            return CookieSameSiteSupplier.ofStrict().whenHasName(cookieName);
+        } else {
+            return CookieSameSiteSupplier.ofLax().whenHasName(cookieName);
+        }
     }
 
     @Bean
@@ -76,7 +91,7 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/public/**", "/api/v1/public/**", "/api/v1/finance/gateways/**").permitAll()
-                        .requestMatchers("/api/admin/**", "/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "GUIDANCE")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -17,6 +17,11 @@ public interface StudentInterventionRepository extends JpaRepository<StudentInte
 
     List<StudentIntervention> findByStudentIdOrderByDispatchedAtDesc(Long studentId);
 
+    @Query("SELECT si FROM StudentIntervention si " +
+           "WHERE si.student.id IN (:studentIds) " +
+           "ORDER BY si.dispatchedAt DESC")
+    List<StudentIntervention> findByStudentIdInOrderByDispatchedAtDesc(@Param("studentIds") Collection<Long> studentIds);
+
     Slice<StudentIntervention> findByStudentId(Long studentId, Pageable pageable);
 
     Slice<StudentIntervention> findByStatus(StudentIntervention.InterventionStatus status, Pageable pageable);

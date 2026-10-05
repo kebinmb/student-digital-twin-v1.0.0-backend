@@ -51,3 +51,12 @@ spring:
 
 app:
   frontend-url: http://localhost:4200
+  security:
+    cookie:
+      name: REFRESH_TOKEN
+      secure: false           # HTTP development on localhost / LAN
+      same-site: Lax          # Lax allows cookies on same-site/localhost over HTTP
+      path: /                 # Root path makes cookie visible across endpoints and in browser DevTools
+      max-age-seconds: 604800 # 7 days
+    refresh-token:
+      expose-in-body: true    # Exposes refreshToken in response body for frontend persistence in dev

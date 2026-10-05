@@ -23,4 +23,9 @@ public interface StudentRiskScoreRepository extends JpaRepository<StudentRiskSco
     List<StudentRiskScore> findByRiskLevelsWithDetails(@Param("levels") List<StudentRiskScore.RiskLevel> levels);
 
     Slice<StudentRiskScore> findByCompositeRiskLevelIn(List<StudentRiskScore.RiskLevel> levels, Pageable pageable);
+
+    @Query("SELECT srs FROM StudentRiskScore srs " +
+           "WHERE srs.student.id IN (:studentIds) " +
+           "ORDER BY srs.evaluatedAt DESC")
+    List<StudentRiskScore> findByStudentIdInOrderByEvaluatedAtDesc(@Param("studentIds") java.util.Collection<Long> studentIds);
 }

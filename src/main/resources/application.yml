@@ -66,3 +66,17 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+app:
+  equity:
+    encryption-key: ${EQUITY_ENCRYPTION_KEY:c2R0LWVxdWl0eS1hZXMtMjU2LWtleS1kZXYtMzJieXRlcyE=}
+  security:
+    cookie:
+      name: ${COOKIE_NAME:REFRESH_TOKEN}
+      secure: ${COOKIE_SECURE:false}
+      same-site: ${COOKIE_SAME_SITE:Lax}
+      path: ${COOKIE_PATH:/}
+      domain: ${COOKIE_DOMAIN:}
+      max-age-seconds: ${COOKIE_MAX_AGE:604800}
+    refresh-token:
+      expose-in-body: ${REFRESH_TOKEN_EXPOSE_BODY:true}

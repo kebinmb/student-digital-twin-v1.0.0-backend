@@ -1,6 +1,7 @@
 package com.sdt.web_app.entities.compliance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sdt.web_app.config.EncryptedStringConverter;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import jakarta.persistence.*;
@@ -53,7 +54,8 @@ public class StudentEquityProfile {
     @Builder.Default
     private Boolean isPersonWithDisability = false;
 
-    @Column(name = "pwd_id_number", length = 60)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "pwd_id_number", length = 512)
     private String pwdIdNumber;
 
     @Enumerated(EnumType.STRING)
@@ -69,7 +71,8 @@ public class StudentEquityProfile {
     @Builder.Default
     private Boolean isRaisedBySoloParent = false;
 
-    @Column(name = "solo_parent_id_number", length = 60)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "solo_parent_id_number", length = 512)
     private String soloParentIdNumber;
 
     // 3. RA 11310 (4Ps Beneficiary & UniFAST / DSWD)
@@ -77,7 +80,8 @@ public class StudentEquityProfile {
     @Builder.Default
     private Boolean is4psBeneficiary = false;
 
-    @Column(name = "household_4ps_id_number", length = 60)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "household_4ps_id_number", length = 512)
     private String household4psIdNumber;
 
     @Column(name = "is_listahanan_nhts", nullable = false)
@@ -88,7 +92,8 @@ public class StudentEquityProfile {
     @Builder.Default
     private Boolean unifastTesAwardee = false;
 
-    @Column(name = "unifast_tes_award_number", length = 60)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "unifast_tes_award_number", length = 512)
     private String unifastTesAwardNumber;
 
     // 4. RA 8371 IPRA (Indigenous Peoples)
@@ -99,7 +104,8 @@ public class StudentEquityProfile {
     @Column(name = "ip_ethnic_group", length = 100)
     private String ipEthnicGroup;
 
-    @Column(name = "ncip_certificate_number", length = 100)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "ncip_certificate_number", length = 512)
     private String ncipCertificateNumber;
 
     // 5. DSWD Case Study / Cert (Orphan Status)
@@ -120,7 +126,8 @@ public class StudentEquityProfile {
     @Builder.Default
     private Boolean isFarmerFisherfolk = false;
 
-    @Column(name = "rsbsa_registration_number", length = 60)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "rsbsa_registration_number", length = 512)
     private String rsbsaRegistrationNumber;
 
     // 8. EO 70 s. 2018 (Rebel Returnees / E-CLIP)
@@ -128,7 +135,8 @@ public class StudentEquityProfile {
     @Builder.Default
     private Boolean isRebelReturneeFamily = false;
 
-    @Column(name = "certificate_of_surrender_number", length = 60)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "certificate_of_surrender_number", length = 512)
     private String certificateOfSurrenderNumber;
 
     // 9. RA 10931 Sec 7/9 (Bottom 40% Household Income Bracket)

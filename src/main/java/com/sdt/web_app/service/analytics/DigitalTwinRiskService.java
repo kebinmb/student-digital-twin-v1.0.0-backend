@@ -259,6 +259,34 @@ public class DigitalTwinRiskService {
         StudentRiskScore saved = riskScoreRepository.save(riskEntity);
         log.info("Digital Twin ML Risk evaluated for student {}. Level: {}, Dropout Prob: {}", student.getStudentNumber(), level, dropoutProb);
 
+        // Auto-dispatch early warning intervention for HIGH or CRITICAL risk if not already actively open
+        if (level == StudentRiskScore.RiskLevel.HIGH || level == StudentRiskScore.RiskLevel.CRITICAL) {
+            List<StudentIntervention.InterventionStatus> activeStatuses = List.of(
+                    StudentIntervention.InterventionStatus.OPEN,
+                    StudentIntervention.InterventionStatus.ASSIGNED,
+                    StudentIntervention.InterventionStatus.IN_PROGRESS
+            );
+            if (!interventionRepository.existsByStudentIdAndStatusIn(student.getId(), activeStatuses)) {
+                StudentIntervention.InterventionType autoType = (level == StudentRiskScore.RiskLevel.CRITICAL)
+                        ? StudentIntervention.InterventionType.GUIDANCE_COUNSELING
+                        : (academicRisk >= 50.0 
+                                ? StudentIntervention.InterventionType.ACADEMIC_TUTORING 
+                                : StudentIntervention.InterventionType.ATTENDANCE_CONFERENCE);
+
+                StudentIntervention autoIntervention = StudentIntervention.builder()
+                        .student(student)
+                        .riskScore(saved)
+                        .interventionType(autoType)
+                        .status(StudentIntervention.InterventionStatus.OPEN)
+                        .triggerFactor("Automated early warning trigger: " + level.name() + " composite risk (" + String.format(java.util.Locale.US, "%.1f", compositeScore) + ")")
+                        .caseNotes(joinedInterventions)
+                        .build();
+                interventionRepository.save(autoIntervention);
+                log.info("Auto-dispatched {} intervention for student {} due to {} risk level",
+                        autoType, student.getStudentNumber(), level);
+            }
+        }
+
         String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
         return new DigitalTwinRiskProfileDto(
                 student.getId(),
@@ -353,10 +381,35 @@ public class DigitalTwinRiskService {
             String searchQuery, String riskLevelFilter, String interventionStatusFilter) {
 
         List<StudentProfile> allStudents = profileRepository.searchStudents(searchQuery);
+        if (allStudents == null || allStudents.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> studentIds = allStudents.stream().map(StudentProfile::getId).toList();
+
+        // Batch query latest risk scores for all students (O(1) database roundtrips)
+        List<StudentRiskScore> allRiskScores = riskScoreRepository.findByStudentIdInOrderByEvaluatedAtDesc(studentIds);
+        Map<Long, StudentRiskScore> latestScoreByStudent = new LinkedHashMap<>();
+        for (StudentRiskScore srs : allRiskScores) {
+            if (srs.getStudent() != null) {
+                latestScoreByStudent.putIfAbsent(srs.getStudent().getId(), srs);
+            }
+        }
+
+        // Batch query all interventions for all students
+        List<com.sdt.web_app.entities.analytics.StudentIntervention> allInterventions =
+                interventionRepository.findByStudentIdInOrderByDispatchedAtDesc(studentIds);
+        Map<Long, List<com.sdt.web_app.entities.analytics.StudentIntervention>> interventionsByStudent = new LinkedHashMap<>();
+        for (com.sdt.web_app.entities.analytics.StudentIntervention si : allInterventions) {
+            if (si.getStudent() != null) {
+                interventionsByStudent.computeIfAbsent(si.getStudent().getId(), k -> new ArrayList<>()).add(si);
+            }
+        }
+
         List<StudentTelemetryAdminSummaryDto> summaries = new ArrayList<>();
 
         for (StudentProfile sp : allStudents) {
-            StudentRiskScore srs = riskScoreRepository.findTopByStudentIdOrderByEvaluatedAtDesc(sp.getId()).orElse(null);
+            StudentRiskScore srs = latestScoreByStudent.get(sp.getId());
 
             String currentRiskLevel = (srs != null && srs.getCompositeRiskLevel() != null)
                     ? srs.getCompositeRiskLevel().name()
@@ -369,7 +422,7 @@ public class DigitalTwinRiskService {
             }
 
             List<com.sdt.web_app.entities.analytics.StudentIntervention> interventions =
-                    interventionRepository.findByStudentIdOrderByDispatchedAtDesc(sp.getId());
+                    interventionsByStudent.getOrDefault(sp.getId(), List.of());
 
             if (interventionStatusFilter != null && !interventionStatusFilter.isBlank() && !interventionStatusFilter.equalsIgnoreCase("ALL")) {
                 boolean hasMatchingStatus = interventions.stream()
@@ -486,6 +539,30 @@ public class DigitalTwinRiskService {
             }
         }
 
+        if (studentMap.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> studentIds = new ArrayList<>(studentMap.keySet());
+
+        // Batch query latest risk scores for section students
+        List<StudentRiskScore> allRiskScores = riskScoreRepository.findByStudentIdInOrderByEvaluatedAtDesc(studentIds);
+        Map<Long, StudentRiskScore> latestScoreByStudent = new LinkedHashMap<>();
+        for (StudentRiskScore srs : allRiskScores) {
+            if (srs.getStudent() != null) {
+                latestScoreByStudent.putIfAbsent(srs.getStudent().getId(), srs);
+            }
+        }
+
+        // Batch query all interventions for section students
+        List<StudentIntervention> allInterventions = interventionRepository.findByStudentIdInOrderByDispatchedAtDesc(studentIds);
+        Map<Long, List<StudentIntervention>> interventionsByStudent = new LinkedHashMap<>();
+        for (StudentIntervention si : allInterventions) {
+            if (si.getStudent() != null) {
+                interventionsByStudent.computeIfAbsent(si.getStudent().getId(), k -> new ArrayList<>()).add(si);
+            }
+        }
+
         List<StudentTelemetrySummaryDto> summaries = new ArrayList<>();
 
         for (StudentProfile sp : studentMap.values()) {
@@ -499,7 +576,7 @@ public class DigitalTwinRiskService {
                 }
             }
 
-            StudentRiskScore srs = riskScoreRepository.findTopByStudentIdOrderByEvaluatedAtDesc(sp.getId()).orElse(null);
+            StudentRiskScore srs = latestScoreByStudent.get(sp.getId());
             String currentRiskLevel = (srs != null && srs.getCompositeRiskLevel() != null)
                     ? srs.getCompositeRiskLevel().name()
                     : "LOW";
@@ -510,7 +587,7 @@ public class DigitalTwinRiskService {
                 }
             }
 
-            List<StudentIntervention> interventions = interventionRepository.findByStudentIdOrderByDispatchedAtDesc(sp.getId());
+            List<StudentIntervention> interventions = interventionsByStudent.getOrDefault(sp.getId(), List.of());
             if (interventionStatusFilter != null && !interventionStatusFilter.isBlank() && !interventionStatusFilter.equalsIgnoreCase("ALL")) {
                 boolean hasMatchingStatus = interventions.stream()
                         .anyMatch(i -> i.getStatus().name().equalsIgnoreCase(interventionStatusFilter.trim()));
@@ -634,7 +711,6 @@ public class DigitalTwinRiskService {
     public StudentSelfTelemetryDto getStudentSelfTelemetry(Long studentUserId) {
         StudentProfile student = profileRepository.findByUserIdWithProgramAndCurriculum(studentUserId)
                 .or(() -> profileRepository.findByUserId(studentUserId))
-                .or(() -> profileRepository.findAll().stream().findFirst())
                 .orElse(null);
 
         if (student == null) {
@@ -655,11 +731,32 @@ public class DigitalTwinRiskService {
             );
         }
 
-        DigitalTwinRiskProfileDto riskProfile = evaluateStudentRiskProfile(student.getId());
+        // Snapshot caching: Use latest evaluated score if recent (within 6 hours), otherwise re-evaluate
+        Instant staleThreshold = Instant.now().minus(6, java.time.temporal.ChronoUnit.HOURS);
+        StudentRiskScore riskScore = riskScoreRepository.findTopByStudentIdOrderByEvaluatedAtDesc(student.getId())
+                .filter(srs -> srs.getEvaluatedAt() != null && srs.getEvaluatedAt().isAfter(staleThreshold))
+                .orElse(null);
 
-        double academicVal = riskProfile.academicRiskScore() != null ? riskProfile.academicRiskScore().doubleValue() : 10.0;
-        double attendanceVal = riskProfile.attendanceRiskScore() != null ? riskProfile.attendanceRiskScore().doubleValue() : 10.0;
-        double socioVal = riskProfile.socioeconomicRiskScore() != null ? riskProfile.socioeconomicRiskScore().doubleValue() : 10.0;
+        double academicVal;
+        double attendanceVal;
+        double socioVal;
+        String riskLevel;
+        Instant syncTime;
+
+        if (riskScore != null) {
+            academicVal = riskScore.getAcademicRiskScore() != null ? riskScore.getAcademicRiskScore().doubleValue() : 10.0;
+            attendanceVal = riskScore.getAttendanceRiskScore() != null ? riskScore.getAttendanceRiskScore().doubleValue() : 10.0;
+            socioVal = riskScore.getSocioeconomicRiskScore() != null ? riskScore.getSocioeconomicRiskScore().doubleValue() : 10.0;
+            riskLevel = riskScore.getCompositeRiskLevel() != null ? riskScore.getCompositeRiskLevel().name() : "LOW";
+            syncTime = riskScore.getEvaluatedAt();
+        } else {
+            DigitalTwinRiskProfileDto evaluated = evaluateStudentRiskProfile(student.getId());
+            academicVal = evaluated.academicRiskScore() != null ? evaluated.academicRiskScore().doubleValue() : 10.0;
+            attendanceVal = evaluated.attendanceRiskScore() != null ? evaluated.attendanceRiskScore().doubleValue() : 10.0;
+            socioVal = evaluated.socioeconomicRiskScore() != null ? evaluated.socioeconomicRiskScore().doubleValue() : 10.0;
+            riskLevel = evaluated.compositeRiskLevel();
+            syncTime = evaluated.evaluatedAt() != null ? evaluated.evaluatedAt() : Instant.now();
+        }
 
         double wellness = 100.0 - (academicVal * 0.40 + attendanceVal * 0.35 + socioVal * 0.25);
         wellness = Math.max(0.0, Math.min(100.0, Math.round(wellness * 10.0) / 10.0));
@@ -693,12 +790,12 @@ public class DigitalTwinRiskService {
         return new StudentSelfTelemetryDto(
                 student.getId(),
                 student.getFullName(),
-                riskProfile.compositeRiskLevel(),
+                riskLevel,
                 wellness,
                 dimensions,
                 dispatchedDtos,
                 milestones,
-                riskProfile.evaluatedAt() != null ? riskProfile.evaluatedAt() : Instant.now()
+                syncTime != null ? syncTime : Instant.now()
         );
     }
 

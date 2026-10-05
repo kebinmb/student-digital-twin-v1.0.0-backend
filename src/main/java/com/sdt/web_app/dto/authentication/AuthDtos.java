@@ -29,7 +29,16 @@ public class AuthDtos {
     public record AuthResponse(
             String accessToken,
             String tokenType,
-            long expiresInSeconds
+            long expiresInSeconds,
+            String refreshToken
+    ) {
+        public AuthResponse(String accessToken, String tokenType, long expiresInSeconds) {
+            this(accessToken, tokenType, expiresInSeconds, null);
+        }
+    }
+
+    public record RefreshTokenRequest(
+            String refreshToken
     ) {
     }
 

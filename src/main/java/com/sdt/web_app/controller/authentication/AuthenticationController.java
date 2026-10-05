@@ -5,6 +5,7 @@ import com.sdt.web_app.dto.authentication.AuthDtos;
 import com.sdt.web_app.service.authentication.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -15,8 +16,28 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/public/auth")
 public class AuthenticationController {
 
-    private static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 7L * 24L * 3600L;
     private final AuthService authService;
+
+    @Value("${app.security.cookie.name:REFRESH_TOKEN}")
+    private String cookieName;
+
+    @Value("${app.security.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.security.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
+    @Value("${app.security.cookie.path:/}")
+    private String cookiePath;
+
+    @Value("${app.security.cookie.domain:}")
+    private String cookieDomain;
+
+    @Value("${app.security.cookie.max-age-seconds:604800}")
+    private long cookieMaxAge;
+
+    @Value("${app.security.refresh-token.expose-in-body:true}")
+    private boolean exposeRefreshTokenInBody;
 
     public AuthenticationController(AuthService authService) {
         this.authService = authService;
@@ -36,45 +57,83 @@ public class AuthenticationController {
             HttpServletResponse response) {
 
         AuthDtos.AuthResult result = authService.authenticate(request);
-        setRefreshTokenCookie(response, result.refreshToken(), REFRESH_TOKEN_COOKIE_MAX_AGE);
+        setRefreshTokenCookie(response, result.refreshToken(), cookieMaxAge);
 
-        return ResponseEntity.ok(new AuthDtos.AuthResponse(result.accessToken(), "Bearer", result.expiresInSeconds()));
+        String bodyRefreshToken = exposeRefreshTokenInBody ? result.refreshToken() : null;
+        return ResponseEntity.ok(new AuthDtos.AuthResponse(
+                result.accessToken(),
+                "Bearer",
+                result.expiresInSeconds(),
+                bodyRefreshToken));
     }
 
     @Auditable(action = "REFRESH_TOKEN", entityName = "User")
     @PostMapping("/refresh")
     public ResponseEntity<AuthDtos.AuthResponse> refresh(
-            @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,
+            @CookieValue(name = "REFRESH_TOKEN", required = false) String cookieRefreshToken,
+            @RequestHeader(name = "X-Refresh-Token", required = false) String headerRefreshToken,
+            @RequestBody(required = false) AuthDtos.RefreshTokenRequest requestBody,
             HttpServletResponse response) {
 
-        AuthDtos.AuthResult result = authService.rotateRefreshToken(refreshToken);
-        setRefreshTokenCookie(response, result.refreshToken(), REFRESH_TOKEN_COOKIE_MAX_AGE);
+        String tokenToRotate = (cookieRefreshToken != null && !cookieRefreshToken.isBlank())
+                ? cookieRefreshToken
+                : (headerRefreshToken != null && !headerRefreshToken.isBlank()
+                    ? headerRefreshToken
+                    : (requestBody != null && requestBody.refreshToken() != null && !requestBody.refreshToken().isBlank()
+                        ? requestBody.refreshToken()
+                        : null));
 
-        return ResponseEntity.ok(new AuthDtos.AuthResponse(result.accessToken(), "Bearer", result.expiresInSeconds()));
+        AuthDtos.AuthResult result = authService.rotateRefreshToken(tokenToRotate);
+        setRefreshTokenCookie(response, result.refreshToken(), cookieMaxAge);
+
+        String bodyRefreshToken = exposeRefreshTokenInBody ? result.refreshToken() : null;
+        return ResponseEntity.ok(new AuthDtos.AuthResponse(
+                result.accessToken(),
+                "Bearer",
+                result.expiresInSeconds(),
+                bodyRefreshToken));
     }
 
     @Auditable(action = "LOGOUT", entityName = "User")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,
+            @CookieValue(name = "REFRESH_TOKEN", required = false) String cookieRefreshToken,
+            @RequestHeader(name = "X-Refresh-Token", required = false) String headerRefreshToken,
+            @RequestBody(required = false) AuthDtos.RefreshTokenRequest requestBody,
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             HttpServletResponse response) {
 
-        authService.logout(refreshToken, authHeader);
+        String tokenToRevoke = (cookieRefreshToken != null && !cookieRefreshToken.isBlank())
+                ? cookieRefreshToken
+                : (headerRefreshToken != null && !headerRefreshToken.isBlank()
+                    ? headerRefreshToken
+                    : (requestBody != null && requestBody.refreshToken() != null && !requestBody.refreshToken().isBlank()
+                        ? requestBody.refreshToken()
+                        : null));
+
+        authService.logout(tokenToRevoke, authHeader);
         setRefreshTokenCookie(response, "", 0L);
 
         return ResponseEntity.noContent().build();
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String tokenValue, long maxAgeSeconds) {
-        ResponseCookie cookie = ResponseCookie.from("REFRESH_TOKEN", tokenValue)
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(cookieName, tokenValue)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/api/public/auth")
-                .maxAge(maxAgeSeconds)
-                .build();
+                .secure(cookieSecure)
+                .sameSite(cookieSameSite)
+                .path(cookiePath != null && !cookiePath.isBlank() ? cookiePath : "/")
+                .maxAge(maxAgeSeconds);
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString() + "; Partitioned");
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            builder.domain(cookieDomain);
+        }
+
+        ResponseCookie cookie = builder.build();
+        String cookieHeader = cookie.toString();
+        if (cookieSecure) {
+            cookieHeader += "; Partitioned";
+        }
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieHeader);
     }
 }

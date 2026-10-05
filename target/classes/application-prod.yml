@@ -64,6 +64,9 @@ management:
     health:
       show-details: never # Never expose DB exception traces to health callers
       show-components: when_authorized
+  health:
+    mail:
+      enabled: false # Do not mark backend down if SMTP fails
 
 # Structured JSON / Production Logging
 logging:
@@ -72,3 +75,15 @@ logging:
     com.sdt: INFO
     org.springframework.security: INFO
     org.flywaydb: INFO
+
+app:
+  security:
+    cookie:
+      name: ${COOKIE_NAME:REFRESH_TOKEN}
+      secure: ${COOKIE_SECURE:false}
+      same-site: ${COOKIE_SAME_SITE:Lax}
+      path: ${COOKIE_PATH:/}
+      domain: ${COOKIE_DOMAIN:}
+      max-age-seconds: ${COOKIE_MAX_AGE:604800}
+    refresh-token:
+      expose-in-body: ${REFRESH_TOKEN_EXPOSE_BODY:true}

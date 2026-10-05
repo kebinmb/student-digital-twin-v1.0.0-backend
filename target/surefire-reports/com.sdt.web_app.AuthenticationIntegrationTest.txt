@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sdt.web_app.AuthenticationIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.731 s -- in com.sdt.web_app.AuthenticationIntegrationTest
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.76 s -- in com.sdt.web_app.AuthenticationIntegrationTest

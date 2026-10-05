@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.sdt.web_app.service.analytics.FacultyAndStudentTelemetryIntegrationTest
--------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.218 s -- in com.sdt.web_app.service.analytics.FacultyAndStudentTelemetryIntegrationTest
