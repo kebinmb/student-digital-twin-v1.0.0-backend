@@ -49,6 +49,9 @@ class ClearanceWorkflowServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+
     @InjectMocks
     private ClearanceWorkflowService clearanceWorkflowService;
 

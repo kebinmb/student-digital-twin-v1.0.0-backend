@@ -36,6 +36,8 @@ class DigitalTwinRiskServiceTest {
     @Mock private EquityTargetService equityTargetService;
     @Mock private StudentProfileL2CacheService studentProfileL2CacheService;
     @Mock private com.sdt.web_app.repositories.grade.StudentAssessmentScoreRepository assessmentScoreRepository;
+    @Mock private com.sdt.web_app.repositories.analytics.StudentInterventionRepository interventionRepository;
+    @Mock private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
 
     @InjectMocks
     private DigitalTwinRiskService riskService;

@@ -23,6 +23,7 @@ import java.util.List;
 public class SchedulingController {
 
     private final SchedulingService schedulingService;
+    private final com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
     private final SecurityUtils securityUtils;
     private final com.sdt.web_app.service.security.DataScopingService dataScopingService;
     private final com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
@@ -189,5 +190,12 @@ public class SchedulingController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
     public ResponseEntity<List<InstructorOptionDto>> getAvailableInstructors() {
         return ResponseEntity.ok(schedulingService.getAvailableInstructors());
+    }
+
+    @GetMapping(value = "/sections/stream", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter streamSectionEvents(
+            @RequestParam(value = "termId", required = false, defaultValue = "0") Long termId) {
+        return sectionEventPublisherService.subscribeToTermSectionEvents(termId);
     }
 }

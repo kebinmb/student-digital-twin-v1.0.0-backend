@@ -2,8 +2,13 @@ com\sdt\web_app\service\authentication\JwtDenylistSecurityTest.class
 com\sdt\web_app\service\enrollment\EnrollmentSecurityTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest.class
 com\sdt\web_app\AuthenticationIntegrationTest.class
+com\sdt\web_app\service\institution\HonorRollComputationServiceTest.class
+com\sdt\web_app\controller\institution\CertificateRevocationAuditControllerTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest.class
+com\sdt\web_app\service\push\VapidJwtServiceTest.class
 com\sdt\web_app\service\financial\CashieringServiceTest.class
+com\sdt\web_app\service\push\WebPushPayloadEncryptionServiceTest.class
+com\sdt\web_app\service\webhook\InstitutionalWebhookServiceTest.class
 com\sdt\web_app\service\compliance\DegreeAuditServiceTest.class
 com\sdt\web_app\service\authentication\UserServiceTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$AcademicPeriodsTests.class
@@ -11,11 +16,14 @@ com\sdt\web_app\controller\PublicHealthController.class
 com\sdt\web_app\service\grade\ClassRecordServiceTest.class
 com\sdt\web_app\TestSecurityConfig.class
 com\sdt\web_app\service\analytics\FacultyAndStudentTelemetryIntegrationTest.class
+com\sdt\web_app\controller\lms\StudentPortalControllerStreamTest.class
 com\sdt\web_app\TestcontainersConfiguration.class
+com\sdt\web_app\service\push\WebPushSubscriptionServiceTest.class
 com\sdt\web_app\service\authentication\RateLimitingIntegrationTest.class
 com\sdt\web_app\AuthenticationIntegrationTest$RegistrationTests.class
 com\sdt\web_app\service\faculty\FacultyProfileServiceTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$GradingAndFinancialFoundationsTests.class
+com\sdt\web_app\service\lms\StudentNotificationPublisherServiceTest.class
 com\sdt\web_app\service\analytics\DigitalTwinRiskServiceTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$1$1.class
 com\sdt\web_app\WebAppApplicationTests.class
@@ -40,6 +48,7 @@ com\sdt\web_app\AuthenticationIntegrationTest$LoginTests.class
 com\sdt\web_app\service\institution\MajorServiceTest.class
 com\sdt\web_app\service\compliance\ClearanceWorkflowServiceTest.class
 com\sdt\web_app\service\lms\Lti13AdvantageServiceTest.class
+com\sdt\web_app\service\events\ClusterEventBridgeTest.class
 com\sdt\web_app\service\enrollment\EnrollmentServiceTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$OrganizationalHierarchyTests.class
 com\sdt\web_app\ActuatorSecurityConfigTest.class
@@ -48,7 +57,9 @@ com\sdt\web_app\controller\TestSecurityControllers$DummyOrderController.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest$DummySecureService.class
 com\sdt\web_app\service\institution\InstitutionalCrudPrerequisiteValidationTest.class
 com\sdt\web_app\controller\analytics\AttendanceControllerTest.class
+com\sdt\web_app\service\scheduling\SectionEventPublisherServiceTest.class
 com\sdt\web_app\service\security\DataScopingServiceTest.class
+com\sdt\web_app\controller\scheduling\SchedulingControllerStreamTest.class
 com\sdt\web_app\service\grade\GradeChangeServiceTest.class
 com\sdt\web_app\AuthenticationIntegrationTest$ProtectedEndpointTests.class
 com\sdt\web_app\service\security\AcademicHierarchyScopingIntegrationTest.class
@@ -68,6 +79,7 @@ com\sdt\web_app\controller\analytics\DigitalTwinAnalyticsControllerTest.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class
 com\sdt\web_app\service\analytics\EquityTargetServiceTest.class
 com\sdt\web_app\service\institution\CurriculumMajorLinkingTest.class
+com\sdt\web_app\service\institution\HonorRollCertificateServiceTest.class
 com\sdt\web_app\service\grade\ClassRecordMatrixIntegrationTest.class
 com\sdt\web_app\service\analytics\StudentInterventionServiceTest.class
 com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.class

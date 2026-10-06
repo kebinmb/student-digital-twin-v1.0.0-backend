@@ -21,6 +21,8 @@ public class TermController {
 
     private final TermService termService;
     private final TermLifecycleService termLifecycleService;
+    private final com.sdt.web_app.service.institution.HonorRollComputationService honorRollService;
+    private final com.sdt.web_app.service.institution.HonorRollCertificateService certificateService;
 
     @Auditable(action = "READ_ALL_TERMS", entityName = "Term")
     @GetMapping
@@ -119,6 +121,40 @@ public class TermController {
     ) {
         Term term = termLifecycleService.toggleAddDrop(id, open);
         return ResponseEntity.ok(mapToResponse(term));
+    }
+
+    @Auditable(action = "READ_TERM_HONOR_ROLL", entityName = "Term", entityId = "#id")
+    @GetMapping("/{id}/honor-roll")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<com.sdt.web_app.dto.institution.HonorRollDtos.TermHonorRollReportDto> getTermHonorRoll(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long programId
+    ) {
+        return ResponseEntity.ok(honorRollService.computeTermHonorRoll(id, programId));
+    }
+
+    @Auditable(action = "READ_HONOR_CERTIFICATE", entityName = "Term", entityId = "#id")
+    @GetMapping("/{id}/honor-certificate/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    public ResponseEntity<com.sdt.web_app.dto.institution.HonorRollDtos.CertificateVerificationDto> getHonorCertificate(
+            @PathVariable Long id,
+            @PathVariable Long studentId
+    ) {
+        return ResponseEntity.ok(certificateService.generateCertificateMetadata(id, studentId));
+    }
+
+    @Auditable(action = "EXPORT_BATCH_HONOR_CERTIFICATES", entityName = "Term", entityId = "#id")
+    @GetMapping("/{id}/honor-certificates/zip")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
+    public ResponseEntity<byte[]> downloadTermCertificatesZip(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long programId
+    ) {
+        byte[] zipBytes = certificateService.generateTermCertificatesZip(id, programId);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Term_" + id + "_Honor_Certificates.zip\"")
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(zipBytes);
     }
 
     @Auditable(action = "DELETE_TERM", entityName = "Term", entityId = "#id")

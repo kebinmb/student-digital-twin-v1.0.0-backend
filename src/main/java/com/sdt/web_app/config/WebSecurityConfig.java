@@ -86,7 +86,7 @@ public class WebSecurityConfig {
                                 .policyDirectives("default-src 'self'; script-src 'self'; frame-ancestors 'none'; object-src 'none';")
                         )
                         .permissionsPolicyHeader(pp -> pp
-                                .policy("camera=(), microphone=(), geolocation=(), payment=()")
+                                .policy("camera=(self), geolocation=(self), microphone=(), payment=()")
                         )
                 )
                 .authorizeHttpRequests(auth -> auth
@@ -94,12 +94,16 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "GUIDANCE")
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt
-                                .decoder(jwtDecoder)
-                                .jwtAuthenticationConverter(jwtRoleConverter)
-                        )
-                )
+                .oauth2ResourceServer(oauth2 -> {
+                    org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver resolver =
+                            new org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver();
+                    resolver.setAllowUriQueryParameter(true);
+                    oauth2.bearerTokenResolver(resolver)
+                            .jwt(jwt -> jwt
+                                    .decoder(jwtDecoder)
+                                    .jwtAuthenticationConverter(jwtRoleConverter)
+                            );
+                })
                 .build();
     }
 

@@ -63,6 +63,10 @@ class EnrollmentServiceTest {
     private com.sdt.web_app.service.institution.TermService termService;
     @Mock
     private ClearanceRequestRepository clearanceRequestRepository;
+    @Mock
+    private com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
+    @Mock
+    private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
 
     @InjectMocks
     private EnrollmentService enrollmentService;

@@ -43,6 +43,6 @@ VALUES
 (1, 'Midterm Examination Schedule AY 2026-2027 Released', 'Registrar', 'Official midterm examination timetable for 1st Semester AY 2026-2027 has been finalized. Room allocations and schedules are viewable in the portal.', 'ALL', 'IMPORTANT', 'REGISTRAR', 1, CURRENT_TIMESTAMP),
 (2, 'Online Encoding of Student Clearance Now Open', 'Student Affairs', 'Students may now settle departmental, library, and laboratory clearances online via the clearance module before the end of the term.', 'STUDENT', 'NORMAL', 'ADMIN', 1, CURRENT_TIMESTAMP),
 (3, 'CHMSU ICT Helpdesk Maintenance on Saturday 10 PM', 'ICT Office', 'Scheduled server maintenance and infrastructure database optimization will occur this Saturday at 10:00 PM for approximately 2 hours.', 'ALL', 'NORMAL', 'ADMIN', 1, CURRENT_TIMESTAMP)
-ON DUPLICATE KEY UPDATE title = VALUES(title);
+AS new_notice ON DUPLICATE KEY UPDATE title = new_notice.title;
 
 SET FOREIGN_KEY_CHECKS = 1;

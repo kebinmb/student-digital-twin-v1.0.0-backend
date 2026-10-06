@@ -42,6 +42,8 @@ public class EnrollmentService {
     private final CoursePrerequisiteRepository prerequisiteRepository;
     private final com.sdt.web_app.service.institution.TermService termService;
     private final ClearanceRequestRepository clearanceRequestRepository;
+    private final com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
+    private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
 
     // -------------------------------------------------------------------------
     // Gate 3: Student Advising & Eligibility Evaluation
@@ -339,6 +341,16 @@ public class EnrollmentService {
                     section.getSectionCode(), section.getMaxCapacity()));
         }
 
+        if (sectionEventPublisherService != null) {
+            sectionEventPublisherService.publishSectionEnlistmentEvent(
+                    section.getTerm() != null ? section.getTerm().getId() : null,
+                    section.getId(),
+                    section.getSectionCode(),
+                    section.getEnrolledCount() + 1,
+                    section.getMaxCapacity()
+            );
+        }
+
         // 5. Create EnrollmentCourseItem
         EnrollmentCourseItem item = EnrollmentCourseItem.builder()
                 .enrollment(enrollment)
@@ -351,6 +363,15 @@ public class EnrollmentService {
         enrollment.updateStatus(StudentEnrollment.Status.ENLISTED);
 
         StudentEnrollment saved = studentEnrollmentRepository.save(enrollment);
+        if (studentNotificationPublisherService != null) {
+            studentNotificationPublisherService.publishEnrollmentUpdatedEvent(
+                    resolvedStudentId,
+                    term.getId(),
+                    section.getId(),
+                    "ENLISTED",
+                    section.getCourse() != null ? section.getCourse().getCode() : ""
+            );
+        }
         return mapToEnrollmentResponse(saved);
     }
 
@@ -376,7 +397,27 @@ public class EnrollmentService {
 
         sectionRepository.decrementEnrolledCount(sectionId);
 
+        if (sectionEventPublisherService != null && itemToRemove.getSection() != null) {
+            sectionEventPublisherService.publishSectionEnlistmentEvent(
+                    itemToRemove.getSection().getTerm() != null ? itemToRemove.getSection().getTerm().getId() : null,
+                    sectionId,
+                    itemToRemove.getSection().getSectionCode(),
+                    Math.max(0, itemToRemove.getSection().getEnrolledCount() - 1),
+                    itemToRemove.getSection().getMaxCapacity()
+            );
+        }
+
         StudentEnrollment saved = studentEnrollmentRepository.save(enrollment);
+        if (studentNotificationPublisherService != null) {
+            studentNotificationPublisherService.publishEnrollmentUpdatedEvent(
+                    resolvedStudentId,
+                    termId,
+                    sectionId,
+                    "DROPPED",
+                    itemToRemove.getSection() != null && itemToRemove.getSection().getCourse() != null
+                            ? itemToRemove.getSection().getCourse().getCode() : ""
+            );
+        }
         return mapToEnrollmentResponse(saved);
     }
 

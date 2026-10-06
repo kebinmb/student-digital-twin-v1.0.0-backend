@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +46,7 @@ public class FeeAssessmentService {
     private final AcademicYearRepository academicYearRepository;
     private final CampusRepository campusRepository;
     private final UserRepository userRepository;
+    private final com.sdt.web_app.service.webhook.InstitutionalWebhookService institutionalWebhookService;
 
     @Transactional
     public FeeTemplateDto createFeeTemplate(CreateFeeTemplateRequest request, Long actorUserId) {
@@ -135,9 +137,31 @@ public class FeeAssessmentService {
                     student.getStudentNumber(), completedTermsCount, maxAllowedSemesters);
         }
 
-        BigDecimal fheSubsidy = isFheEligible ? grossAssessment : BigDecimal.ZERO;
-        BigDecimal netAssessed = grossAssessment.subtract(fheSubsidy).setScale(2, RoundingMode.HALF_UP);
-        StudentAssessmentInvoice.InvoiceStatus status = isFheEligible ? StudentAssessmentInvoice.InvoiceStatus.FHE_COVERED : StudentAssessmentInvoice.InvoiceStatus.UNPAID;
+        // Evaluate Prior Term Academic Honor Roll Scholarship Discount
+        String honorCategory = evaluatePriorTermHonorCategory(student.getId(), term.getId());
+        BigDecimal scholarshipDiscount = BigDecimal.ZERO;
+        String discountDescription = null;
+
+        if ("PRESIDENTS_LIST".equals(honorCategory)) {
+            scholarshipDiscount = tuitionFee; // 100% of tuition fee
+            discountDescription = "President's List Academic Scholarship (100% Tuition Discount)";
+        } else if ("DEANS_LIST".equals(honorCategory)) {
+            scholarshipDiscount = tuitionFee.multiply(new BigDecimal("0.50")).setScale(2, RoundingMode.HALF_UP); // 50% of tuition fee
+            discountDescription = "Dean's List Academic Scholarship (50% Tuition Discount)";
+        }
+
+        BigDecimal grossAfterDiscount = grossAssessment.subtract(scholarshipDiscount).max(BigDecimal.ZERO);
+        BigDecimal fheSubsidy = isFheEligible ? grossAfterDiscount : BigDecimal.ZERO;
+        BigDecimal netAssessed = grossAfterDiscount.subtract(fheSubsidy).setScale(2, RoundingMode.HALF_UP);
+
+        StudentAssessmentInvoice.InvoiceStatus status;
+        if (isFheEligible) {
+            status = StudentAssessmentInvoice.InvoiceStatus.FHE_COVERED;
+        } else if (netAssessed.compareTo(BigDecimal.ZERO) == 0) {
+            status = StudentAssessmentInvoice.InvoiceStatus.PAID;
+        } else {
+            status = StudentAssessmentInvoice.InvoiceStatus.UNPAID;
+        }
 
         StudentAssessmentInvoice invoice;
         String yearCode = (term.getAcademicYear() != null && term.getAcademicYear().getCode() != null) ? term.getAcademicYear().getCode() : "AY2026";
@@ -147,6 +171,7 @@ public class FeeAssessmentService {
             invoice.setTotalLabFee(labFee);
             invoice.setTotalMiscFee(miscFee);
             invoice.setTotalGrossAssessment(grossAssessment);
+            invoice.setScholarshipDiscountAmount(scholarshipDiscount);
             invoice.setFheSubsidyAmount(fheSubsidy);
             invoice.setNetAssessedAmount(netAssessed);
             invoice.setOutstandingBalance(netAssessed);
@@ -163,6 +188,7 @@ public class FeeAssessmentService {
                     .totalLabFee(labFee)
                     .totalMiscFee(miscFee)
                     .totalGrossAssessment(grossAssessment)
+                    .scholarshipDiscountAmount(scholarshipDiscount)
                     .fheSubsidyAmount(fheSubsidy)
                     .netAssessedAmount(netAssessed)
                     .totalPaidAmount(BigDecimal.ZERO)
@@ -195,9 +221,42 @@ public class FeeAssessmentService {
                 .build();
         ledgerRepository.save(chargeLedger);
 
-        // 2. FHE Subsidy Ledger (if eligible)
+        // 2. Academic Honor Scholarship Ledger (if applicable)
+        BigDecimal balanceAfterDiscount = balanceAfterCharge;
+        if (scholarshipDiscount.compareTo(BigDecimal.ZERO) > 0) {
+            balanceAfterDiscount = balanceAfterCharge.subtract(scholarshipDiscount).setScale(2, RoundingMode.HALF_UP);
+            StudentAccountLedger discountLedger = StudentAccountLedger.builder()
+                    .transactionNumber("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                    .studentProfile(student)
+                    .term(term)
+                    .assessmentInvoice(savedInvoice)
+                    .transactionType(StudentAccountLedger.TransactionType.DISCOUNT)
+                    .description(discountDescription)
+                    .debitAmount(BigDecimal.ZERO)
+                    .creditAmount(scholarshipDiscount)
+                    .runningBalance(balanceAfterDiscount)
+                    .referenceNumber("SCHOLARSHIP-" + savedInvoice.getInvoiceNumber())
+                    .createdByUser(actorUser)
+                    .build();
+            ledgerRepository.save(discountLedger);
+
+            if (institutionalWebhookService != null) {
+                institutionalWebhookService.dispatchEvent(
+                        "TUITION_DISCOUNT_APPLIED",
+                        java.util.Map.of(
+                                "studentId", student.getId(),
+                                "studentNumber", student.getStudentNumber(),
+                                "invoiceNumber", savedInvoice.getInvoiceNumber(),
+                                "discountAmount", scholarshipDiscount,
+                                "honorCategory", honorCategory != null ? honorCategory : "N/A"
+                        )
+                );
+            }
+        }
+
+        // 3. FHE Subsidy Ledger (if eligible)
         if (isFheEligible && fheSubsidy.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal balanceAfterSubsidy = balanceAfterCharge.subtract(fheSubsidy).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal balanceAfterSubsidy = balanceAfterDiscount.subtract(fheSubsidy).setScale(2, RoundingMode.HALF_UP);
             StudentAccountLedger subsidyLedger = StudentAccountLedger.builder()
                     .transactionNumber("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                     .studentProfile(student)
@@ -214,8 +273,8 @@ public class FeeAssessmentService {
             ledgerRepository.save(subsidyLedger);
         }
 
-        log.info("Assessed tuition for enrollment ID {} student {} invoice {}: gross={}, fhe={}, net={}",
-                enrollmentId, student.getStudentNumber(), savedInvoice.getInvoiceNumber(), grossAssessment, fheSubsidy, netAssessed);
+        log.info("Assessed tuition for enrollment ID {} student {} invoice {}: gross={}, scholarshipDiscount={}, fhe={}, net={}",
+                enrollmentId, student.getStudentNumber(), savedInvoice.getInvoiceNumber(), grossAssessment, scholarshipDiscount, fheSubsidy, netAssessed);
 
         return mapToInvoiceDto(savedInvoice);
     }
@@ -404,5 +463,64 @@ public class FeeAssessmentService {
                 l.getRunningBalance(),
                 l.getReferenceNumber()
         );
+    }
+
+    public String evaluatePriorTermHonorCategory(Long studentId, Long currentTermId) {
+        if (studentId == null) return null;
+        List<StudentEnrollment> enrollments = enrollmentRepository.findByStudentId(studentId);
+        if (enrollments == null || enrollments.isEmpty()) return null;
+
+        // Prior enrollments in descending order of ID
+        List<StudentEnrollment> priorEnrollments = enrollments.stream()
+                .filter(e -> e.getTerm() != null && (currentTermId == null || !e.getTerm().getId().equals(currentTermId)))
+                .filter(e -> e.getItems() != null && !e.getItems().isEmpty())
+                .sorted(Comparator.comparing(StudentEnrollment::getId).reversed())
+                .toList();
+
+        if (priorEnrollments.isEmpty()) return null;
+
+        StudentEnrollment prior = priorEnrollments.get(0);
+        BigDecimal totalUnits = BigDecimal.ZERO;
+        BigDecimal weightedGradeSum = BigDecimal.ZERO;
+        boolean hasFailingOrIncomplete = false;
+        double maxGrade = 1.00;
+
+        for (EnrollmentCourseItem item : prior.getItems()) {
+            if (item.getCompletionStatus() == EnrollmentCourseItem.CompletionStatus.DROPPED) {
+                continue;
+            }
+            if (item.getFinalNumericalGrade() == null) {
+                hasFailingOrIncomplete = true;
+                break;
+            }
+            double gradeVal = item.getFinalNumericalGrade().doubleValue();
+            if (gradeVal > 3.00 || item.getCompletionStatus() == EnrollmentCourseItem.CompletionStatus.FAILED) {
+                hasFailingOrIncomplete = true;
+                break;
+            }
+            if (gradeVal > maxGrade) {
+                maxGrade = gradeVal;
+            }
+            BigDecimal units = (item.getSection() != null && item.getSection().getCourse() != null && item.getSection().getCourse().getCreditUnits() != null)
+                    ? item.getSection().getCourse().getCreditUnits()
+                    : BigDecimal.valueOf(3.0);
+            totalUnits = totalUnits.add(units);
+            weightedGradeSum = weightedGradeSum.add(item.getFinalNumericalGrade().multiply(units));
+        }
+
+        // Philippine academic honors regular load minimum: at least 15 units, no INC or failing
+        if (hasFailingOrIncomplete || totalUnits.compareTo(BigDecimal.valueOf(15.0)) < 0) {
+            return null;
+        }
+
+        BigDecimal gpa = weightedGradeSum.divide(totalUnits, 2, RoundingMode.HALF_UP);
+        double gpaVal = gpa.doubleValue();
+
+        if (gpaVal <= 1.25 && maxGrade <= 1.50) {
+            return "PRESIDENTS_LIST";
+        } else if (gpaVal <= 1.75 && maxGrade <= 2.00) {
+            return "DEANS_LIST";
+        }
+        return null;
     }
 }

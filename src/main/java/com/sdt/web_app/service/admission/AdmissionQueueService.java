@@ -45,13 +45,15 @@ public class AdmissionQueueService {
     private final Map<String, TokenEntry> tokenStore = new ConcurrentHashMap<>();
     private final ConcurrentLinkedQueue<String> waitingQueue = new ConcurrentLinkedQueue<>();
     private final Set<String> activeTokens = ConcurrentHashMap.newKeySet();
+    private final java.util.concurrent.locks.ReentrantLock queueLock = new java.util.concurrent.locks.ReentrantLock();
 
     public QueueTokenResponse issueToken(String clientIdentifier) {
         cleanExpiredTokens();
         String token = "ADM-Q-" + UUID.randomUUID().toString().substring(0, 18).toUpperCase();
         String clientId = (clientIdentifier != null && !clientIdentifier.isBlank()) ? clientIdentifier.trim() : "anonymous";
 
-        synchronized (this) {
+        queueLock.lock();
+        try {
             if (activeTokens.size() < MAX_ACTIVE_TRANSACTIONS) {
                 activeTokens.add(token);
                 TokenEntry entry = new TokenEntry(token, clientId, QueueStatus.ACTIVE);
@@ -67,6 +69,8 @@ public class AdmissionQueueService {
                 log.info("Issued QUEUED token {} at position {} for client {}", token, pos, clientId);
                 return new QueueTokenResponse(token, QueueStatus.QUEUED.name(), pos, estWait, false, null, null);
             }
+        } finally {
+            queueLock.unlock();
         }
     }
 
@@ -80,7 +84,8 @@ public class AdmissionQueueService {
             return new QueueTokenResponse(token, QueueStatus.EXPIRED.name(), -1, 0, false, null, 0L);
         }
 
-        synchronized (this) {
+        queueLock.lock();
+        try {
             entry.lastAccessedAt = Instant.now();
             
             // Check if queue can be promoted
@@ -106,6 +111,8 @@ public class AdmissionQueueService {
             } else {
                 return new QueueTokenResponse(token, entry.status.name(), -1, 0, false, null, 0L);
             }
+        } finally {
+            queueLock.unlock();
         }
     }
 
@@ -119,7 +126,8 @@ public class AdmissionQueueService {
             return false;
         }
 
-        synchronized (this) {
+        queueLock.lock();
+        try {
             if (entry.status == QueueStatus.ACTIVE) {
                 if (entry.expiresAt != null && entry.expiresAt.isBefore(Instant.now())) {
                     entry.status = QueueStatus.EXPIRED;
@@ -131,6 +139,8 @@ public class AdmissionQueueService {
                 return true;
             }
             return false;
+        } finally {
+            queueLock.unlock();
         }
     }
 
@@ -139,7 +149,8 @@ public class AdmissionQueueService {
             return;
         }
 
-        synchronized (this) {
+        queueLock.lock();
+        try {
             TokenEntry entry = tokenStore.remove(token);
             if (entry != null) {
                 entry.status = QueueStatus.CONSUMED;
@@ -147,6 +158,8 @@ public class AdmissionQueueService {
                 promoteQueueIfPossible();
                 log.info("Successfully consumed queue token {}", token);
             }
+        } finally {
+            queueLock.unlock();
         }
     }
 
@@ -156,12 +169,15 @@ public class AdmissionQueueService {
             return true;
         }
 
-        synchronized (this) {
+        queueLock.lock();
+        try {
             if (validateToken(token)) {
                 consumeToken(token);
                 return true;
             }
             return false;
+        } finally {
+            queueLock.unlock();
         }
     }
 
@@ -193,7 +209,8 @@ public class AdmissionQueueService {
 
     @Scheduled(fixedRate = 30000)
     public void cleanExpiredTokens() {
-        synchronized (this) {
+        queueLock.lock();
+        try {
             Instant now = Instant.now();
             List<String> toRemove = new ArrayList<>();
             for (Map.Entry<String, TokenEntry> e : tokenStore.entrySet()) {
@@ -215,6 +232,8 @@ public class AdmissionQueueService {
                 }
             }
             promoteQueueIfPossible();
+        } finally {
+            queueLock.unlock();
         }
     }
 }

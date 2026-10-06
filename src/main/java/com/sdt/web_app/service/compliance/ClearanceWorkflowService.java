@@ -35,6 +35,7 @@ public class ClearanceWorkflowService {
     private final TermRepository termRepository;
     private final com.sdt.web_app.service.institution.TermService termService;
     private final UserRepository userRepository;
+    private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
 
     private static final List<String> REQUIRED_DEPARTMENTS = List.of(
             "LIBRARY", "ACCOUNTING", "LABORATORY", "STUDENT_AFFAIRS", "DEAN"
@@ -131,7 +132,64 @@ public class ClearanceWorkflowService {
         }
         clearanceRequestRepository.save(clearanceRequest);
 
+        if (studentNotificationPublisherService != null && profile != null) {
+            studentNotificationPublisherService.publishClearanceUpdatedEvent(
+                    profile.getId(),
+                    clearanceRequest.getTerm() != null ? clearanceRequest.getTerm().getId() : 0L,
+                    signoff.getDepartmentType(),
+                    signoff.getSignoffStatus(),
+                    clearanceRequest.getOverallStatus(),
+                    signoff.getRemarks()
+            );
+        }
+
         return mapToSignoffDto(updated);
+    }
+
+    @Transactional
+    public void cascadeGradeSealingToClearance(Long studentProfileId, Long termId) {
+        if (studentProfileId == null || termId == null) return;
+
+        clearanceRequestRepository.findByStudentProfileIdAndTermId(studentProfileId, termId).ifPresent(clearanceRequest -> {
+            if ("CLEARED".equalsIgnoreCase(clearanceRequest.getOverallStatus())) {
+                return;
+            }
+
+            if (clearanceRequest.getSignoffs() != null) {
+                for (ClearanceSignoff signoff : clearanceRequest.getSignoffs()) {
+                    if ("DEAN".equalsIgnoreCase(signoff.getDepartmentType()) && "PENDING".equalsIgnoreCase(signoff.getSignoffStatus())) {
+                        signoff.setSignoffStatus("APPROVED");
+                        signoff.setRemarks("Automated Academic Clearance: Term grades sealed in good academic standing.");
+                        signoff.setSignedAt(LocalDateTime.now());
+                        clearanceSignoffRepository.save(signoff);
+
+                        boolean allApproved = clearanceRequest.getSignoffs().stream()
+                                .allMatch(s -> "APPROVED".equalsIgnoreCase(s.getSignoffStatus()));
+                        if (allApproved) {
+                            clearanceRequest.setOverallStatus("CLEARED");
+                            StudentProfile profile = clearanceRequest.getStudentProfile();
+                            if (profile != null) {
+                                profile.updateClearance(StudentProfile.ClearanceStatus.CLEARED, StudentProfile.ClearanceStatus.CLEARED);
+                                studentProfileRepository.save(profile);
+                            }
+                        }
+                        clearanceRequestRepository.save(clearanceRequest);
+
+                        if (studentNotificationPublisherService != null && clearanceRequest.getStudentProfile() != null) {
+                            studentNotificationPublisherService.publishClearanceUpdatedEvent(
+                                    clearanceRequest.getStudentProfile().getId(),
+                                    termId,
+                                    "DEAN",
+                                    "APPROVED",
+                                    clearanceRequest.getOverallStatus(),
+                                    signoff.getRemarks()
+                            );
+                        }
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     @Transactional(readOnly = true)

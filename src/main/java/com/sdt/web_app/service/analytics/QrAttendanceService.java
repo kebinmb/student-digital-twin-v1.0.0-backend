@@ -47,6 +47,7 @@ public class QrAttendanceService {
     private final StudentProfileRepository studentProfileRepository;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
 
     public static String computeHmacToken(Long sessionId, long window, String secretKey) {
         try {
@@ -331,6 +332,17 @@ public class QrAttendanceService {
                 ? session.getSchedule().getSection().getSectionCode() : "N/A";
         String courseCode = session.getSchedule() != null && session.getSchedule().getSection() != null && session.getSchedule().getSection().getCourse() != null
                 ? session.getSchedule().getSection().getCourse().getCode() : "N/A";
+
+        // Dispatch instant real-time student notification
+        if (studentNotificationPublisherService != null) {
+            studentNotificationPublisherService.publishAttendanceVerifiedEvent(
+                    student.getId(),
+                    session.getId(),
+                    courseCode,
+                    sectionCode,
+                    saved.getStatus().name()
+            );
+        }
 
         String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
         AttendanceRecordResponse response = new AttendanceRecordResponse(

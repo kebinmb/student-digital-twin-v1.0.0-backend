@@ -45,6 +45,9 @@ public class GradeService {
     private final AcademicScopeAssertionService academicScopeAssertionService;
     private final GradeSealingAuditRepository sealingAuditRepository;
     private final UserRepository userRepository;
+    private final com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
+    private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    private final com.sdt.web_app.service.compliance.ClearanceWorkflowService clearanceWorkflowService;
 
     @Transactional(readOnly = true)
     public SectionRosterResponse getSectionRoster(Long sectionId) {
@@ -90,6 +93,7 @@ public class GradeService {
                         .map(s -> s.getInstructor().getId())
                         .findFirst().orElse(null));
 
+        Long updatedAtEpochMs = section.getUpdatedAt() != null ? section.getUpdatedAt().toEpochMilli() : null;
         return new SectionRosterResponse(
                 section.getId(),
                 section.getSectionCode(),
@@ -104,7 +108,8 @@ public class GradeService {
                 instructorName,
                 section.getEnrolledCount(),
                 section.getMaxCapacity(),
-                students
+                students,
+                updatedAtEpochMs
         );
     }
 
@@ -112,6 +117,14 @@ public class GradeService {
     public GradeActionResponse saveGrades(Long sectionId, SaveSectionGradesRequest request, Long actorUserId) {
         ClassSection section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new EntityNotFoundException("Class section not found with ID: " + sectionId));
+
+        if (request.expectedUpdatedAtEpochMs() != null && section.getUpdatedAt() != null) {
+            long currentUpdated = section.getUpdatedAt().toEpochMilli();
+            if (currentUpdated > request.expectedUpdatedAtEpochMs()) {
+                throw new org.springframework.dao.OptimisticLockingFailureException(
+                        "Section grades were modified concurrently by another user. Please reload the gradebook before saving.");
+            }
+        }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
@@ -172,6 +185,14 @@ public class GradeService {
 
             section.updateGradeStatus(ClassSection.GradeStatus.SUBMITTED);
             sectionRepository.save(section);
+            if (sectionEventPublisherService != null) {
+                sectionEventPublisherService.publishGradeStatusEvent(
+                        section.getTerm() != null ? section.getTerm().getId() : null,
+                        section.getId(),
+                        section.getSectionCode(),
+                        "SUBMITTED"
+                );
+            }
             log.info("Section {} grades submitted for verification by user {}", section.getSectionCode(), actorUserId);
             return new GradeActionResponse(
                     section.getId(),
@@ -181,6 +202,9 @@ public class GradeService {
                     "Grades successfully submitted for Dean/Chairperson verification."
             );
         }
+
+        section.preUpdate();
+        sectionRepository.save(section);
 
         return new GradeActionResponse(
                 section.getId(),
@@ -208,6 +232,14 @@ public class GradeService {
 
         section.updateGradeStatus(ClassSection.GradeStatus.VERIFIED);
         sectionRepository.save(section);
+        if (sectionEventPublisherService != null) {
+            sectionEventPublisherService.publishGradeStatusEvent(
+                    section.getTerm() != null ? section.getTerm().getId() : null,
+                    section.getId(),
+                    section.getSectionCode(),
+                    "VERIFIED"
+            );
+        }
         log.info("Section {} grades verified by user {}", section.getSectionCode(), approverUserId);
 
         return new GradeActionResponse(
@@ -236,6 +268,14 @@ public class GradeService {
 
         section.updateGradeStatus(ClassSection.GradeStatus.DRAFT);
         sectionRepository.save(section);
+        if (sectionEventPublisherService != null) {
+            sectionEventPublisherService.publishGradeStatusEvent(
+                    section.getTerm() != null ? section.getTerm().getId() : null,
+                    section.getId(),
+                    section.getSectionCode(),
+                    "DRAFT"
+            );
+        }
         log.warn("Section {} grades rejected and returned to DRAFT by user {}. Reason: {}", section.getSectionCode(), approverUserId, reason);
 
         return new GradeActionResponse(
@@ -290,6 +330,17 @@ public class GradeService {
                 historicalGrade.updateGrade(item.getFinalNumericalGrade(), item.getCompletionStatus().name());
                 gradeRepository.save(historicalGrade);
                 affectedStudents.add(sp);
+
+                if (studentNotificationPublisherService != null) {
+                    studentNotificationPublisherService.publishGradeReleasedEvent(
+                            sp.getId(),
+                            section.getId(),
+                            section.getCourse() != null ? section.getCourse().getCode() : "",
+                            section.getCourse() != null ? section.getCourse().getTitle() : "",
+                            item.getFinalNumericalGrade().doubleValue(),
+                            "SEALED"
+                    );
+                }
             }
         }
 
@@ -311,10 +362,35 @@ public class GradeService {
 
             sp.updateProgress(totalUnits, gpa);
             profileRepository.save(sp);
+
+            if (studentNotificationPublisherService != null) {
+                studentNotificationPublisherService.publishStandingUpdatedEvent(
+                        sp.getId(),
+                        gpa != null ? gpa.doubleValue() : null,
+                        totalUnits,
+                        sp.getEnrollmentStatus() != null ? sp.getEnrollmentStatus().name() : "REGULAR"
+                );
+            }
+
+            if (clearanceWorkflowService != null && termId != null) {
+                try {
+                    clearanceWorkflowService.cascadeGradeSealingToClearance(sp.getId(), termId);
+                } catch (Exception ex) {
+                    log.warn("Failed to cascade clearance for student {}: {}", sp.getId(), ex.getMessage());
+                }
+            }
         }
 
         section.updateGradeStatus(ClassSection.GradeStatus.SEALED);
         sectionRepository.save(section);
+        if (sectionEventPublisherService != null) {
+            sectionEventPublisherService.publishGradeStatusEvent(
+                    section.getTerm() != null ? section.getTerm().getId() : null,
+                    section.getId(),
+                    section.getSectionCode(),
+                    "SEALED"
+            );
+        }
 
         // Record Sealing Audit Ledger Entry
         if (userRepository != null && sealingAuditRepository != null) {

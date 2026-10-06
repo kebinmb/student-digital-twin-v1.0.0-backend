@@ -32,8 +32,28 @@ public class GradeDtos {
             String primaryInstructorName,
             int enrolledCount,
             int maxCapacity,
-            List<RosterStudentDto> students
-    ) {}
+            List<RosterStudentDto> students,
+            Long updatedAtEpochMs
+    ) {
+        public SectionRosterResponse(
+                Long sectionId,
+                String sectionCode,
+                Long courseId,
+                String courseCode,
+                String courseTitle,
+                BigDecimal creditUnits,
+                Long termId,
+                String termName,
+                String gradeStatus,
+                Long primaryInstructorId,
+                String primaryInstructorName,
+                int enrolledCount,
+                int maxCapacity,
+                List<RosterStudentDto> students
+        ) {
+            this(sectionId, sectionCode, courseId, courseCode, courseTitle, creditUnits, termId, termName, gradeStatus, primaryInstructorId, primaryInstructorName, enrolledCount, maxCapacity, students, null);
+        }
+    }
 
     public record GradeEntryDto(
             @NotNull(message = "Enrollment item ID is required")
@@ -48,8 +68,14 @@ public class GradeDtos {
             @NotNull(message = "Grades list cannot be null")
             List<GradeEntryDto> grades,
 
-            boolean submitForVerification
-    ) {}
+            boolean submitForVerification,
+
+            Long expectedUpdatedAtEpochMs
+    ) {
+        public SaveSectionGradesRequest(List<GradeEntryDto> grades, boolean submitForVerification) {
+            this(grades, submitForVerification, null);
+        }
+    }
 
     public record GradeActionResponse(
             Long sectionId,

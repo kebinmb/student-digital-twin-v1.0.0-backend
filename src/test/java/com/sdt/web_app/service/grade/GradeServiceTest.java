@@ -53,6 +53,12 @@ class GradeServiceTest {
     private GradeSealingAuditRepository sealingAuditRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
+    @Mock
+    private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    @Mock
+    private com.sdt.web_app.service.compliance.ClearanceWorkflowService clearanceWorkflowService;
 
     @InjectMocks
     private GradeService gradeService;

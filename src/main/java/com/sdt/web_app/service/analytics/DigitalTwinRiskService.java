@@ -56,6 +56,7 @@ public class DigitalTwinRiskService {
     private final StudentAssessmentScoreRepository assessmentScoreRepository;
     private final ClassSectionRepository classSectionRepository;
     private final EnrollmentCourseItemRepository enrollmentCourseItemRepository;
+    private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
 
     @Transactional
     public DigitalTwinRiskProfileDto evaluateStudentRiskProfile(Long studentId) {
@@ -281,9 +282,18 @@ public class DigitalTwinRiskService {
                         .triggerFactor("Automated early warning trigger: " + level.name() + " composite risk (" + String.format(java.util.Locale.US, "%.1f", compositeScore) + ")")
                         .caseNotes(joinedInterventions)
                         .build();
-                interventionRepository.save(autoIntervention);
+                StudentIntervention savedIntervention = interventionRepository.save(autoIntervention);
                 log.info("Auto-dispatched {} intervention for student {} due to {} risk level",
                         autoType, student.getStudentNumber(), level);
+
+                if (studentNotificationPublisherService != null) {
+                    studentNotificationPublisherService.publishInterventionDispatchedEvent(
+                            student.getId(),
+                            autoType.name(),
+                            level.name(),
+                            autoIntervention.getTriggerFactor()
+                    );
+                }
             }
         }
 

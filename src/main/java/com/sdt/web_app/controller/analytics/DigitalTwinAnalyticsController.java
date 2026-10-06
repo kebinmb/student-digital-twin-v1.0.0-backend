@@ -37,21 +37,21 @@ public class DigitalTwinAnalyticsController {
 
     @Auditable(action = "READ_STUDENT_RISK_PROFILE", entityName = "DigitalTwinRiskProfile", entityId = "#studentId")
     @GetMapping("/risk/{studentId:[0-9]+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT')")
     public ResponseEntity<DigitalTwinRiskProfileDto> getStudentRiskProfile(@PathVariable("studentId") Long studentId) {
         return ResponseEntity.ok(riskService.evaluateStudentRiskProfile(studentId));
     }
 
     @Auditable(action = "READ_EARLY_WARNING_RADAR", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/radar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
     public ResponseEntity<List<EarlyWarningRadarItemDto>> getEarlyWarningRadar() {
         return ResponseEntity.ok(riskService.getEarlyWarningRadar());
     }
 
     @Auditable(action = "READ_EARLY_WARNING_RADAR_SLICE", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/slice")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
     public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<DigitalTwinRiskProfileDto>> getEarlyWarningRadarSlice(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,

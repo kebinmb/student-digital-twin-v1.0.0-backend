@@ -46,6 +46,8 @@ management:
   health:
     mail:
       enabled: false
+    redis:
+      enabled: false
   server:
     port: "" # Disables separate management port so endpoints are accessible via MockMvc
   endpoints:
