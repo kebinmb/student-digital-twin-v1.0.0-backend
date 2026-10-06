@@ -105,6 +105,32 @@ class EnrollmentSecurityTest {
     }
 
     @Test
+    @DisplayName("canAccessStudentAdvising: Student role allows access when studentId is own userId")
+    void canAccessStudentAdvising_StudentUserIdAllowed() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "student1", "pass", List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
+        given(securityUtils.resolveUserId(auth)).willReturn(42L);
+        given(securityProfileCache.getStudentProfile(42L)).willReturn(Optional.of(ownedProfile));
+
+        boolean result = enrollmentSecurity.canAccessStudentAdvising(auth, 42L);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessStudentEnrollment: Student owner allowed to access when studentId is own userId")
+    void canAccessStudentEnrollment_StudentUserIdAllowed() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "student1", "pass", List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
+        given(securityUtils.resolveUserId(auth)).willReturn(42L);
+        given(securityProfileCache.getStudentProfile(42L)).willReturn(Optional.of(ownedProfile));
+
+        boolean result = enrollmentSecurity.canAccessStudentEnrollment(auth, 42L);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
     @DisplayName("canAccessStudentEnrollment: Student IDOR attempt to enlist for other student is rejected")
     void canAccessStudentEnrollment_StudentIdorRejected() {
         Authentication auth = new UsernamePasswordAuthenticationToken(

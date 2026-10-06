@@ -59,15 +59,25 @@ public class EnrollmentService {
         return getAdvisingEligibility(studentId, termId, targetYearLevel, targetSemester, false);
     }
 
+    private Long resolveStudentProfileId(Long studentId) {
+        if (studentId == null) {
+            return null;
+        }
+        if (studentId < 0) {
+            return studentService.createStudentFromAdmissionAppId(-studentId).id();
+        }
+        if (studentProfileRepository.existsById(studentId)) {
+            return studentId;
+        }
+        return studentProfileRepository.findByUserId(studentId)
+                .map(StudentProfile::getId)
+                .orElse(studentId);
+    }
+
     @Transactional
     public AdvisingEligibilityResponse getAdvisingEligibility(
             Long studentId, Long termId, Integer targetYearLevel, String targetSemester, Boolean allCourses) {
-        final Long resolvedStudentId;
-        if (studentId != null && studentId < 0) {
-            resolvedStudentId = studentService.createStudentFromAdmissionAppId(-studentId).id();
-        } else {
-            resolvedStudentId = studentId;
-        }
+        final Long resolvedStudentId = resolveStudentProfileId(studentId);
 
         StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(resolvedStudentId)
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
@@ -229,12 +239,7 @@ public class EnrollmentService {
     // -------------------------------------------------------------------------
     @Transactional
     public StudentEnrollmentResponse enlistSection(Long studentId, EnlistSectionRequest request) {
-        final Long resolvedStudentId;
-        if (studentId != null && studentId < 0) {
-            resolvedStudentId = studentService.createStudentFromAdmissionAppId(-studentId).id();
-        } else {
-            resolvedStudentId = studentId;
-        }
+        final Long resolvedStudentId = resolveStudentProfileId(studentId);
 
         StudentProfile student = studentProfileRepository.findByIdWithProgramAndCurriculum(resolvedStudentId)
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
@@ -377,10 +382,10 @@ public class EnrollmentService {
 
     @Transactional
     public StudentEnrollmentResponse removeEnlistedSection(Long studentId, Long termId, Long sectionId) {
-        final Long resolvedStudentId = studentId != null && studentId < 0 ? studentService.createStudentFromAdmissionAppId(-studentId).id() : studentId;
+        final Long resolvedStudentId = resolveStudentProfileId(studentId);
         StudentEnrollment enrollment = studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, termId)
                 .orElseThrow(() -> new EntityNotFoundException("Enrollment record not found for student " + resolvedStudentId + " in term " + termId));
-
+        
         Term term = termService.getTermById(termId);
         if (!term.isEnrollmentOpen() && !term.isAddDropOpen()) {
             throw new IllegalStateException("Enrollment and add/drop period for term '" + term.getName() + "' is currently closed.");
@@ -424,7 +429,7 @@ public class EnrollmentService {
     @Transactional
     @CacheEvict(value = {CacheConfig.CACHE_PROGRAMS, CacheConfig.CACHE_EQUITY_PROFILES}, allEntries = true)
     public EnrollmentConfirmationDto confirmEnrollment(Long studentId, ConfirmEnrollmentRequest request) {
-        final Long resolvedStudentId = studentId != null && studentId < 0 ? studentService.createStudentFromAdmissionAppId(-studentId).id() : studentId;
+        final Long resolvedStudentId = resolveStudentProfileId(studentId);
         StudentProfile student = studentProfileRepository.findById(resolvedStudentId)
                 .orElseThrow(() -> new EntityNotFoundException("Student profile not found with id: " + resolvedStudentId));
 
@@ -509,7 +514,7 @@ public class EnrollmentService {
                 );
             }
         } else {
-            resolvedStudentId = studentId;
+            resolvedStudentId = resolveStudentProfileId(studentId);
         }
 
         return studentEnrollmentRepository.findByStudentIdAndTermIdWithItems(resolvedStudentId, termId)

@@ -24,10 +24,14 @@ public class TokenService {
     private List<String> audiences;
 
     private final ProgramRepository programRepository;
+    private final com.sdt.web_app.repositories.enrollment.StudentProfileRepository studentProfileRepository;
 
-    public TokenService(JwtEncoder jwtEncoder, ProgramRepository programRepository) {
+    public TokenService(JwtEncoder jwtEncoder,
+                        ProgramRepository programRepository,
+                        com.sdt.web_app.repositories.enrollment.StudentProfileRepository studentProfileRepository) {
         this.jwtEncoder = jwtEncoder;
         this.programRepository = programRepository;
+        this.studentProfileRepository = studentProfileRepository;
     }
 
     public String generateAccessToken(User user) {
@@ -57,6 +61,13 @@ public class TokenService {
         }
         if (programId != null) {
             claimsBuilder.claim("program_id", programId);
+        }
+
+        if (studentProfileRepository != null && user.getId() != null) {
+            studentProfileRepository.findByUserId(user.getId()).ifPresent(sp -> {
+                claimsBuilder.claim("student_profile_id", sp.getId());
+                claimsBuilder.claim("student_number", sp.getStudentNumber());
+            });
         }
 
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claimsBuilder.build())).getTokenValue();

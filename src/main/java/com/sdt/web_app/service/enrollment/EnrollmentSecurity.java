@@ -138,10 +138,13 @@ public class EnrollmentSecurity {
             return false;
         }
 
-        boolean matches = profileOpt.get().getId().equals(studentId);
+        Long profileId = profileOpt.get().getId();
+        boolean matches = profileId.equals(studentId) || userId.equals(studentId);
         if (!matches) {
             log.warn("IDOR check failed: User ID {} (Student Profile ID {}) attempted to access Student Profile ID {}",
-                    userId, profileOpt.get().getId(), studentId);
+                    userId, profileId, studentId);
+        } else if (!profileId.equals(studentId) && userId.equals(studentId)) {
+            log.info("Student owner accessed enrollment security via User ID {} (Profile ID: {})", userId, profileId);
         }
         return matches;
     }

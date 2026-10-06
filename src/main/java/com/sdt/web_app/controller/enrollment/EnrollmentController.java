@@ -22,6 +22,8 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
     private final AdmissionService admissionService;
+    private final com.sdt.web_app.repositories.enrollment.StudentProfileRepository studentProfileRepository;
+    private final com.sdt.web_app.service.security.SecurityUtils securityUtils;
 
     @Auditable(action = "READ_APPROVED_ADMISSIONS", entityName = "AdmissionApplication")
     @GetMapping("/admissions/approved")
@@ -84,6 +86,21 @@ public class EnrollmentController {
             @PathVariable("studentId") Long studentId,
             @PathVariable("termId") Long termId) {
         return ResponseEntity.ok(enrollmentService.getEnrollment(studentId, termId));
+    }
+
+    @Auditable(action = "READ_MY_ENROLLMENT", entityName = "StudentEnrollment")
+    @GetMapping("/me/term/{termId}")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<StudentEnrollmentResponse> getMyEnrollment(
+            @PathVariable("termId") Long termId,
+            org.springframework.security.core.Authentication authentication) {
+        Long userId = securityUtils.resolveUserId(authentication);
+        if (userId == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Unable to resolve user identity.");
+        }
+        com.sdt.web_app.entities.enrollment.StudentProfile profile = studentProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Student profile not found for user: " + userId));
+        return ResponseEntity.ok(enrollmentService.getEnrollment(profile.getId(), termId));
     }
 
     // -------------------------------------------------------------------------
