@@ -298,6 +298,14 @@ public class CurriculumDesignerService {
         Curriculum curriculum = curriculumRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Curriculum not found with ID: " + id));
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (curriculum.getProgram() != null) {
+                academicScopeAssertionService.validateProgramMutation(scope, curriculum.getProgram().getId());
+            }
+        }
+
         if (curriculum.getStatus() == Curriculum.Status.ACTIVE || curriculum.getStatus() == Curriculum.Status.APPROVED) {
             throw new IllegalStateException("Cannot delete a curriculum that is ACTIVE or APPROVED. It must be ARCHIVED instead.");
         }
@@ -312,6 +320,14 @@ public class CurriculumDesignerService {
 
     public CurriculumSummaryResponse cloneCurriculumAsNewRevision(Long sourceCurriculumId, CloneCurriculumRequest request) {
         Curriculum source = getCurriculum(sourceCurriculumId);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser") && academicScopeAssertionService != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (source.getProgram() != null) {
+                academicScopeAssertionService.validateProgramMutation(scope, source.getProgram().getId());
+            }
+        }
 
         if (curriculumRepository.existsByCode(request.newCode())) {
             throw new IllegalArgumentException("Curriculum code already exists: " + request.newCode());

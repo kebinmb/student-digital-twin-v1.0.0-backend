@@ -35,7 +35,7 @@ public class StudentController {
 
     @Auditable(action = "READ_STUDENT", entityName = "Student", entityId = "#id")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'CASHIER', 'ACCOUNTANT') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
     public ResponseEntity<StudentProfileResponse> getStudentById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
     }
@@ -63,7 +63,7 @@ public class StudentController {
 
     @Auditable(action = "READ_CREDITED_COURSES", entityName = "Student", entityId = "#id")
     @GetMapping("/{id}/credited-courses")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #id)")
     public ResponseEntity<List<CourseEquivalencyDto>> getCreditedCourses(@PathVariable("id") Long id) {
         return ResponseEntity.ok(creditingService.getStudentCourseEquivalencies(id));
     }

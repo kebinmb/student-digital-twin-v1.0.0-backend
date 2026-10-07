@@ -19,7 +19,7 @@ public class AdminTelemetryController {
 
     @Auditable(action = "READ_ADMIN_TELEMETRY", entityName = "StudentTelemetry")
     @GetMapping("/students")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'GUIDANCE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'GUIDANCE', 'STUDENT_AFFAIRS')")
     public ResponseEntity<Page<StudentTelemetryAdminSummaryDto>> getAdminStudentTelemetry(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
@@ -34,7 +34,7 @@ public class AdminTelemetryController {
 
     @Auditable(action = "READ_ADMIN_TELEMETRY_KPI", entityName = "StudentTelemetry")
     @GetMapping("/kpi")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'GUIDANCE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'GUIDANCE', 'STUDENT_AFFAIRS')")
     public ResponseEntity<TelemetryKpiSummaryDto> getAdminTelemetryKpi(
             @RequestParam(name = "searchQuery", required = false) String searchQuery,
             @RequestParam(name = "riskLevel", required = false) String riskLevel,

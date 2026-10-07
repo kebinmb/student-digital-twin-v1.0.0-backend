@@ -3,9 +3,14 @@ package com.sdt.web_app.controller.analytics;
 import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.*;
 import com.sdt.web_app.dto.enrollment.EnrollmentDtos.StudentProfileResponse;
+import com.sdt.web_app.entities.enrollment.StudentProfile;
+import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
 import com.sdt.web_app.service.analytics.DigitalTwinRiskService;
 import com.sdt.web_app.service.enrollment.StudentService;
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
 import com.sdt.web_app.service.security.SecurityUtils;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +27,8 @@ public class DigitalTwinAnalyticsController {
     private final DigitalTwinRiskService riskService;
     private final StudentService studentService;
     private final SecurityUtils securityUtils;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
+    private final StudentProfileRepository studentProfileRepository;
 
     @Auditable(action = "READ_SELF_RISK_PROFILE", entityName = "DigitalTwinRiskProfile")
     @GetMapping("/risk/me")
@@ -37,21 +44,29 @@ public class DigitalTwinAnalyticsController {
 
     @Auditable(action = "READ_STUDENT_RISK_PROFILE", entityName = "DigitalTwinRiskProfile", entityId = "#studentId")
     @GetMapping("/risk/{studentId:[0-9]+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT')")
-    public ResponseEntity<DigitalTwinRiskProfileDto> getStudentRiskProfile(@PathVariable("studentId") Long studentId) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT_AFFAIRS', 'STUDENT')")
+    public ResponseEntity<DigitalTwinRiskProfileDto> getStudentRiskProfile(
+            @PathVariable("studentId") Long studentId,
+            Authentication authentication) {
+        if (authentication != null && academicScopeAssertionService != null && studentProfileRepository != null) {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(authentication);
+            StudentProfile student = studentProfileRepository.findById(studentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Student profile not found: " + studentId));
+            academicScopeAssertionService.validateStudentAccess(scope, student);
+        }
         return ResponseEntity.ok(riskService.evaluateStudentRiskProfile(studentId));
     }
 
     @Auditable(action = "READ_EARLY_WARNING_RADAR", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/radar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS')")
     public ResponseEntity<List<EarlyWarningRadarItemDto>> getEarlyWarningRadar() {
         return ResponseEntity.ok(riskService.getEarlyWarningRadar());
     }
 
     @Auditable(action = "READ_EARLY_WARNING_RADAR_SLICE", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/slice")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS')")
     public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<DigitalTwinRiskProfileDto>> getEarlyWarningRadarSlice(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,

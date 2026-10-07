@@ -40,6 +40,7 @@ public class DataScopingService {
 
         return roles.contains("ROLE_FACULTY")
                 && !roles.contains("ROLE_ADMIN")
+                && !roles.contains("ROLE_SUPER_ADMIN")
                 && !roles.contains("ROLE_REGISTRAR")
                 && !roles.contains("ROLE_DEAN")
                 && !roles.contains("ROLE_CHAIRPERSON");
@@ -54,8 +55,8 @@ public class DataScopingService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        // ADMIN, REGISTRAR, CASHIER, and ACCOUNTANT have unrestricted institutional-wide scope
-        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_REGISTRAR") || roles.contains("ROLE_CASHIER") || roles.contains("ROLE_ACCOUNTANT")) {
+        // ADMIN, SUPER_ADMIN, REGISTRAR, CASHIER, and ACCOUNTANT have unrestricted institutional-wide scope
+        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_SUPER_ADMIN") || roles.contains("ROLE_REGISTRAR") || roles.contains("ROLE_CASHIER") || roles.contains("ROLE_ACCOUNTANT")) {
             return Optional.empty();
         }
 

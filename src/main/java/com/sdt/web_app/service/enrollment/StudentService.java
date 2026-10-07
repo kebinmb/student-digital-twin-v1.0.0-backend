@@ -386,7 +386,7 @@ public class StudentService {
 
         // Also search Admission Applications for Incoming First Years
         boolean canSearchAdmissions = auth == null || auth.getAuthorities().stream().anyMatch(a ->
-                a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_REGISTRAR") || a.getAuthority().equals("ROLE_DEAN") || a.getAuthority().equals("ROLE_CHAIRPERSON"));
+                a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN") || a.getAuthority().equals("ROLE_REGISTRAR") || a.getAuthority().equals("ROLE_DEAN") || a.getAuthority().equals("ROLE_CHAIRPERSON"));
 
         if (canSearchAdmissions) {
             List<AdmissionApplication> matchingApps = admissionApplicationRepository.searchKeyword(cleanQuery);

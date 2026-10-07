@@ -633,4 +633,19 @@ class AcademicHierarchyScopingIntegrationTest extends BaseIntegrationTest {
         org.assertj.core.api.Assertions.assertThat(fp.getCollege().getId()).isEqualTo(collegeA.getId());
         org.assertj.core.api.Assertions.assertThat(fp.getProgram().getId()).isEqualTo(progA1.getId());
     }
+
+    @Test
+    @DisplayName("SUPER_ADMIN: Possesses unrestricted institutional scope and equal or greater access than ADMIN")
+    @WithMockUser(username = "super_admin_user", roles = {"SUPER_ADMIN"})
+    void superAdmin_UnrestrictedAccess_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/sections/" + sectionA1.getId() + "/roster"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/sections/" + sectionB1.getId() + "/roster"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/scheduling/sections/term/" + term.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+    }
 }

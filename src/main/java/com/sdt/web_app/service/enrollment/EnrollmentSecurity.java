@@ -26,16 +26,16 @@ public class EnrollmentSecurity {
     private final com.sdt.web_app.repositories.admission.AdmissionApplicationRepository admissionApplicationRepository;
 
     private static final Set<String> ADVISING_STAFF_ROLES = Set.of(
-            "ROLE_ADMIN", "ROLE_REGISTRAR", "ROLE_DEAN", "ROLE_CHAIRPERSON", "ROLE_FACULTY", "ROLE_CASHIER", "ROLE_ACCOUNTANT"
+            "ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_REGISTRAR", "ROLE_DEAN", "ROLE_CHAIRPERSON", "ROLE_FACULTY", "ROLE_CASHIER", "ROLE_ACCOUNTANT"
     );
 
     private static final Set<String> ENLISTMENT_STAFF_ROLES = Set.of(
-            "ROLE_ADMIN", "ROLE_REGISTRAR", "ROLE_DEAN", "ROLE_CHAIRPERSON"
+            "ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_REGISTRAR", "ROLE_DEAN", "ROLE_CHAIRPERSON"
     );
 
     /**
      * Verifies if the authenticated caller can view advising for the given student.
-     * Admin/Registrar/Cashier/Accountant can view any student; Dean/Chairperson/Faculty strictly scoped; students only view self.
+     * Admin/Super Admin/Registrar/Cashier/Accountant can view any student; Dean/Chairperson/Faculty strictly scoped; students only view self.
      */
     public boolean canAccessStudentAdvising(Authentication authentication, Long studentId) {
         if (authentication == null || studentId == null) {
@@ -46,7 +46,7 @@ public class EnrollmentSecurity {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_REGISTRAR") || authorities.contains("ROLE_CASHIER") || authorities.contains("ROLE_ACCOUNTANT")) {
+        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_SUPER_ADMIN") || authorities.contains("ROLE_REGISTRAR") || authorities.contains("ROLE_CASHIER") || authorities.contains("ROLE_ACCOUNTANT")) {
             return true;
         }
 
@@ -81,7 +81,7 @@ public class EnrollmentSecurity {
 
     /**
      * Verifies if the authenticated caller can perform enlistment, drop, confirmation, or view enrollment.
-     * Admin/Registrar can manage any student; Dean/Chairperson strictly scoped; students only manage self.
+     * Admin/Super Admin/Registrar can manage any student; Dean/Chairperson strictly scoped; students only manage self.
      */
     public boolean canAccessStudentEnrollment(Authentication authentication, Long studentId) {
         if (authentication == null || studentId == null) {
@@ -92,7 +92,7 @@ public class EnrollmentSecurity {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_REGISTRAR")) {
+        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_SUPER_ADMIN") || authorities.contains("ROLE_REGISTRAR")) {
             return true;
         }
 

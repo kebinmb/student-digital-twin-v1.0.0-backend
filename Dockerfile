@@ -5,7 +5,9 @@ WORKDIR /workspace
 # Copy Maven wrapper and dependencies specification
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN chmod +x mvnw
+
+# Strip Windows carriage returns (\r) and ensure executable permissions
+RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
 
 # Resolve dependencies in a cached layer
 RUN ./mvnw dependency:go-offline -B
@@ -18,12 +20,15 @@ RUN ./mvnw clean package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine AS runner
 WORKDIR /app
 
-# Run as non-root user for security
-RUN addgroup -S sdtgroup && adduser -S sdtuser -G sdtgroup
+# 1. Install wget so the docker-compose healthcheck passes
+# 2. Run as non-root user for security
+RUN apk --no-cache add wget && \
+    addgroup -S sdtgroup && adduser -S sdtuser -G sdtgroup
+
 USER sdtuser:sdtgroup
 
-# Copy compiled jar from builder stage
-COPY --from=builder --chown=sdtuser:sdtgroup /workspace/target/web-app-0.0.1-SNAPSHOT.jar app.jar
+# Copy compiled jar from builder stage (using wildcard to prevent SNAPSHOT version mismatch)
+COPY --from=builder --chown=sdtuser:sdtgroup /workspace/target/*.jar app.jar
 
 # Expose HTTP API port and Actuator management port
 EXPOSE 8080 8081

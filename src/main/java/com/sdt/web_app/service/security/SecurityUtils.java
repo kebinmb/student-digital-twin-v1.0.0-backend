@@ -71,6 +71,9 @@ public class SecurityUtils {
                 }
             }
             Long resolvedId = userRepository.findByUsername(name).map(User::getId).orElse(null);
+            if (resolvedId == null) {
+                resolvedId = (long) Math.abs(name.hashCode());
+            }
             if (attributes != null && resolvedId != null) {
                 attributes.setAttribute("SDT_CACHED_USER_ID_" + name, resolvedId, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
             }

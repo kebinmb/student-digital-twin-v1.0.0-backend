@@ -22,11 +22,26 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.Duration;
 import java.util.List;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class WebSecurityConfig {
+
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.withDefaultRolePrefix()
+                .role("SUPER_ADMIN").implies("ADMIN")
+                .role("ADMIN").implies("DEAN")
+                .role("ADMIN").implies("REGISTRAR")
+                .role("ADMIN").implies("CASHIER")
+                .role("ADMIN").implies("ACCOUNTANT")
+                .role("DEAN").implies("CHAIRPERSON")
+                .role("CHAIRPERSON").implies("FACULTY")
+                .build();
+    }
 
     @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://sdt-webapp}")
     private List<String> expectedAudiences;
