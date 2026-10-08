@@ -46,6 +46,7 @@ class QrAttendanceServiceTest {
     @Mock private StudentProfileL2CacheService studentProfileL2CacheService;
     @Mock private org.springframework.context.ApplicationEventPublisher eventPublisher;
     @Mock private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    @Mock private com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @InjectMocks
     private QrAttendanceService attendanceService;

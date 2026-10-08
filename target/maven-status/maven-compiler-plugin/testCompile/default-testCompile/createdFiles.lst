@@ -6,6 +6,7 @@ com\sdt\web_app\service\institution\HonorRollComputationServiceTest.class
 com\sdt\web_app\controller\institution\CertificateRevocationAuditControllerTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest.class
 com\sdt\web_app\service\push\VapidJwtServiceTest.class
+com\sdt\web_app\service\WebSocketBroadcastServiceTest.class
 com\sdt\web_app\service\financial\CashieringServiceTest.class
 com\sdt\web_app\service\push\WebPushPayloadEncryptionServiceTest.class
 com\sdt\web_app\service\webhook\InstitutionalWebhookServiceTest.class
@@ -38,6 +39,7 @@ com\sdt\web_app\service\compliance\StudentEquityProfileServiceTest.class
 com\sdt\web_app\service\institution\CurriculumDesignerServiceTest.class
 com\sdt\web_app\service\analytics\AdminTelemetryIntegrationTest.class
 com\sdt\web_app\SsrfProtectionTest.class
+com\sdt\web_app\service\compliance\ClearanceDataConsistencyTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest$CourseCatalogAndOutcomesTests.class
 com\sdt\web_app\controller\TestSecurityControllers.class
 com\sdt\web_app\service\PerformanceAndCachingOptimizationTest.class
@@ -60,6 +62,7 @@ com\sdt\web_app\controller\analytics\AttendanceControllerTest.class
 com\sdt\web_app\service\scheduling\SectionEventPublisherServiceTest.class
 com\sdt\web_app\service\security\DataScopingServiceTest.class
 com\sdt\web_app\controller\scheduling\SchedulingControllerStreamTest.class
+com\sdt\web_app\service\compliance\ClearanceBroadcastTest.class
 com\sdt\web_app\service\grade\GradeChangeServiceTest.class
 com\sdt\web_app\AuthenticationIntegrationTest$ProtectedEndpointTests.class
 com\sdt\web_app\service\security\AcademicHierarchyScopingIntegrationTest.class
@@ -82,4 +85,7 @@ com\sdt\web_app\service\institution\CurriculumMajorLinkingTest.class
 com\sdt\web_app\service\institution\HonorRollCertificateServiceTest.class
 com\sdt\web_app\service\grade\ClassRecordMatrixIntegrationTest.class
 com\sdt\web_app\service\analytics\StudentInterventionServiceTest.class
+com\sdt\web_app\controller\scheduling\SchedulingControllerSecurityTest.class
+com\sdt\web_app\service\enrollment\EnrollmentBroadcastTest.class
 com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.class
+com\sdt\web_app\service\compliance\ClearanceWebSocketDeliveryTest.class

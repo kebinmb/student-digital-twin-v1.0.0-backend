@@ -43,6 +43,7 @@ class GradeChangeServiceTest {
     @Mock private com.sdt.web_app.repositories.enrollment.EnrollmentCourseItemRepository itemRepository;
     @Mock private com.sdt.web_app.repositories.grade.GradeSealingAuditRepository sealingAuditRepository;
     @Mock private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
+    @Mock private com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @InjectMocks
     private GradeChangeService gradeChangeService;

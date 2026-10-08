@@ -54,6 +54,7 @@ public class FacultyProfileService {
     private final AcademicScopeAssertionService academicScopeAssertionService;
     private final DepartmentRepository departmentRepository;
     private final ProgramRepository programRepository;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @Transactional
     @CacheEvict(value = "facultyProfileByUser", allEntries = true)
@@ -168,6 +169,7 @@ public class FacultyProfileService {
         FacultyProfile savedProfile = profileRepository.save(profile);
         log.info("Provisioned new faculty account: {} ({}) for user ID {}",
                 savedProfile.getFacultyIdNumber(), savedUser.getUsername(), savedUser.getId());
+        broadcastFacultyProfile(savedProfile);
 
         return mapToProfileResponse(savedProfile);
     }
@@ -305,6 +307,7 @@ public class FacultyProfileService {
 
         FacultyProfile saved = profileRepository.save(profile);
         log.info("Updated faculty credentials for user ID {}", userId);
+        broadcastFacultyProfile(saved);
 
         return mapToProfileResponse(saved);
     }
@@ -417,5 +420,20 @@ public class FacultyProfileService {
                 programCode,
                 programName
         );
+    }
+
+    private void broadcastFacultyProfile(FacultyProfile fp) {
+        if (fp == null || broadcastService == null || fp.getUser() == null) return;
+        Long facultyUserId = fp.getUser().getId();
+        com.sdt.web_app.websocket.dto.FacultyWorkloadMessage msg = new com.sdt.web_app.websocket.dto.FacultyWorkloadMessage(
+                facultyUserId,
+                null,
+                0.0,
+                0,
+                null,
+                fp.getEmploymentStatus() != null ? fp.getEmploymentStatus().name() : "ACTIVE",
+                java.time.Instant.now()
+        );
+        broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.faculty(facultyUserId), msg);
     }
 }

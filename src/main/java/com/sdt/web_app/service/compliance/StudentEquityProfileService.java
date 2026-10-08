@@ -37,6 +37,7 @@ public class StudentEquityProfileService {
     private final StudentProfileL2CacheService studentProfileL2CacheService;
     private final AdmissionApplicationRepository admissionApplicationRepository;
     private final EquityTargetService equityTargetService;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @Transactional(readOnly = true)
     public StudentEquityProfileDto getEquityProfileByStudentProfileId(Long studentProfileId) {
@@ -127,6 +128,7 @@ public class StudentEquityProfileService {
 
         StudentEquityProfile saved = equityRepository.save(profile);
         log.info("Successfully updated equity profile for studentProfileId: {}", studentProfile.getId());
+        broadcastEquityProfile(saved);
         return mapToDto(saved);
     }
 
@@ -146,7 +148,30 @@ public class StudentEquityProfileService {
 
         StudentEquityProfile saved = equityRepository.save(profile);
         log.info("Verified equity profile ID {} status set to {} by user {}", profileId, request.getVerificationStatus(), verifierUserId);
+        broadcastEquityProfile(saved);
         return mapToDto(saved);
+    }
+
+    private void broadcastEquityProfile(StudentEquityProfile profile) {
+        if (profile == null || broadcastService == null || profile.getStudentProfile() == null) return;
+        Long studentId = profile.getStudentProfile().getId();
+        String classification = profile.getMonthlyHouseholdIncomeBracket() != null
+                ? profile.getMonthlyHouseholdIncomeBracket().name()
+                : "STANDARD";
+        String status = profile.getVerificationStatus() != null
+                ? profile.getVerificationStatus().name()
+                : "SELF_DECLARED";
+        String verifiedBy = profile.getVerifiedBy() != null ? profile.getVerifiedBy().getUsername() : null;
+
+        com.sdt.web_app.websocket.dto.EquityProfileMessage msg = new com.sdt.web_app.websocket.dto.EquityProfileMessage(
+                studentId,
+                classification,
+                status,
+                null,
+                verifiedBy,
+                java.time.Instant.now()
+        );
+        broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.equity(studentId), msg);
     }
 
     @Transactional(readOnly = true)

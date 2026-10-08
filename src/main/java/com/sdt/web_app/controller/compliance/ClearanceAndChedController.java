@@ -37,7 +37,7 @@ public class ClearanceAndChedController {
     }
 
     @Auditable(action = "READ_CLEARANCE_BY_STUDENT_AND_TERM", entityName = "ClearanceRequest")
-    @GetMapping("/clearance/requests/student/{studentIdentifier}/term/{termId}")
+    @GetMapping({"/clearance/requests/student/{studentIdentifier}/term/{termId}", "/clearance/student/{studentIdentifier}/term/{termId}"})
     public ResponseEntity<ClearanceRequestDto> getClearanceByStudentAndTerm(@PathVariable String studentIdentifier, @PathVariable Long termId) {
         ClearanceRequestDto result = clearanceWorkflowService.getClearanceByStudentAndTerm(studentIdentifier, termId);
         return ResponseEntity.ok(result);

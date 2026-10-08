@@ -59,6 +59,8 @@ class GradeServiceTest {
     private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
     @Mock
     private com.sdt.web_app.service.compliance.ClearanceWorkflowService clearanceWorkflowService;
+    @Mock
+    private com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @InjectMocks
     private GradeService gradeService;

@@ -48,6 +48,7 @@ public class QrAttendanceService {
     private final StudentProfileL2CacheService studentProfileL2CacheService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     public static String computeHmacToken(Long sessionId, long window, String secretKey) {
         try {
@@ -136,6 +137,22 @@ public class QrAttendanceService {
         // Record initial separate faculty/creator attendance when host launches session
         if (creatorUser != null) {
             recordInitialFacultyAttendance(saved, creatorUser, sessionLat, sessionLon);
+        }
+
+        if (broadcastService != null) {
+            Long classSecId = schedule.getSection() != null ? schedule.getSection().getId() : null;
+            if (classSecId != null) {
+                com.sdt.web_app.websocket.dto.AttendanceUpdateMessage msg = new com.sdt.web_app.websocket.dto.AttendanceUpdateMessage(
+                        null,
+                        classSecId,
+                        LocalDate.now(),
+                        "SESSION_STARTED",
+                        "Attendance session started: " + schedule.getId(),
+                        Instant.now()
+                );
+                broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.attendanceClass(classSecId), msg);
+                broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_ATTENDANCE, msg);
+            }
         }
 
         String qrDataUrl;
@@ -344,6 +361,24 @@ public class QrAttendanceService {
             );
         }
 
+        if (broadcastService != null) {
+            Long classSecId = session.getSchedule() != null && session.getSchedule().getSection() != null
+                    ? session.getSchedule().getSection().getId() : null;
+            com.sdt.web_app.websocket.dto.AttendanceUpdateMessage msg = new com.sdt.web_app.websocket.dto.AttendanceUpdateMessage(
+                    student.getId(),
+                    classSecId,
+                    LocalDate.now(),
+                    saved.getStatus().name(),
+                    "Attendance verified: " + sectionCode,
+                    Instant.now()
+            );
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.attendance(student.getId()), msg);
+            if (classSecId != null) {
+                broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.attendanceClass(classSecId), msg);
+            }
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_ATTENDANCE, msg);
+        }
+
         String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
         AttendanceRecordResponse response = new AttendanceRecordResponse(
                 saved.getId(),
@@ -522,6 +557,23 @@ public class QrAttendanceService {
 
         FacultyAttendanceRecord saved = facultyAttendanceRecordRepository.save(record);
         log.info("Faculty/Host geofenced attendance verified for user {} in session #{}", creatorUser.getUsername(), session.getId());
+
+        if (broadcastService != null) {
+            Long classSecId = session.getSchedule() != null && session.getSchedule().getSection() != null
+                    ? session.getSchedule().getSection().getId() : null;
+            com.sdt.web_app.websocket.dto.AttendanceUpdateMessage msg = new com.sdt.web_app.websocket.dto.AttendanceUpdateMessage(
+                    null,
+                    classSecId,
+                    LocalDate.now(),
+                    saved.getStatus().name(),
+                    "Faculty verified: " + creatorUser.getUsername(),
+                    Instant.now()
+            );
+            if (classSecId != null) {
+                broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.attendanceClass(classSecId), msg);
+            }
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_ATTENDANCE, msg);
+        }
 
         String sectionCode = session.getSchedule() != null && session.getSchedule().getSection() != null
                 ? session.getSchedule().getSection().getSectionCode() : "N/A";

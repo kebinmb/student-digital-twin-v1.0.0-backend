@@ -27,6 +27,7 @@ public class CampusNoticeService {
     private final CampusNoticeRepository noticeRepository;
     private final NoticeAcknowledgmentRepository acknowledgmentRepository;
     private final UserRepository userRepository;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a").withZone(ZoneId.of("Asia/Manila"));
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.of("Asia/Manila"));
@@ -87,6 +88,19 @@ public class CampusNoticeService {
 
         CampusNotice saved = noticeRepository.save(notice);
         log.info("Created campus notice id={} by author={}", saved.getId(), authorUserId);
+        if (broadcastService != null) {
+            broadcastService.broadcast(
+                    com.sdt.web_app.config.WebSocketTopics.NOTIFICATIONS,
+                    new com.sdt.web_app.websocket.dto.NotificationMessage(
+                            saved.getId(),
+                            saved.getTitle(),
+                            saved.getContent(),
+                            saved.getPriority(),
+                            saved.getAudience(),
+                            saved.getPublishAt() != null ? saved.getPublishAt() : Instant.now()
+                    )
+            );
+        }
         return mapToDto(saved, false);
     }
 

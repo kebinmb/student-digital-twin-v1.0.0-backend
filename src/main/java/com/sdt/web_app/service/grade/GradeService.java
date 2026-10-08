@@ -33,6 +33,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import java.time.Instant;
+import com.sdt.web_app.config.WebSocketBroadcastService;
+import com.sdt.web_app.config.WebSocketTopics;
+import com.sdt.web_app.websocket.dto.GradeUpdateMessage;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -48,6 +53,7 @@ public class GradeService {
     private final com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
     private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
     private final com.sdt.web_app.service.compliance.ClearanceWorkflowService clearanceWorkflowService;
+    private final WebSocketBroadcastService broadcastService;
 
     @Transactional(readOnly = true)
     public SectionRosterResponse getSectionRoster(Long sectionId) {
@@ -167,6 +173,20 @@ public class GradeService {
                 item.updateGrade(entry.finalNumericalGrade(), status);
                 itemRepository.save(item);
                 updatedCount++;
+
+                if (broadcastService != null && item.getEnrollment() != null && item.getEnrollment().getStudent() != null) {
+                    Long studentId = item.getEnrollment().getStudent().getId();
+                    broadcastService.broadcast(WebSocketTopics.grades(studentId), new GradeUpdateMessage(
+                            studentId,
+                            section.getId(),
+                            section.getCourse() != null ? section.getCourse().getCode() : "",
+                            null,
+                            entry.finalNumericalGrade() != null ? entry.finalNumericalGrade().doubleValue() : null,
+                            entry.finalNumericalGrade() != null ? entry.finalNumericalGrade().doubleValue() : null,
+                            status.name(),
+                            Instant.now()
+                    ));
+                }
             }
         }
 
@@ -192,6 +212,18 @@ public class GradeService {
                         section.getSectionCode(),
                         "SUBMITTED"
                 );
+            }
+            if (broadcastService != null) {
+                broadcastService.broadcast(WebSocketTopics.ADMIN_GRADES, new GradeUpdateMessage(
+                        null,
+                        section.getId(),
+                        section.getCourse() != null ? section.getCourse().getCode() : "",
+                        null,
+                        null,
+                        null,
+                        "SUBMITTED",
+                        Instant.now()
+                ));
             }
             log.info("Section {} grades submitted for verification by user {}", section.getSectionCode(), actorUserId);
             return new GradeActionResponse(
@@ -240,6 +272,18 @@ public class GradeService {
                     "VERIFIED"
             );
         }
+        if (broadcastService != null) {
+            broadcastService.broadcast(WebSocketTopics.ADMIN_GRADES, new GradeUpdateMessage(
+                    null,
+                    section.getId(),
+                    section.getCourse() != null ? section.getCourse().getCode() : "",
+                    null,
+                    null,
+                    null,
+                    "VERIFIED",
+                    Instant.now()
+            ));
+        }
         log.info("Section {} grades verified by user {}", section.getSectionCode(), approverUserId);
 
         return new GradeActionResponse(
@@ -275,6 +319,18 @@ public class GradeService {
                     section.getSectionCode(),
                     "DRAFT"
             );
+        }
+        if (broadcastService != null) {
+            broadcastService.broadcast(WebSocketTopics.ADMIN_GRADES, new GradeUpdateMessage(
+                    null,
+                    section.getId(),
+                    section.getCourse() != null ? section.getCourse().getCode() : "",
+                    null,
+                    null,
+                    null,
+                    "DRAFT",
+                    Instant.now()
+            ));
         }
         log.warn("Section {} grades rejected and returned to DRAFT by user {}. Reason: {}", section.getSectionCode(), approverUserId, reason);
 
@@ -341,8 +397,28 @@ public class GradeService {
                             "SEALED"
                     );
                 }
+                broadcastService.broadcast(WebSocketTopics.grades(sp.getId()), new GradeUpdateMessage(
+                        sp.getId(),
+                        section.getId(),
+                        section.getCourse() != null ? section.getCourse().getCode() : "",
+                        null,
+                        item.getFinalNumericalGrade().doubleValue(),
+                        item.getFinalNumericalGrade().doubleValue(),
+                        "SEALED",
+                        Instant.now()
+                ));
             }
         }
+        broadcastService.broadcast(WebSocketTopics.ADMIN_GRADES, new GradeUpdateMessage(
+                null,
+                section.getId(),
+                section.getCourse() != null ? section.getCourse().getCode() : "",
+                null,
+                null,
+                null,
+                "SEALED",
+                Instant.now()
+        ));
 
         // Recalculate units and GPA for each affected student
         for (StudentProfile sp : affectedStudents) {

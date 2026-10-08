@@ -103,6 +103,7 @@ com\sdt\web_app\dto\authentication\AuthDtos.class
 com\sdt\web_app\repositories\compliance\GraduationApplicationRepository.class
 com\sdt\web_app\dto\admission\AdmissionDtos$UpdateAdmissionStatusRequest.class
 com\sdt\web_app\dto\authentication\AuthDtos$AuthResponse.class
+com\sdt\web_app\controller\institution\TermWebSocketController.class
 com\sdt\web_app\dto\compliance\ComplianceDtos$ProcessSignoffRequest.class
 com\sdt\web_app\repositories\institution\MajorRepository.class
 com\sdt\web_app\dto\institution\CurriculumDtos$CurriculumResponse.class
@@ -178,6 +179,7 @@ com\sdt\web_app\entities\lms\LtiOidcState$LtiOidcStateBuilder.class
 com\sdt\web_app\entities\analytics\AttendanceRecord$Status.class
 com\sdt\web_app\repositories\institution\TermRepository.class
 com\sdt\web_app\dto\institution\CourseDtos.class
+com\sdt\web_app\config\WebSocketConfig.class
 com\sdt\web_app\entities\grade\GradeSealingAudit.class
 com\sdt\web_app\service\lms\LmsRosterSyncService.class
 com\sdt\web_app\dto\authentication\UserDtos.class
@@ -186,6 +188,7 @@ com\sdt\web_app\dto\scheduling\SchedulingDtos$CreateSectionRequest.class
 com\sdt\web_app\dto\notice\NoticeDtos$UpdateNoticeRequest.class
 com\sdt\web_app\dto\institution\CiloPiloMappingDtos$CiloPiloMappingResponse.class
 com\sdt\web_app\repositories\grade\GradeSealingAuditRepository.class
+com\sdt\web_app\websocket\dto\ClassScheduleMessage.class
 com\sdt\web_app\dto\compliance\ComplianceDtos$ChedFormE2ProgramDto.class
 com\sdt\web_app\entities\institution\AcademicYear.class
 com\sdt\web_app\service\enrollment\StudentService.class
@@ -197,10 +200,12 @@ com\sdt\web_app\dto\faculty\FacultyDtos$CreateFacultyAccountRequest.class
 com\sdt\web_app\entities\financial\FundCluster$FundClusterBuilder.class
 com\sdt\web_app\specifications\ClassSectionSpecifications.class
 com\sdt\web_app\controller\institution\CoursePrerequisiteController.class
+com\sdt\web_app\websocket\dto\ActiveTermMessage.class
 com\sdt\web_app\service\institution\HonorRollComputationService$HonorStudentCandidate.class
 com\sdt\web_app\dto\admission\AdmissionDtos$AdmissionConfigDto.class
 com\sdt\web_app\dto\admission\AdmissionDtos$QueueTokenResponse.class
 com\sdt\web_app\entities\grade\SectionGradingCategory.class
+com\sdt\web_app\websocket\dto\AttendanceUpdateMessage.class
 com\sdt\web_app\entities\institution\CoursePrerequisite.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$CloneCurriculumRequest.class
 com\sdt\web_app\entities\admission\EntranceExamSlot$SlotStatus.class
@@ -217,6 +222,7 @@ com\sdt\web_app\specifications\ProgramSpecifications.class
 com\sdt\web_app\service\institution\GradeTransmutationService.class
 com\sdt\web_app\entities\financial\StudentAssessmentInvoice$InvoiceStatusConverter.class
 com\sdt\web_app\entities\grade\SectionGradingConfig$SectionGradingConfigBuilder.class
+com\sdt\web_app\websocket\dto\ClearanceStatusMessage$DepartmentClearanceItem.class
 com\sdt\web_app\entities\institution\ScholarshipDiscount.class
 com\sdt\web_app\dto\institution\FinancialDtos$FeeCategoryResponse.class
 com\sdt\web_app\dto\financial\FinancialDtos$StudentAccountLedgerDto.class
@@ -224,6 +230,7 @@ com\sdt\web_app\entities\analytics\StudentRiskScore$RiskLevel.class
 com\sdt\web_app\repositories\authentication\RefreshTokenRepository.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$CreateRoomRequest.class
 com\sdt\web_app\dto\compliance\EquityDtos$EquityStatisticsSummaryDto.class
+com\sdt\web_app\websocket\dto\FacultyWorkloadMessage.class
 com\sdt\web_app\service\lms\StudentPortalService.class
 com\sdt\web_app\controller\admission\PublicAdmissionController.class
 com\sdt\web_app\dto\institution\CurriculumCourseDtos$AssignCourseToCurriculumRequest.class
@@ -301,6 +308,7 @@ com\sdt\web_app\entities\audit\AuditLog.class
 com\sdt\web_app\repositories\institution\CurriculumCourseRepository.class
 com\sdt\web_app\entities\institution\InstitutionalOutcome.class
 com\sdt\web_app\dto\compliance\EquityDtos$StudentEquityProfileDto.class
+com\sdt\web_app\config\WebSocketTopics.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$CreateStudentRequest.class
 com\sdt\web_app\exceptions\UserAlreadyExistsException.class
 com\sdt\web_app\entities\faculty\FacultyProfile$HighestDegree.class
@@ -353,6 +361,7 @@ com\sdt\web_app\dto\enrollment\EnrollmentDtos.class
 com\sdt\web_app\repositories\institution\FeeCategoryRepository.class
 com\sdt\web_app\dto\grade\ClassRecordDtos.class
 com\sdt\web_app\dto\institution\FinancialDtos$UpdateScholarshipDiscountRequest.class
+com\sdt\web_app\websocket\dto\GradeUpdateMessage.class
 com\sdt\web_app\entities\financial\CashierReceipt$ReceiptStatus.class
 com\sdt\web_app\service\admission\AdmissionQueueService.class
 com\sdt\web_app\service\admission\AdmissionQueueService$QueueStatus.class
@@ -372,6 +381,7 @@ com\sdt\web_app\dto\institution\TermDtos$TermResponse.class
 com\sdt\web_app\entities\authentication\PasswordResetToken.class
 com\sdt\web_app\service\security\DataScopingService.class
 com\sdt\web_app\entities\grade\StudentAssessmentScore.class
+com\sdt\web_app\websocket\dto\PerformanceSummaryMessage.class
 com\sdt\web_app\repositories\enrollment\EnrollmentCourseItemRepository.class
 com\sdt\web_app\dto\institution\CampusDtos$UpdateCampusRequest.class
 com\sdt\web_app\service\analytics\DigitalTwinRiskService.class
@@ -400,6 +410,7 @@ com\sdt\web_app\dto\push\PushDtos$UnsubscribeRequest.class
 com\sdt\web_app\entities\financial\OrBooklet$BookletStatus.class
 com\sdt\web_app\entities\enrollment\StudentEnrollment$Status.class
 com\sdt\web_app\service\institution\MajorService.class
+com\sdt\web_app\websocket\dto\StudentProfileMessage.class
 com\sdt\web_app\controller\institution\CertificateRevocationAuditController.class
 com\sdt\web_app\dto\analytics\AnalyticsDtos$EarlyWarningRadarItemDto.class
 com\sdt\web_app\service\financial\UnifastBillingService.class
@@ -441,6 +452,7 @@ com\sdt\web_app\repositories\admission\AdmissionConfigRepository.class
 com\sdt\web_app\dto\compliance\EquityDtos.class
 com\sdt\web_app\dto\institution\CampusDtos$CampusResponse.class
 com\sdt\web_app\repositories\financial\VoidedOfficialReceiptRepository.class
+com\sdt\web_app\config\WebSocketSecurityConfig.class
 com\sdt\web_app\controller\institution\AcademicYearController.class
 com\sdt\web_app\entities\financial\UnifastFheClaimItem$UnifastFheClaimItemBuilder.class
 com\sdt\web_app\dto\lms\LmsDtos$LmsRosterSyncResponse.class
@@ -457,6 +469,7 @@ com\sdt\web_app\service\lms\Lti13AdvantageService.class
 com\sdt\web_app\dto\institution\GradingScaleDtos.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$EnlistSectionRequest.class
 com\sdt\web_app\dto\push\PushDtos.class
+com\sdt\web_app\websocket\dto\NotificationMessage.class
 com\sdt\web_app\exceptions\InvalidTokenException.class
 com\sdt\web_app\repositories\enrollment\StudentProfileRepository.class
 com\sdt\web_app\dto\institution\CiloPiloMappingDtos$UpdateCiloPiloMappingRequest.class
@@ -484,6 +497,7 @@ com\sdt\web_app\entities\institution\Major$MajorBuilder.class
 com\sdt\web_app\repositories\institution\DepartmentRepository.class
 com\sdt\web_app\service\authentication\PasswordResetService.class
 com\sdt\web_app\config\SsrfProtectingClientInterceptor$SsrfInterceptor.class
+com\sdt\web_app\controller\compliance\ClearanceWebSocketController.class
 com\sdt\web_app\service\scheduling\SectionEventPublisherService.class
 com\sdt\web_app\entities\institution\CiloPiloMapping.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$PrerequisiteDetailDto.class
@@ -513,6 +527,7 @@ com\sdt\web_app\entities\financial\UnifastFheClaim$ClaimStatus.class
 com\sdt\web_app\dto\admission\AdmissionDtos$EntranceExamSlotResponse.class
 com\sdt\web_app\entities\institution\FeeCategoryCode.class
 com\sdt\web_app\entities\scheduling\ClassSection$Status.class
+com\sdt\web_app\controller\enrollment\StudentWebSocketController.class
 com\sdt\web_app\dto\webhook\WebhookDtos$CreateWebhookRequest.class
 com\sdt\web_app\controller\institution\GradingScaleController.class
 com\sdt\web_app\entities\enrollment\StudentCourseGrade$StudentCourseGradeBuilder.class
@@ -571,6 +586,7 @@ com\sdt\web_app\config\JwtRoleConverter.class
 com\sdt\web_app\entities\analytics\AttendanceSession.class
 com\sdt\web_app\entities\enrollment\StudentProfile$StudentProfileBuilder.class
 com\sdt\web_app\entities\grade\SectionGradingCategory$TermPeriod.class
+com\sdt\web_app\controller\grade\GradeWebSocketController.class
 com\sdt\web_app\controller\lms\LmsSyncController.class
 com\sdt\web_app\dto\grade\ClassRecordDtos$ClassRecordItemDto.class
 com\sdt\web_app\repositories\financial\UnifastFheClaimRepository.class
@@ -582,9 +598,11 @@ com\sdt\web_app\service\institution\PrerequisiteEvaluationService.class
 com\sdt\web_app\service\institution\TermService.class
 com\sdt\web_app\entities\enrollment\StudentProfile.class
 com\sdt\web_app\entities\financial\StudentAssessmentInvoice$InvoiceStatus.class
+com\sdt\web_app\controller\analytics\AttendanceWebSocketController.class
 com\sdt\web_app\dto\institution\FinancialDtos.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$AssignedSectionDto.class
 com\sdt\web_app\dto\authentication\AuthDtos$ResetPasswordRequest.class
+com\sdt\web_app\config\WebSocketBroadcastService.class
 com\sdt\web_app\entities\webhook\InstitutionalWebhookDelivery$DeliveryStatus.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$EnrollmentItemResponse.class
 com\sdt\web_app\controller\analytics\FacultyTelemetryController.class
@@ -631,6 +649,7 @@ com\sdt\web_app\controller\compliance\StudentEquityProfileController.class
 com\sdt\web_app\controller\grade\GradeController.class
 com\sdt\web_app\entities\scheduling\Room.class
 com\sdt\web_app\entities\institution\Term$TermBuilder.class
+com\sdt\web_app\websocket\dto\EquityProfileMessage.class
 com\sdt\web_app\repositories\notice\CampusNoticeRepository.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$ConfirmEnrollmentRequest.class
 com\sdt\web_app\dto\financial\FinancialDtos$DisallowClaimItemRequest.class
@@ -656,6 +675,7 @@ com\sdt\web_app\entities\faculty\FacultyProfile.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$UpdateFacultyLoadLimitRequest.class
 com\sdt\web_app\dto\institution\CurriculumDesignerDtos$DiagnosticMessage.class
 com\sdt\web_app\entities\compliance\GraduationApplication$GraduationApplicationBuilder.class
+com\sdt\web_app\websocket\dto\ClearanceStatusMessage.class
 com\sdt\web_app\dto\compliance\ComplianceDtos.class
 com\sdt\web_app\entities\admission\AdmissionApplication$ApplicationStatus.class
 com\sdt\web_app\repositories\analytics\StudentRiskScoreRepository.class
@@ -674,6 +694,7 @@ com\sdt\web_app\entities\webhook\InstitutionalWebhook.class
 com\sdt\web_app\repositories\grade\SectionGradingCategoryRepository.class
 com\sdt\web_app\entities\grade\ClassRecordItem.class
 com\sdt\web_app\service\analytics\StudentInterventionService.class
+com\sdt\web_app\config\WebSocketSecurityConfig$1.class
 com\sdt\web_app\entities\institution\ScholarshipDiscount$ScholarshipDiscountBuilder.class
 com\sdt\web_app\config\GrpcAuthInterceptor$2.class
 com\sdt\web_app\repositories\compliance\StudentEquityProfileRepository.class
@@ -684,6 +705,7 @@ com\sdt\web_app\dto\institution\FinancialDtos$CreateFeeCategoryRequest.class
 com\sdt\web_app\config\RateLimitingFilter.class
 com\sdt\web_app\dto\institution\CurriculumCourseDtos.class
 com\sdt\web_app\entities\authentication\User$UserBuilder.class
+com\sdt\web_app\websocket\dto\EnrollmentStatusMessage.class
 com\sdt\web_app\entities\enrollment\CourseEquivalency.class
 com\sdt\web_app\entities\institution\Term.class
 com\sdt\web_app\dto\admission\AdmissionDtos$CreateExamSlotRequest.class

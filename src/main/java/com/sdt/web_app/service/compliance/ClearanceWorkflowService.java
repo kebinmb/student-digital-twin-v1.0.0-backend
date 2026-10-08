@@ -20,10 +20,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.sdt.web_app.config.WebSocketBroadcastService;
+import com.sdt.web_app.config.WebSocketTopics;
+import com.sdt.web_app.websocket.dto.ClearanceStatusMessage;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +40,7 @@ public class ClearanceWorkflowService {
     private final com.sdt.web_app.service.institution.TermService termService;
     private final UserRepository userRepository;
     private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    private final WebSocketBroadcastService broadcastService;
 
     private static final List<String> REQUIRED_DEPARTMENTS = List.of(
             "LIBRARY", "ACCOUNTING", "LABORATORY", "STUDENT_AFFAIRS", "DEAN"
@@ -69,6 +74,11 @@ public class ClearanceWorkflowService {
         }
 
         ClearanceRequest saved = clearanceRequestRepository.save(clearanceRequest);
+        if (student != null) {
+            ClearanceStatusMessage msg = buildClearanceMessage(saved);
+            broadcastService.broadcast(WebSocketTopics.clearance(student.getId()), msg);
+            broadcastService.broadcast(WebSocketTopics.ADMIN_CLEARANCE, msg);
+        }
         return mapToRequestDto(saved);
     }
 
@@ -143,6 +153,12 @@ public class ClearanceWorkflowService {
             );
         }
 
+        if (profile != null) {
+            ClearanceStatusMessage msg = buildClearanceMessage(clearanceRequest);
+            broadcastService.broadcast(WebSocketTopics.clearance(profile.getId()), msg);
+            broadcastService.broadcast(WebSocketTopics.ADMIN_CLEARANCE, msg);
+        }
+
         return mapToSignoffDto(updated);
     }
 
@@ -185,6 +201,10 @@ public class ClearanceWorkflowService {
                                     signoff.getRemarks()
                             );
                         }
+
+                        ClearanceStatusMessage msg = buildClearanceMessage(clearanceRequest);
+                        broadcastService.broadcast(WebSocketTopics.clearance(studentProfileId), msg);
+                        broadcastService.broadcast(WebSocketTopics.ADMIN_CLEARANCE, msg);
                         break;
                     }
                 }
@@ -372,5 +392,54 @@ public class ClearanceWorkflowService {
                         currentDepartment, requiredDept));
             }
         }
+    }
+
+    public ClearanceStatusMessage buildClearanceMessage(ClearanceRequest entity) {
+        if (entity == null) {
+            return new ClearanceStatusMessage(null, null, "UNKNOWN", List.of());
+        }
+        Long studentId = entity.getStudentProfile() != null ? entity.getStudentProfile().getId() : null;
+        Long termId = entity.getTerm() != null ? entity.getTerm().getId() : null;
+        List<ClearanceStatusMessage.DepartmentClearanceItem> items = entity.getSignoffs() != null
+                ? entity.getSignoffs().stream()
+                        .map(s -> new ClearanceStatusMessage.DepartmentClearanceItem(
+                                s.getId(),
+                                s.getDepartmentType(),
+                                s.getSignoffStatus(),
+                                s.getRemarks(),
+                                s.getSignedByUser() != null ? s.getSignedByUser().getUsername() : null,
+                                s.getSignedAt()
+                        ))
+                        .toList()
+                : List.of();
+        return new ClearanceStatusMessage(studentId, termId, entity.getOverallStatus(), items);
+    }
+
+    @Transactional(readOnly = true)
+    public void broadcastClearanceUpdate(Long studentId, Long termId) {
+        if (studentId == null || termId == null) return;
+        clearanceRequestRepository.findByStudentProfileIdAndTermId(studentId, termId).ifPresent(cr -> {
+            ClearanceStatusMessage msg = buildClearanceMessage(cr);
+            broadcastService.broadcast(WebSocketTopics.clearance(studentId), msg);
+            broadcastService.broadcast(WebSocketTopics.ADMIN_CLEARANCE, msg);
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public ClearanceStatusMessage getClearanceAsMessage(Long studentId, Long termId) {
+        if (studentId == null || termId == null) {
+            return new ClearanceStatusMessage(studentId, termId, "UNKNOWN", List.of());
+        }
+        return clearanceRequestRepository.findByStudentProfileIdAndTermId(studentId, termId)
+                .map(this::buildClearanceMessage)
+                .orElseGet(() -> new ClearanceStatusMessage(
+                        studentId,
+                        termId,
+                        "NOT_INITIATED",
+                        REQUIRED_DEPARTMENTS.stream()
+                                .map(dept -> new ClearanceStatusMessage.DepartmentClearanceItem(
+                                        null, dept, "PENDING", "No active clearance request", null, null))
+                                .toList()
+                ));
     }
 }

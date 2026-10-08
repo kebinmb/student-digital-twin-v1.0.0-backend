@@ -57,6 +57,7 @@ public class DigitalTwinRiskService {
     private final ClassSectionRepository classSectionRepository;
     private final EnrollmentCourseItemRepository enrollmentCourseItemRepository;
     private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @Transactional
     public DigitalTwinRiskProfileDto evaluateStudentRiskProfile(Long studentId) {
@@ -259,6 +260,19 @@ public class DigitalTwinRiskService {
 
         StudentRiskScore saved = riskScoreRepository.save(riskEntity);
         log.info("Digital Twin ML Risk evaluated for student {}. Level: {}, Dropout Prob: {}", student.getStudentNumber(), level, dropoutProb);
+
+        if (broadcastService != null) {
+            com.sdt.web_app.websocket.dto.PerformanceSummaryMessage perfMsg = new com.sdt.web_app.websocket.dto.PerformanceSummaryMessage(
+                    student.getId(),
+                    null,
+                    student.getCumulativeGpa() != null ? student.getCumulativeGpa().doubleValue() : null,
+                    student.getEnrollmentStatus() != null ? student.getEnrollmentStatus().name() : null,
+                    level.name(),
+                    Instant.now()
+            );
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.performance(student.getId()), perfMsg);
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_TELEMETRY, perfMsg);
+        }
 
         // Auto-dispatch early warning intervention for HIGH or CRITICAL risk if not already actively open
         if (level == StudentRiskScore.RiskLevel.HIGH || level == StudentRiskScore.RiskLevel.CRITICAL) {

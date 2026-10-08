@@ -55,6 +55,9 @@ class StudentEquityProfileServiceTest {
     @Mock
     private EquityTargetService equityTargetService;
 
+    @Mock
+    private com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
+
     @InjectMocks
     private StudentEquityProfileService equityProfileService;
 

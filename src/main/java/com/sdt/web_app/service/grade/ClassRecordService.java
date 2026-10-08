@@ -27,7 +27,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.function.Function;
+import java.time.Instant;
 import java.util.stream.Collectors;
+import com.sdt.web_app.config.WebSocketBroadcastService;
+import com.sdt.web_app.config.WebSocketTopics;
+import com.sdt.web_app.websocket.dto.GradeUpdateMessage;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,7 @@ public class ClassRecordService {
     private final EnrollmentCourseItemRepository enrollmentItemRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final GradeTransmutationService transmutationService;
+    private final WebSocketBroadcastService broadcastService;
 
     @Transactional
     public SectionGradingConfigResponse getGradingConfig(Long sectionId) {
@@ -428,6 +433,34 @@ public class ClassRecordService {
         }
         if (!itemsToUpdate.isEmpty()) {
             enrollmentItemRepository.saveAll(itemsToUpdate);
+            for (EnrollmentCourseItem item : itemsToUpdate) {
+                if (item.getEnrollment() != null && item.getEnrollment().getStudent() != null) {
+                    Long studentProfileId = item.getEnrollment().getStudent().getId();
+                    String courseCode = section.getCourse() != null ? section.getCourse().getCode() : "";
+                    Double gradeVal = item.getFinalNumericalGrade() != null ? item.getFinalNumericalGrade().doubleValue() : null;
+                    GradeUpdateMessage msg = new GradeUpdateMessage(
+                            studentProfileId,
+                            sectionId,
+                            courseCode,
+                            null,
+                            gradeVal,
+                            gradeVal,
+                            item.getCompletionStatus() != null ? item.getCompletionStatus().name() : "",
+                            Instant.now()
+                    );
+                    broadcastService.broadcast(WebSocketTopics.grades(studentProfileId), msg);
+                }
+            }
+            broadcastService.broadcast(WebSocketTopics.ADMIN_GRADES, new GradeUpdateMessage(
+                    null,
+                    sectionId,
+                    section.getCourse() != null ? section.getCourse().getCode() : "",
+                    null,
+                    null,
+                    null,
+                    "UPDATED",
+                    Instant.now()
+            ));
         }
 
         log.info("Synced transmuted grades to EnrollmentCourseItems for section {} by user {}", sectionId, actorUserId);

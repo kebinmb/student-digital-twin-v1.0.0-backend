@@ -126,7 +126,7 @@ public class SchedulingController {
     // -------------------------------------------------------------------------
     @Auditable(action = "READ_FACULTY_WORKLOAD", entityName = "FacultyLoadSummary", entityId = "#facultyId")
     @GetMapping("/faculty-workload/term/{termId}/faculty/{facultyId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY')")
     public ResponseEntity<FacultyLoadSummaryResponse> getFacultyWorkload(
             @PathVariable("termId") Long termId,
             @PathVariable("facultyId") Long facultyId) {

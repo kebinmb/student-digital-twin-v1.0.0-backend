@@ -49,6 +49,7 @@ public class StudentService {
     private final PasswordEncoder passwordEncoder;
     private final AcademicScopeAssertionService academicScopeAssertionService;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @Transactional
     public StudentProfileResponse createStudent(CreateStudentRequest request) {
@@ -152,7 +153,7 @@ public class StudentService {
             copyEquityProfileIfPresent(app, savedProfile);
         }
         log.info("Registered new student: {} ({}) under curriculum {}", savedProfile.getStudentNumber(), classification, curriculum.getCode());
-
+        broadcastStudentProfile(savedProfile);
         return mapToProfileResponse(savedProfile);
     }
 
@@ -231,6 +232,7 @@ public class StudentService {
         copyEquityProfileIfPresent(app, savedProfile);
 
         log.info("Auto-provisioned student profile {} for incoming first year admission application {}", savedProfile.getStudentNumber(), app.getApplicationNumber());
+        broadcastStudentProfile(savedProfile);
         return mapToProfileResponse(savedProfile);
     }
 
@@ -467,7 +469,42 @@ public class StudentService {
         StudentProfile saved = studentProfileRepository.save(student);
         log.info("Updated clearance for student {}: financial={}, departmental={}",
                 saved.getStudentNumber(), saved.getFinancialClearance(), saved.getDepartmentalClearance());
+        broadcastStudentProfile(saved);
         return mapToProfileResponse(saved);
+    }
+
+    public void broadcastStudentProfile(StudentProfile sp) {
+        if (sp == null || broadcastService == null) return;
+        com.sdt.web_app.websocket.dto.StudentProfileMessage msg = new com.sdt.web_app.websocket.dto.StudentProfileMessage(
+                sp.getId(),
+                sp.getUser() != null ? sp.getUser().getId() : null,
+                sp.getStudentNumber(),
+                sp.getFirstName(),
+                sp.getLastName(),
+                sp.getUser() != null ? sp.getUser().getEmail() : null,
+                sp.getEnrollmentStatus() != null ? sp.getEnrollmentStatus().name() : "REGULAR",
+                null,
+                java.time.Instant.now()
+        );
+        broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.student(sp.getId()), msg);
+        broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_STUDENTS, msg);
+    }
+
+    @Transactional(readOnly = true)
+    public com.sdt.web_app.websocket.dto.StudentProfileMessage getStudentAsMessage(Long id) {
+        return studentProfileRepository.findById(id)
+                .map(sp -> new com.sdt.web_app.websocket.dto.StudentProfileMessage(
+                        sp.getId(),
+                        sp.getUser() != null ? sp.getUser().getId() : null,
+                        sp.getStudentNumber(),
+                        sp.getFirstName(),
+                        sp.getLastName(),
+                        sp.getUser() != null ? sp.getUser().getEmail() : null,
+                        sp.getEnrollmentStatus() != null ? sp.getEnrollmentStatus().name() : "REGULAR",
+                        null,
+                        java.time.Instant.now()
+                ))
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)

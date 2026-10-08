@@ -67,6 +67,8 @@ class EnrollmentServiceTest {
     private com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
     @Mock
     private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    @Mock
+    private com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @InjectMocks
     private EnrollmentService enrollmentService;

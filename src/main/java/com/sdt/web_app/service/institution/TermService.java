@@ -7,6 +7,9 @@ import com.sdt.web_app.repositories.enrollment.StudentEnrollmentRepository;
 import com.sdt.web_app.repositories.institution.AcademicYearRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
+import com.sdt.web_app.config.WebSocketBroadcastService;
+import com.sdt.web_app.config.WebSocketTopics;
+import com.sdt.web_app.websocket.dto.ActiveTermMessage;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,6 +29,7 @@ public class TermService {
     private final AcademicYearRepository academicYearRepository;
     private final ClassSectionRepository classSectionRepository;
     private final StudentEnrollmentRepository studentEnrollmentRepository;
+    private final WebSocketBroadcastService broadcastService;
 
     @CacheEvict(value = {"terms", "termsById", "activeTerms"}, allEntries = true)
     public Term createTerm(Long academicYearId, TermType termType, LocalDate startDate, LocalDate endDate) {
@@ -57,6 +61,22 @@ public class TermService {
         Term term = findTermById(termId);
         validateTermDates(term.getAcademicYear(), termId, startDate, endDate);
         term.updateSchedule(startDate, endDate);
+        if (term.isActive()) {
+            broadcastService.broadcast(WebSocketTopics.ACTIVE_TERM, new ActiveTermMessage(
+                    term.getId(),
+                    term.getAcademicYear().getId(),
+                    term.getAcademicYear().getCode(),
+                    term.getTermType().name(),
+                    term.getTermType().name(),
+                    term.getStartDate(),
+                    term.getEndDate(),
+                    term.getAcademicYear().isCurrent(),
+                    term.isActive(),
+                    term.isEnrollmentOpen(),
+                    term.isGradingOpen(),
+                    term.isAddDropOpen()
+            ));
+        }
         return term;
     }
 

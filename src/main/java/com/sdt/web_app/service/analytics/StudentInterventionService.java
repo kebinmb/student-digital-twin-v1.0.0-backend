@@ -18,9 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import com.sdt.web_app.config.WebSocketBroadcastService;
+import com.sdt.web_app.config.WebSocketTopics;
+import com.sdt.web_app.websocket.dto.PerformanceSummaryMessage;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +34,7 @@ public class StudentInterventionService {
     private final StudentRiskScoreRepository riskScoreRepository;
     private final UserRepository userRepository;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
+    private final WebSocketBroadcastService broadcastService;
 
     @Transactional
     public StudentInterventionDto dispatchIntervention(DispatchInterventionRequest request) {
@@ -76,6 +80,17 @@ public class StudentInterventionService {
         log.info("Student intervention #{} dispatched for student {} (Type: {}, Status: {})",
                 saved.getId(), student.getStudentNumber(), saved.getInterventionType(), saved.getStatus());
 
+        PerformanceSummaryMessage dispatchMsg = new PerformanceSummaryMessage(
+                student.getId(),
+                null,
+                null,
+                saved.getInterventionType().name(),
+                saved.getStatus().name(),
+                Instant.now()
+        );
+        broadcastService.broadcast(WebSocketTopics.performance(student.getId()), dispatchMsg);
+        broadcastService.broadcast(WebSocketTopics.ADMIN_TELEMETRY, dispatchMsg);
+
         return mapToDto(saved);
     }
 
@@ -89,6 +104,20 @@ public class StudentInterventionService {
 
         StudentIntervention saved = interventionRepository.save(intervention);
         log.info("Student intervention #{} status updated to {}", saved.getId(), saved.getStatus());
+
+        if (saved.getStudent() != null) {
+            PerformanceSummaryMessage updateMsg = new PerformanceSummaryMessage(
+                    saved.getStudent().getId(),
+                    null,
+                    null,
+                    saved.getInterventionType().name(),
+                    saved.getStatus().name(),
+                    Instant.now()
+            );
+            broadcastService.broadcast(WebSocketTopics.performance(saved.getStudent().getId()), updateMsg);
+            broadcastService.broadcast(WebSocketTopics.ADMIN_TELEMETRY, updateMsg);
+        }
+
         return mapToDto(saved);
     }
 

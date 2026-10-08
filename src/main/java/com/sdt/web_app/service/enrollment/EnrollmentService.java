@@ -27,6 +27,11 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.sdt.web_app.config.WebSocketBroadcastService;
+import com.sdt.web_app.config.WebSocketTopics;
+import com.sdt.web_app.websocket.dto.EnrollmentStatusMessage;
+import java.time.Instant;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -44,6 +49,7 @@ public class EnrollmentService {
     private final ClearanceRequestRepository clearanceRequestRepository;
     private final com.sdt.web_app.service.scheduling.SectionEventPublisherService sectionEventPublisherService;
     private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
+    private final WebSocketBroadcastService broadcastService;
 
     // -------------------------------------------------------------------------
     // Gate 3: Student Advising & Eligibility Evaluation
@@ -368,6 +374,7 @@ public class EnrollmentService {
         enrollment.updateStatus(StudentEnrollment.Status.ENLISTED);
 
         StudentEnrollment saved = studentEnrollmentRepository.save(enrollment);
+        broadcastEnrollmentUpdate(saved);
         if (studentNotificationPublisherService != null) {
             studentNotificationPublisherService.publishEnrollmentUpdatedEvent(
                     resolvedStudentId,
@@ -413,6 +420,7 @@ public class EnrollmentService {
         }
 
         StudentEnrollment saved = studentEnrollmentRepository.save(enrollment);
+        broadcastEnrollmentUpdate(saved);
         if (studentNotificationPublisherService != null) {
             studentNotificationPublisherService.publishEnrollmentUpdatedEvent(
                     resolvedStudentId,
@@ -475,7 +483,8 @@ public class EnrollmentService {
         }
 
         enrollment.updateStatus(StudentEnrollment.Status.ENROLLED);
-        studentEnrollmentRepository.save(enrollment);
+        StudentEnrollment savedEnrollment = studentEnrollmentRepository.save(enrollment);
+        broadcastEnrollmentUpdate(savedEnrollment);
 
         return new EnrollmentConfirmationDto(
                 enrollment.getId(),
@@ -561,7 +570,26 @@ public class EnrollmentService {
         }
 
         StudentEnrollment saved = studentEnrollmentRepository.save(enrollment);
+        broadcastEnrollmentUpdate(saved);
         return mapToEnrollmentResponse(saved);
+    }
+
+    private void broadcastEnrollmentUpdate(StudentEnrollment enrollment) {
+        if (enrollment == null) return;
+        Long studentProfileId = enrollment.getStudent() != null ? enrollment.getStudent().getId() : null;
+        Long termId = enrollment.getTerm() != null ? enrollment.getTerm().getId() : null;
+        EnrollmentStatusMessage msg = new EnrollmentStatusMessage(
+                enrollment.getId(),
+                studentProfileId,
+                termId,
+                enrollment.getStatus() != null ? enrollment.getStatus().name() : "UNKNOWN",
+                "Enrollment updated",
+                Instant.now()
+        );
+        if (studentProfileId != null) {
+            broadcastService.broadcast(WebSocketTopics.enrollment(studentProfileId), msg);
+        }
+        broadcastService.broadcast(WebSocketTopics.ADMIN_ENROLLMENTS, msg);
     }
 
     // -------------------------------------------------------------------------

@@ -4,6 +4,9 @@ import com.sdt.web_app.entities.institution.AcademicYear;
 import com.sdt.web_app.entities.institution.Term;
 import com.sdt.web_app.repositories.institution.AcademicYearRepository;
 import com.sdt.web_app.repositories.institution.TermRepository;
+import com.sdt.web_app.config.WebSocketBroadcastService;
+import com.sdt.web_app.config.WebSocketTopics;
+import com.sdt.web_app.websocket.dto.ActiveTermMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,6 +21,7 @@ import java.util.List;
 public class TermLifecycleService {
     private final TermRepository termRepository;
     private final AcademicYearRepository academicYearRepository;
+    private final WebSocketBroadcastService broadcastService;
 
     @CacheEvict(value = {"terms", "termsById", "activeTerms"}, allEntries = true)
     public Term activateTerm(Long termId) {
@@ -42,6 +46,7 @@ public class TermLifecycleService {
         });
         parentAy.markAsCurrent();
         targetTerm.activate();
+        broadcastActiveTerm(targetTerm);
         return targetTerm;
     }
 
@@ -50,6 +55,7 @@ public class TermLifecycleService {
         Term term = getTermOrThrow(termId);
         validateTermIsActive(term);
         term.openEnrollment();
+        broadcastActiveTerm(term);
         return term;
     }
 
@@ -57,6 +63,7 @@ public class TermLifecycleService {
     public Term closeEnrollment(Long termId) {
         Term term = getTermOrThrow(termId);
         term.closeEnrollment();
+        broadcastActiveTerm(term);
         return term;
     }
 
@@ -65,6 +72,7 @@ public class TermLifecycleService {
         Term term = getTermOrThrow(termId);
         validateTermIsActive(term);
         term.openGrading();
+        broadcastActiveTerm(term);
         return term;
     }
 
@@ -72,6 +80,7 @@ public class TermLifecycleService {
     public Term lockGrading(Long termId) {
         Term term = getTermOrThrow(termId);
         term.closeGrading();
+        broadcastActiveTerm(term);
         return term;
     }
 
@@ -84,7 +93,27 @@ public class TermLifecycleService {
         } else {
             term.closeAddDrop();
         }
+        broadcastActiveTerm(term);
         return term;
+    }
+
+    private void broadcastActiveTerm(Term term) {
+        if (term != null && term.isActive()) {
+            broadcastService.broadcast(WebSocketTopics.ACTIVE_TERM, new ActiveTermMessage(
+                    term.getId(),
+                    term.getAcademicYear().getId(),
+                    term.getAcademicYear().getCode(),
+                    term.getTermType().name(),
+                    term.getTermType().name(),
+                    term.getStartDate(),
+                    term.getEndDate(),
+                    term.getAcademicYear().isCurrent(),
+                    term.isActive(),
+                    term.isEnrollmentOpen(),
+                    term.isGradingOpen(),
+                    term.isAddDropOpen()
+            ));
+        }
     }
 
     @Transactional(readOnly = true)

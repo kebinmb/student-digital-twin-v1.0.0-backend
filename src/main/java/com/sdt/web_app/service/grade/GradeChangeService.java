@@ -53,6 +53,7 @@ public class GradeChangeService {
     private final EnrollmentCourseItemRepository itemRepository;
     private final GradeSealingAuditRepository sealingAuditRepository;
     private final AcademicScopeAssertionService academicScopeAssertionService;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @Transactional
     public GradeChangeResponse submitRequest(CreateGradeChangeRequest request, Long requestedByUserId) {
@@ -86,6 +87,18 @@ public class GradeChangeService {
 
         GradeChangeRequest saved = requestRepository.save(entity);
         log.info("Grade change request #{} submitted by user {} for student {}", saved.getId(), requestedByUserId, student.getStudentNumber());
+        if (broadcastService != null) {
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_GRADES, new com.sdt.web_app.websocket.dto.GradeUpdateMessage(
+                    student.getId(),
+                    null,
+                    course.getCode(),
+                    null,
+                    request.newGrade() != null ? request.newGrade().doubleValue() : null,
+                    request.newGrade() != null ? request.newGrade().doubleValue() : null,
+                    "CHANGE_REQUESTED",
+                    java.time.Instant.now()
+            ));
+        }
         return mapToResponse(saved);
     }
 
@@ -207,6 +220,21 @@ public class GradeChangeService {
 
         GradeChangeRequest saved = requestRepository.save(request);
         log.info("Grade change request #{} APPROVED by user {}. Updated grade to {}", requestId, approvedByUserId, request.getNewGrade());
+        if (broadcastService != null) {
+            Long secId = auditSection != null ? auditSection.getId() : null;
+            com.sdt.web_app.websocket.dto.GradeUpdateMessage msg = new com.sdt.web_app.websocket.dto.GradeUpdateMessage(
+                    student.getId(),
+                    secId,
+                    course.getCode(),
+                    null,
+                    request.getNewGrade() != null ? request.getNewGrade().doubleValue() : null,
+                    request.getNewGrade() != null ? request.getNewGrade().doubleValue() : null,
+                    completionStatus,
+                    java.time.Instant.now()
+            );
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.grades(student.getId()), msg);
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_GRADES, msg);
+        }
         return mapToResponse(saved);
     }
 
@@ -231,6 +259,18 @@ public class GradeChangeService {
         request.reject(rejector);
         GradeChangeRequest saved = requestRepository.save(request);
         log.info("Grade change request #{} REJECTED by user {}", requestId, rejectedByUserId);
+        if (broadcastService != null) {
+            broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_GRADES, new com.sdt.web_app.websocket.dto.GradeUpdateMessage(
+                    request.getStudent().getId(),
+                    null,
+                    request.getCourse().getCode(),
+                    null,
+                    null,
+                    null,
+                    "CHANGE_REJECTED",
+                    java.time.Instant.now()
+            ));
+        }
         return mapToResponse(saved);
     }
 

@@ -56,6 +56,8 @@ class FacultyProfileServiceTest {
     private com.sdt.web_app.repositories.institution.DepartmentRepository departmentRepository;
     @Mock
     private com.sdt.web_app.repositories.institution.ProgramRepository programRepository;
+    @Mock
+    private com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     @InjectMocks
     private FacultyProfileService facultyService;

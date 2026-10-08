@@ -62,6 +62,7 @@ public class SchedulingService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final AcademicScopeAssertionService academicScopeAssertionService;
+    private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
     // -------------------------------------------------------------------------
     // Room Management
@@ -264,6 +265,24 @@ public class SchedulingService {
             updateFacultyWorkload(term, instructor, course);
         }
 
+        if (broadcastService != null) {
+            broadcastService.broadcast(
+                    com.sdt.web_app.config.WebSocketTopics.classSchedule(saved.getId()),
+                    new com.sdt.web_app.websocket.dto.ClassScheduleMessage(
+                            saved.getId(),
+                            saved.getTerm() != null ? saved.getTerm().getId() : null,
+                            saved.getCourse() != null ? saved.getCourse().getCode() : "",
+                            saved.getSectionCode(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            "CREATED",
+                            java.time.Instant.now()
+                    )
+            );
+        }
+
         return mapToSectionDetail(saved);
     }
 
@@ -410,6 +429,24 @@ public class SchedulingService {
             recalculateFacultyWorkload(term, instructor);
         }
 
+        if (broadcastService != null) {
+            broadcastService.broadcast(
+                    com.sdt.web_app.config.WebSocketTopics.classSchedule(saved.getId()),
+                    new com.sdt.web_app.websocket.dto.ClassScheduleMessage(
+                            saved.getId(),
+                            saved.getTerm() != null ? saved.getTerm().getId() : null,
+                            saved.getCourse() != null ? saved.getCourse().getCode() : "",
+                            saved.getSectionCode(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            "UPDATED",
+                            java.time.Instant.now()
+                    )
+            );
+        }
+
         return mapToSectionDetail(saved);
     }
 
@@ -444,6 +481,24 @@ public class SchedulingService {
 
         scheduleRepository.deleteAll(scheduleRepository.findBySectionId(sectionId));
         sectionRepository.delete(section);
+
+        if (broadcastService != null) {
+            broadcastService.broadcast(
+                    com.sdt.web_app.config.WebSocketTopics.classSchedule(section.getId()),
+                    new com.sdt.web_app.websocket.dto.ClassScheduleMessage(
+                            section.getId(),
+                            section.getTerm() != null ? section.getTerm().getId() : null,
+                            section.getCourse() != null ? section.getCourse().getCode() : "",
+                            section.getSectionCode(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            "DELETED",
+                            java.time.Instant.now()
+                    )
+            );
+        }
 
         for (User instructor : instructorsToUpdate) {
             recalculateFacultyWorkload(term, instructor);
@@ -494,7 +549,8 @@ public class SchedulingService {
             workload.updateWorkload(totalHours, BigDecimal.ZERO, totalHours);
         }
 
-        workloadRepository.save(workload);
+        FacultyWorkload savedWorkload = workloadRepository.save(workload);
+        broadcastFacultyWorkload(savedWorkload);
     }
 
     private void updateFacultyWorkload(Term term, User instructor, Course course) {
@@ -552,7 +608,8 @@ public class SchedulingService {
             workload.updateWorkload(newTotalHours, BigDecimal.ZERO, newTotalHours);
         }
 
-        workloadRepository.save(workload);
+        FacultyWorkload savedWorkload = workloadRepository.save(workload);
+        broadcastFacultyWorkload(savedWorkload);
     }
 
     @Transactional(readOnly = true)
@@ -665,7 +722,8 @@ public class SchedulingService {
                 .orElseThrow(() -> new EntityNotFoundException("Faculty workload record not found for faculty " + facultyUserId + " in term " + termId));
 
         workload.approveOverload(approver);
-        workloadRepository.save(workload);
+        FacultyWorkload saved = workloadRepository.save(workload);
+        broadcastFacultyWorkload(saved);
     }
 
     @Transactional
@@ -690,7 +748,8 @@ public class SchedulingService {
         int preps = (int) scheduleRepository.countDistinctCoursesByFacultyAndTerm(facultyUserId, termId);
         workload.updatePreparations(preps);
         workload.overrideLoadLimit(customMaxUnits, reason, adminUser);
-        workloadRepository.save(workload);
+        FacultyWorkload saved = workloadRepository.save(workload);
+        broadcastFacultyWorkload(saved);
 
         return getFacultyWorkload(termId, facultyUserId);
     }
@@ -800,6 +859,24 @@ public class SchedulingService {
             updateFacultyWorkload(term, instructor, section.getCourse());
         }
 
+        if (broadcastService != null) {
+            broadcastService.broadcast(
+                    com.sdt.web_app.config.WebSocketTopics.classSchedule(saved.getId()),
+                    new com.sdt.web_app.websocket.dto.ClassScheduleMessage(
+                            saved.getId(),
+                            saved.getTerm() != null ? saved.getTerm().getId() : null,
+                            saved.getCourse() != null ? saved.getCourse().getCode() : "",
+                            saved.getSectionCode(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            "SLOTS_ADDED",
+                            java.time.Instant.now()
+                    )
+            );
+        }
+
         return mapToSectionDetail(saved);
     }
 
@@ -904,5 +981,24 @@ public class SchedulingService {
                 sec.getGradeStatus() != null ? sec.getGradeStatus().name() : "DRAFT",
                 slotResponses
         );
+    }
+
+    private void broadcastFacultyWorkload(FacultyWorkload workload) {
+        if (workload == null || broadcastService == null || workload.getFaculty() == null) return;
+        Long facultyId = workload.getFaculty().getId();
+        Long termId = workload.getTerm() != null ? workload.getTerm().getId() : null;
+        Double totalHours = workload.getTotalContactHours() != null ? workload.getTotalContactHours().doubleValue() : 0.0;
+        Integer preps = workload.getNumberOfPreparations();
+        String status = workload.isOverloadApproved() ? "OVERLOAD_APPROVED" : "STANDARD";
+        com.sdt.web_app.websocket.dto.FacultyWorkloadMessage msg = new com.sdt.web_app.websocket.dto.FacultyWorkloadMessage(
+                facultyId,
+                termId,
+                totalHours,
+                preps,
+                null,
+                status,
+                java.time.Instant.now()
+        );
+        broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.faculty(facultyId), msg);
     }
 }

@@ -91,7 +91,7 @@ public class WebSecurityConfig {
             JwtRoleConverter jwtRoleConverter,
             RateLimitingFilter rateLimitingFilter) throws Exception {
         return http
-                .securityMatcher("/api/**", "/ws/**")
+                .securityMatcher("/api/**", "/ws/**", "/ws-sockjs/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(rateLimitingFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
@@ -101,11 +101,11 @@ public class WebSecurityConfig {
                                 .policyDirectives("default-src 'self'; script-src 'self'; frame-ancestors 'none'; object-src 'none';")
                         )
                         .permissionsPolicyHeader(pp -> pp
-                                .policy("camera=(self), geolocation=(self), microphone=(), payment=()")
+                                .policy("camera=(self), geolocation=(self), microphone=(), payment=(), unload=*")
                         )
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/public/**", "/api/v1/public/**", "/api/v1/finance/gateways/**").permitAll()
+                        .requestMatchers("/api/public/**", "/api/v1/public/**", "/api/v1/finance/gateways/**", "/ws/**", "/ws-sockjs/**").permitAll()
                         .requestMatchers("/api/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "GUIDANCE")
                         .anyRequest().authenticated()
                 )
