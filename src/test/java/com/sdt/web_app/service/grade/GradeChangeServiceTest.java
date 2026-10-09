@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,5 +113,66 @@ class GradeChangeServiceTest {
         assertThat(res).isNotNull();
         verify(gradeRepository).save(any(StudentCourseGrade.class));
         verify(profileRepository).save(mockStudent);
+    }
+
+    @Test
+    @DisplayName("getPendingRequests filters by programId for CHAIRPERSON")
+    void getPendingRequests_Chairperson_ProgramScoped() {
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getPrincipal()).thenReturn("chairperson");
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+
+        com.sdt.web_app.service.security.AcademicScopeContext scope =
+                com.sdt.web_app.service.security.AcademicScopeContext.chairperson(1L, 2L, 5L);
+        when(academicScopeAssertionService.assertAndResolveScope(auth)).thenReturn(scope);
+        when(requestRepository.findPendingByProgramId(GradeChangeRequest.Status.PENDING, 5L, 50L))
+                .thenReturn(List.of(mockRequest));
+
+        List<GradeChangeResponse> responses = gradeChangeService.getPendingRequests(50L);
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).id()).isEqualTo(500L);
+        verify(requestRepository).findPendingByProgramId(GradeChangeRequest.Status.PENDING, 5L, 50L);
+    }
+
+    @Test
+    @DisplayName("getPendingRequests filters by collegeId for DEAN")
+    void getPendingRequests_Dean_CollegeScoped() {
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getPrincipal()).thenReturn("dean");
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+
+        com.sdt.web_app.service.security.AcademicScopeContext scope =
+                com.sdt.web_app.service.security.AcademicScopeContext.dean(1L, 2L, List.of(5L, 6L));
+        when(academicScopeAssertionService.assertAndResolveScope(auth)).thenReturn(scope);
+        when(requestRepository.findPendingByCollegeId(GradeChangeRequest.Status.PENDING, 2L, 50L))
+                .thenReturn(List.of(mockRequest));
+
+        List<GradeChangeResponse> responses = gradeChangeService.getPendingRequests(50L);
+
+        assertThat(responses).hasSize(1);
+        verify(requestRepository).findPendingByCollegeId(GradeChangeRequest.Status.PENDING, 2L, 50L);
+    }
+
+    @Test
+    @DisplayName("getPendingRequests returns unrestricted results for ADMIN")
+    void getPendingRequests_Admin_Unrestricted() {
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getPrincipal()).thenReturn("admin");
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+
+        com.sdt.web_app.service.security.AcademicScopeContext scope =
+                com.sdt.web_app.service.security.AcademicScopeContext.unrestricted(1L);
+        when(academicScopeAssertionService.assertAndResolveScope(auth)).thenReturn(scope);
+        when(requestRepository.findByStatusWithDetails(GradeChangeRequest.Status.PENDING, 50L))
+                .thenReturn(List.of(mockRequest));
+
+        List<GradeChangeResponse> responses = gradeChangeService.getPendingRequests(50L);
+
+        assertThat(responses).hasSize(1);
+        verify(requestRepository).findByStatusWithDetails(GradeChangeRequest.Status.PENDING, 50L);
     }
 }

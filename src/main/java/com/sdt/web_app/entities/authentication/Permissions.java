@@ -24,6 +24,24 @@ public class Permissions {
     @Column(name = "description", length = 255)
     private String description;
 
+    public static final String INTERVENTION_ACKNOWLEDGE = "intervention:telemetry:acknowledge";
+    public static final String INTERVENTION_RESPOND = "intervention:telemetry:respond";
+    public static final String EARLY_WARNING_RADAR_READ = "analytics:early-warning:read";
+    public static final String GRADE_CHANGE_READ = "grades:change-requests:read";
+    public static final String GRADE_CHANGE_APPROVE = "grades:change-requests:approve";
+    public static final String CURRICULUM_READ = "curriculum:read";
+    public static final String CAMPUS_READ = "campus:read";
+    public static final String USER_READ = "users:read";
+    public static final String SCHEDULE_READ = "scheduling:sections:read";
+    public static final String ENROLLMENT_READ = "enrollment:read";
+    public static final String UNIFAST_READ = "finance:unifast:read";
+    public static final String UNIFAST_PROCESS = "finance:unifast:process";
+    public static final String PAYMENT_READ = "finance:payment:read";
+    public static final String PAYMENT_PROCESS = "finance:payment:process";
+    public static final String EQUITY_PROFILE_READ = "compliance:equity:read";
+    public static final String EQUITY_PROFILE_SEARCH = "compliance:equity:search";
+    public static final String FINANCE_READ = "finance:read";
+
     public void updateDescription(String description) {
         this.description = description;
     }

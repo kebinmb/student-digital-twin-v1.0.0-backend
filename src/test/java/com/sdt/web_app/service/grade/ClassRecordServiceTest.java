@@ -254,4 +254,48 @@ class ClassRecordServiceTest {
         verify(itemRepository).delete(item);
         verify(enrollmentItemRepository, atLeastOnce()).findBySectionIdWithStudentDetails(201L);
     }
+
+    @Test
+    @DisplayName("Should reject adding assessment item when item with same title already exists in category")
+    void addAssessmentItem_WhenDuplicateTitle_ThrowsIllegalStateException() {
+        CreateClassRecordItemRequest request = new CreateClassRecordItemRequest(401L, "Quiz 1", new BigDecimal("50.00"), 1);
+
+        given(sectionRepository.findById(201L)).willReturn(Optional.of(section));
+        given(categoryRepository.findById(401L)).willReturn(Optional.of(category));
+        given(itemRepository.existsByCategoryIdAndItemTitleIgnoreCaseTrimmed(401L, "Quiz 1")).willReturn(true);
+
+        assertThatThrownBy(() -> classRecordService.addAssessmentItem(201L, request, 5L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already exists in this category");
+    }
+
+    @Test
+    @DisplayName("Should deduplicate student rows and assessment items in score matrix response")
+    void getScoreMatrix_DeduplicatesStudentsAndItems() {
+        given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(section));
+        given(configRepository.findBySectionIdWithDetails(201L)).willReturn(Optional.of(config));
+        given(enrollmentItemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(enrollmentItem, enrollmentItem));
+        given(itemRepository.findBySectionId(201L)).willReturn(List.of(item, item));
+
+        StudentAssessmentScore score = StudentAssessmentScore.builder()
+                .item(item)
+                .student(studentProfile)
+                .scoreEarned(new BigDecimal("45.00"))
+                .isExcused(false)
+                .build();
+        given(scoreRepository.findBySectionId(201L)).willReturn(List.of(score));
+
+        GradingScale scale = GradingScale.builder()
+                .code("1.75")
+                .numericGrade(new BigDecimal("1.75"))
+                .isPassing(true)
+                .build();
+        given(transmutationService.transmutePercentage(any(BigDecimal.class))).willReturn(scale);
+
+        ClassRecordMatrixResponse matrix = classRecordService.getScoreMatrix(201L);
+
+        assertThat(matrix).isNotNull();
+        assertThat(matrix.rows()).hasSize(1);
+        assertThat(matrix.rows().get(0).scores()).hasSize(1);
+    }
 }

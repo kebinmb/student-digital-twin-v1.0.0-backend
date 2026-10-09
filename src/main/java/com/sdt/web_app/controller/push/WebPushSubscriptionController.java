@@ -21,6 +21,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/push")
 @RequiredArgsConstructor
 @Slf4j
+@org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
 public class WebPushSubscriptionController {
 
     private final WebPushSubscriptionService webPushService;

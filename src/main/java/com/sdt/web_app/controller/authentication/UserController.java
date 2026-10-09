@@ -15,13 +15,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'CASHIER')")
 public class UserController {
 
     private final UserService userService;
 
     @Auditable(action = "CREATE_USER", entityName = "User")
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<UserDetailResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         UserDetailResponse response = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -29,7 +30,15 @@ public class UserController {
 
     @Auditable(action = "READ_ALL_USERS", entityName = "User")
     @GetMapping
-    public ResponseEntity<List<UserDetailResponse>> getAllUsers() {
+    public ResponseEntity<List<UserDetailResponse>> getAllUsers(org.springframework.security.core.Authentication authentication) {
+        boolean isCashier = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CASHIER") || a.getAuthority().equals("CASHIER"));
+        boolean isAdminOrRegistrar = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().contains("ADMIN") || a.getAuthority().contains("REGISTRAR"));
+
+        if (isCashier && !isAdminOrRegistrar) {
+            return ResponseEntity.ok(userService.getUsersByRole(com.sdt.web_app.entities.authentication.Roles.STUDENT));
+        }
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
@@ -41,6 +50,7 @@ public class UserController {
 
     @Auditable(action = "UPDATE_USER", entityName = "User", entityId = "#id")
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR')")
     public ResponseEntity<UserDetailResponse> updateUser(
             @PathVariable("id") Long id,
             @RequestBody UpdateUserRequest request) {

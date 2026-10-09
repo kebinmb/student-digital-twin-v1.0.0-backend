@@ -34,14 +34,15 @@ public class GradeChangeRequestController {
 
     @Auditable(action = "READ_PENDING_GRADE_CHANGE_REQUESTS", entityName = "GradeChangeRequest")
     @GetMapping("/pending")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
-    public ResponseEntity<List<GradeChangeResponse>> getPendingRequests() {
-        return ResponseEntity.ok(gradeChangeService.getPendingRequests());
+    @PreAuthorize("hasAuthority('grades:change-requests:read') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY')")
+    public ResponseEntity<List<GradeChangeResponse>> getPendingRequests(
+            @RequestParam(required = false) Long termId) {
+        return ResponseEntity.ok(gradeChangeService.getPendingRequests(termId));
     }
 
     @Auditable(action = "APPROVE_GRADE_CHANGE_REQUEST", entityName = "GradeChangeRequest", entityId = "#id")
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
+    @PreAuthorize("hasAuthority('grades:change-requests:approve') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<GradeChangeResponse> approveRequest(
             @PathVariable("id") Long id,
             Authentication authentication) {
@@ -51,7 +52,7 @@ public class GradeChangeRequestController {
 
     @Auditable(action = "REJECT_GRADE_CHANGE_REQUEST", entityName = "GradeChangeRequest", entityId = "#id")
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'REGISTRAR')")
+    @PreAuthorize("hasAuthority('grades:change-requests:approve') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<GradeChangeResponse> rejectRequest(
             @PathVariable("id") Long id,
             Authentication authentication) {

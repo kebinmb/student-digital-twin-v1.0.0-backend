@@ -92,7 +92,7 @@ public class EnrollmentSecurity {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_SUPER_ADMIN") || authorities.contains("ROLE_REGISTRAR")) {
+        if (authorities.contains("ROLE_ADMIN") || authorities.contains("ROLE_SUPER_ADMIN") || authorities.contains("ROLE_REGISTRAR") || authorities.contains("ROLE_CASHIER") || authorities.contains("ROLE_ACCOUNTANT")) {
             return true;
         }
 

@@ -13,8 +13,11 @@ public interface ClassRecordItemRepository extends JpaRepository<ClassRecordItem
 
     List<ClassRecordItem> findByCategoryId(Long categoryId);
 
-    @Query("SELECT cri FROM ClassRecordItem cri JOIN FETCH cri.category cat WHERE cat.config.section.id = :sectionId")
+    @Query("SELECT DISTINCT cri FROM ClassRecordItem cri JOIN FETCH cri.category cat WHERE cat.config.section.id = :sectionId ORDER BY cri.sequenceOrder ASC, cri.id ASC")
     List<ClassRecordItem> findBySectionId(@Param("sectionId") Long sectionId);
+
+    @Query("SELECT COUNT(cri) > 0 FROM ClassRecordItem cri WHERE cri.category.id = :categoryId AND LOWER(TRIM(cri.itemTitle)) = LOWER(TRIM(:itemTitle))")
+    boolean existsByCategoryIdAndItemTitleIgnoreCaseTrimmed(@Param("categoryId") Long categoryId, @Param("itemTitle") String itemTitle);
 
     @Query("SELECT cri.category.config.section.id FROM ClassRecordItem cri WHERE cri.id = :itemId")
     java.util.Optional<Long> findSectionIdByItemId(@Param("itemId") Long itemId);

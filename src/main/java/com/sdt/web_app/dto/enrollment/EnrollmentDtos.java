@@ -202,6 +202,8 @@ public class EnrollmentDtos {
             String lastName,
             String suffix,
             String fullName,
+            Long collegeId,
+            String collegeName,
             Long programId,
             String programCode,
             String programName,
@@ -222,6 +224,11 @@ public class EnrollmentDtos {
                 Long userId,
                 String username,
                 String email,
+                String firstName,
+                String middleName,
+                String lastName,
+                String suffix,
+                String fullName,
                 Long programId,
                 String programCode,
                 String programName,
@@ -236,7 +243,30 @@ public class EnrollmentDtos {
                 String financialClearance,
                 String departmentalClearance
         ) {
-            this(id, studentNumber, userId, username, email, null, null, null, null, username, programId, programCode, programName, curriculumId, curriculumCode, classification, yearLevel, enrollmentStatus, isGraduating, totalUnitsEarned, cumulativeGpa, financialClearance, departmentalClearance);
+            this(id, studentNumber, userId, username, email, firstName, middleName, lastName, suffix, fullName, null, null, programId, programCode, programName, curriculumId, curriculumCode, classification, yearLevel, enrollmentStatus, isGraduating, totalUnitsEarned, cumulativeGpa, financialClearance, departmentalClearance);
+        }
+
+        public StudentProfileResponse(
+                Long id,
+                String studentNumber,
+                Long userId,
+                String username,
+                String email,
+                Long programId,
+                String programCode,
+                String programName,
+                Long curriculumId,
+                String curriculumCode,
+                String classification,
+                int yearLevel,
+                String enrollmentStatus,
+                boolean isGraduating,
+                BigDecimal totalUnitsEarned,
+                BigDecimal cumulativeGpa,
+                String financialClearance,
+                String departmentalClearance
+        ) {
+            this(id, studentNumber, userId, username, email, null, null, null, null, username, null, null, programId, programCode, programName, curriculumId, curriculumCode, classification, yearLevel, enrollmentStatus, isGraduating, totalUnitsEarned, cumulativeGpa, financialClearance, departmentalClearance);
         }
     }
 

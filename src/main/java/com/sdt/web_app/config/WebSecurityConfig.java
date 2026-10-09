@@ -34,13 +34,21 @@ public class WebSecurityConfig {
     public RoleHierarchy roleHierarchy() {
         return RoleHierarchyImpl.withDefaultRolePrefix()
                 .role("SUPER_ADMIN").implies("ADMIN")
-                .role("ADMIN").implies("DEAN")
                 .role("ADMIN").implies("REGISTRAR")
-                .role("ADMIN").implies("CASHIER")
-                .role("ADMIN").implies("ACCOUNTANT")
+                .role("REGISTRAR").implies("DEAN")
+                .role("REGISTRAR").implies("CASHIER")
+                .role("REGISTRAR").implies("ACCOUNTANT")
                 .role("DEAN").implies("CHAIRPERSON")
                 .role("CHAIRPERSON").implies("FACULTY")
                 .build();
+    }
+
+    @Bean
+    static org.springframework.security.access.expression.method.MethodSecurityExpressionHandler methodSecurityExpressionHandler(RoleHierarchy roleHierarchy) {
+        org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler expressionHandler =
+                new org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setRoleHierarchy(roleHierarchy);
+        return expressionHandler;
     }
 
     @Value("${spring.security.oauth2.resourceserver.jwt.audiences:api://sdt-webapp}")

@@ -20,12 +20,14 @@ public class InstitutionalOutcomeController {
 
     @Auditable(action = "READ_ACTIVE_IILO", entityName = "InstitutionalOutcome")
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'REGISTRAR', 'STUDENT')")
     public ResponseEntity<List<InstitutionalOutcome>> getAllActiveOutcomes() {
         return ResponseEntity.ok(service.getAllActiveOutcomes());
     }
 
     @Auditable(action = "READ_IILO", entityName = "InstitutionalOutcome", entityId = "#id")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'REGISTRAR', 'STUDENT')")
     public ResponseEntity<InstitutionalOutcome> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }

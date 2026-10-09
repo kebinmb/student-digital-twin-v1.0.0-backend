@@ -2,6 +2,7 @@ package com.sdt.web_app.service.compliance;
 
 import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.dto.compliance.EquityDtos.*;
+import com.sdt.web_app.dto.compliance.EquityProfileAccountingView;
 import com.sdt.web_app.entities.admission.AdmissionApplication;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile;
@@ -175,6 +176,17 @@ public class StudentEquityProfileService {
     }
 
     @Transactional(readOnly = true)
+    public Page<EquityProfileAccountingView> searchForAccounting(String search, String category, Pageable pageable) {
+        Boolean is4ps = "4PS".equalsIgnoreCase(category) ? true : null;
+        Boolean isIp = "IP".equalsIgnoreCase(category) ? true : null;
+        Boolean isPwd = "PWD".equalsIgnoreCase(category) ? true : null;
+        Boolean isSolo = "SOLO_PARENT".equalsIgnoreCase(category) ? true : null;
+        Page<StudentEquityProfile> page = equityRepository.searchProfiles(
+                search, EquityVerificationStatus.VERIFIED, is4ps, isIp, isPwd, null, null, isSolo, null, null, pageable);
+        return page.map(EquityProfileAccountingView::from);
+    }
+
+    @Transactional(readOnly = true)
     public Page<StudentEquityProfileDto> searchEquityProfiles(
             String search,
             EquityVerificationStatus status,
@@ -290,7 +302,9 @@ public class StudentEquityProfileService {
         User user = sp != null ? sp.getUser() : null;
 
         String studentName = null;
-        if (user != null) {
+        if (sp != null) {
+            studentName = sp.getFullName();
+        } else if (user != null) {
             try {
                 studentName = user.getUsername();
             } catch (Exception e) {
@@ -388,19 +402,24 @@ public class StudentEquityProfileService {
             return ApplicantEquityStatsDto.builder().build();
         }
         return ApplicantEquityStatsDto.builder()
-                .totalPostExamCount(proj.getTotalPostExamCount())
-                .examPassedCount(proj.getExamPassedCount())
-                .examFailedCount(proj.getExamFailedCount())
-                .count4psBeneficiaries(proj.getFourPsCount())
-                .countIndigenousPeoples(proj.getIpCount())
-                .countPersonsWithDisabilities(proj.getPwdCount())
-                .countSoloParents(proj.getSoloParentCount())
-                .countOrphans(proj.getOrphanCount())
-                .countGidaResidents(proj.getGidaCount())
-                .countFarmerFisherfolk(proj.getFarmerFisherfolkCount())
-                .countBottom40IncomeBracket(proj.getBottom40Count())
-                .countFirstGenerationCollege(proj.getFirstGenCount())
+                .totalPostExamCount(proj.getTotalPostExamCount() != null ? proj.getTotalPostExamCount() : 0L)
+                .examPassedCount(proj.getExamPassedCount() != null ? proj.getExamPassedCount() : 0L)
+                .examFailedCount(proj.getExamFailedCount() != null ? proj.getExamFailedCount() : 0L)
+                .count4psBeneficiaries(proj.getFourPsCount() != null ? proj.getFourPsCount() : 0L)
+                .countIndigenousPeoples(proj.getIpCount() != null ? proj.getIpCount() : 0L)
+                .countPersonsWithDisabilities(proj.getPwdCount() != null ? proj.getPwdCount() : 0L)
+                .countSoloParents(proj.getSoloParentCount() != null ? proj.getSoloParentCount() : 0L)
+                .countOrphans(proj.getOrphanCount() != null ? proj.getOrphanCount() : 0L)
+                .countGidaResidents(proj.getGidaCount() != null ? proj.getGidaCount() : 0L)
+                .countFarmerFisherfolk(proj.getFarmerFisherfolkCount() != null ? proj.getFarmerFisherfolkCount() : 0L)
+                .countBottom40IncomeBracket(proj.getBottom40Count() != null ? proj.getBottom40Count() : 0L)
+                .countFirstGenerationCollege(proj.getFirstGenCount() != null ? proj.getFirstGenCount() : 0L)
                 .build();
+    }
+
+    public double computePercentage(long numerator, long denominator) {
+        if (denominator == 0) return 0.0;
+        return Math.round((double) numerator / denominator * 10000.0) / 100.0;
     }
 
     private ApplicantEquityAuditDto mapApplicantToEquityDto(AdmissionApplication app) {

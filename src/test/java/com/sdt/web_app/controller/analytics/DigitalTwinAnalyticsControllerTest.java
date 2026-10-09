@@ -98,4 +98,22 @@ class DigitalTwinAnalyticsControllerTest {
                 .andExpect(jsonPath("$.studentId").value(10))
                 .andExpect(jsonPath("$.studentNumber").value("2026-0001"));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/analytics/digital-twin/early-warning/radar routes correctly")
+    void getEarlyWarningRadar_ReturnsRoster() throws Exception {
+        com.sdt.web_app.dto.analytics.AnalyticsDtos.EarlyWarningRadarItemDto item =
+                new com.sdt.web_app.dto.analytics.AnalyticsDtos.EarlyWarningRadarItemDto(
+                        10L, "2026-0001", "Alice Student", "BSIT", 3,
+                        "CRITICAL", new BigDecimal("0.8500"), "Academic Deficit", "Tutoring"
+                );
+        when(riskService.getEarlyWarningRadar(any())).thenReturn(List.of(item));
+
+        mockMvc.perform(get("/api/v1/analytics/digital-twin/early-warning/radar")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].studentId").value(10))
+                .andExpect(jsonPath("$[0].studentNumber").value("2026-0001"))
+                .andExpect(jsonPath("$[0].riskLevel").value("CRITICAL"));
+    }
 }

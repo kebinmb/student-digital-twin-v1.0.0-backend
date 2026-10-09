@@ -156,6 +156,10 @@ public class ClassRecordService {
             throw new IllegalArgumentException("Grading category " + request.categoryId() + " does not belong to section " + sectionId);
         }
 
+        if (itemRepository.existsByCategoryIdAndItemTitleIgnoreCaseTrimmed(category.getId(), request.itemTitle().trim())) {
+            throw new IllegalStateException("An assessment item with title '" + request.itemTitle().trim() + "' already exists in this category");
+        }
+
         ClassRecordItem item = ClassRecordItem.builder()
                 .category(category)
                 .itemTitle(request.itemTitle().trim())
@@ -200,6 +204,17 @@ public class ClassRecordService {
 
         List<EnrollmentCourseItem> enrollmentItems = enrollmentItemRepository.findBySectionIdWithStudentDetails(sectionId);
         List<ClassRecordItem> sectionItems = itemRepository.findBySectionId(sectionId);
+        List<ClassRecordItem> distinctSectionItems = sectionItems != null ? sectionItems.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(
+                        ClassRecordItem::getId,
+                        item -> item,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ))
+                .values()
+                .stream()
+                .toList() : Collections.emptyList();
         List<StudentAssessmentScore> allScores = scoreRepository.findBySectionId(sectionId);
 
         Map<String, StudentAssessmentScore> scoreMap = allScores.stream()
@@ -210,6 +225,7 @@ public class ClassRecordService {
                         (s1, s2) -> s1
                 ));
 
+        Set<Long> processedStudentIds = new HashSet<>();
         List<StudentScoreMatrixRowDto> rows = new ArrayList<>();
 
         for (EnrollmentCourseItem item : enrollmentItems) {
@@ -221,9 +237,12 @@ public class ClassRecordService {
             }
 
             StudentProfile sp = item.getEnrollment().getStudent();
+            if (sp.getId() == null || !processedStudentIds.add(sp.getId())) {
+                continue;
+            }
             List<StudentScoreEntryDto> studentScores = new ArrayList<>();
 
-            for (ClassRecordItem cri : sectionItems) {
+            for (ClassRecordItem cri : distinctSectionItems) {
                 StudentAssessmentScore sas = scoreMap.get(cri.getId() + "_" + sp.getId());
                 if (sas != null) {
                     studentScores.add(new StudentScoreEntryDto(cri.getId(), sp.getId(), sas.getScoreEarned(), sas.isExcused()));
@@ -233,8 +252,8 @@ public class ClassRecordService {
             }
 
             // Progressive weighted calculations
-            BigDecimal midtermPct = calculateTermPercentage(config, sectionItems, studentScores, SectionGradingCategory.TermPeriod.MIDTERM);
-            BigDecimal finalPct = calculateTermPercentage(config, sectionItems, studentScores, SectionGradingCategory.TermPeriod.FINAL);
+            BigDecimal midtermPct = calculateTermPercentage(config, distinctSectionItems, studentScores, SectionGradingCategory.TermPeriod.MIDTERM);
+            BigDecimal finalPct = calculateTermPercentage(config, distinctSectionItems, studentScores, SectionGradingCategory.TermPeriod.FINAL);
 
             BigDecimal totalRawPct = BigDecimal.ZERO;
             BigDecimal assessedTermWeightSum = BigDecimal.ZERO;
@@ -284,7 +303,7 @@ public class ClassRecordService {
             rows.add(new StudentScoreMatrixRowDto(
                     sp.getId(),
                     sp.getStudentNumber(),
-                    sp.getUser() != null ? sp.getUser().getUsername() : "Student " + (sp.getStudentNumber() != null ? sp.getStudentNumber() : sp.getId()),
+                    sp.getFullName(),
                     sp.getProgram() != null ? sp.getProgram().getCode() : "N/A",
                     sp.getYearLevel(),
                     studentScores,
@@ -550,6 +569,15 @@ public class ClassRecordService {
 
     private SectionGradingConfigResponse mapToConfigResponse(SectionGradingConfig config) {
         List<SectionGradingCategoryDto> catDtos = (config.getCategories() != null ? config.getCategories() : Collections.<SectionGradingCategory>emptyList()).stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(
+                        SectionGradingCategory::getId,
+                        cat -> cat,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ))
+                .values()
+                .stream()
                 .sorted(Comparator.comparingInt(SectionGradingCategory::getDisplayOrder)
                         .thenComparing(c -> c.getId() != null ? c.getId() : 0L))
                 .map(cat -> new SectionGradingCategoryDto(
@@ -559,6 +587,15 @@ public class ClassRecordService {
                         cat.getTermPeriod().name(),
                         cat.getDisplayOrder(),
                         (cat.getItems() != null ? cat.getItems() : Collections.<ClassRecordItem>emptyList()).stream()
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toMap(
+                                        ClassRecordItem::getId,
+                                        item -> item,
+                                        (existing, replacement) -> existing,
+                                        LinkedHashMap::new
+                                ))
+                                .values()
+                                .stream()
                                 .sorted(Comparator.comparingInt(ClassRecordItem::getSequenceOrder)
                                         .thenComparing(i -> i.getId() != null ? i.getId() : 0L))
                                 .map(item -> new ClassRecordItemDto(item.getId(), cat.getId(), item.getItemTitle(), item.getMaxPoints(), item.getSequenceOrder()))

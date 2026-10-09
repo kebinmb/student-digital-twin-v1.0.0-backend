@@ -395,4 +395,49 @@ class StudentEquityProfileServiceTest {
         assertThat(stats.getCountPersonsWithDisabilities()).isEqualTo(3L);
         assertThat(stats.getCountBottom40IncomeBracket()).isEqualTo(25L);
     }
+
+    @Test
+    @DisplayName("Should return zero defaults without NPE when projection is null")
+    void getPostExamApplicantEquityStatistics_NullProjection_ReturnsZeroDefaults() {
+        when(admissionApplicationRepository.getPostExamApplicantEquityStatistics()).thenReturn(null);
+
+        ApplicantEquityStatsDto stats = equityProfileService.getPostExamApplicantEquityStatistics();
+
+        assertThat(stats).isNotNull();
+        assertThat(stats.getTotalPostExamCount()).isEqualTo(0L);
+        assertThat(stats.getExamPassedCount()).isEqualTo(0L);
+        assertThat(stats.getCount4psBeneficiaries()).isEqualTo(0L);
+    }
+
+    @Test
+    @DisplayName("Should return zero defaults without NPE when projection fields return null")
+    void getPostExamApplicantEquityStatistics_NullFields_ReturnsZeroDefaults() {
+        AdmissionApplicationRepository.PostExamApplicantEquityStatisticsProjection projection =
+                mock(AdmissionApplicationRepository.PostExamApplicantEquityStatisticsProjection.class);
+        when(projection.getTotalPostExamCount()).thenReturn(null);
+        when(projection.getExamPassedCount()).thenReturn(null);
+        when(projection.getExamFailedCount()).thenReturn(null);
+        when(projection.getFourPsCount()).thenReturn(null);
+        when(admissionApplicationRepository.getPostExamApplicantEquityStatistics()).thenReturn(projection);
+
+        ApplicantEquityStatsDto stats = equityProfileService.getPostExamApplicantEquityStatistics();
+
+        assertThat(stats).isNotNull();
+        assertThat(stats.getTotalPostExamCount()).isEqualTo(0L);
+        assertThat(stats.getExamPassedCount()).isEqualTo(0L);
+        assertThat(stats.getCount4psBeneficiaries()).isEqualTo(0L);
+    }
+
+    @Test
+    @DisplayName("Should guard against division by zero in computePercentage")
+    void computePercentage_ZeroDivisionGuard() {
+        double resultZeroDenominator = equityProfileService.computePercentage(15, 0);
+        assertThat(resultZeroDenominator).isEqualTo(0.0);
+
+        double resultNormal = equityProfileService.computePercentage(25, 100);
+        assertThat(resultNormal).isEqualTo(25.0);
+
+        double resultRounding = equityProfileService.computePercentage(1, 3);
+        assertThat(resultRounding).isEqualTo(33.33);
+    }
 }

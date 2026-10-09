@@ -76,7 +76,7 @@ public class GradeService {
                             item.getId(),
                             sp.getId(),
                             sp.getStudentNumber(),
-                            sp.getUser() != null ? sp.getUser().getUsername() : "Student " + sp.getStudentNumber(),
+                            sp.getFullName(),
                             sp.getProgram() != null ? sp.getProgram().getCode() : "N/A",
                             sp.getYearLevel(),
                             item.getFinalNumericalGrade(),

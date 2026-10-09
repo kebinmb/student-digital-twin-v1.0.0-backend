@@ -3,6 +3,7 @@ package com.sdt.web_app.entities.enrollment;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.institution.Curriculum;
+import com.sdt.web_app.entities.institution.Department;
 import com.sdt.web_app.entities.institution.Program;
 import jakarta.persistence.*;
 import lombok.*;
@@ -69,6 +70,12 @@ public class StudentProfile {
     @JsonIgnore
     private Program program;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "college_id")
+    @ToString.Exclude
+    @JsonIgnore
+    private Department college;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "curriculum_id", nullable = false)
     @ToString.Exclude
@@ -115,15 +122,7 @@ public class StudentProfile {
     private Instant createdAt = Instant.now();
 
     public String getFullName() {
-        if (firstName == null && lastName == null) {
-            return user != null ? user.getUsername() : studentNumber;
-        }
-        StringBuilder sb = new StringBuilder();
-        if (firstName != null) sb.append(firstName);
-        if (middleName != null && !middleName.isBlank()) sb.append(" ").append(middleName);
-        if (lastName != null) sb.append(" ").append(lastName);
-        if (suffix != null && !suffix.isBlank()) sb.append(" ").append(suffix);
-        return sb.toString().trim();
+        return com.sdt.web_app.utils.NameUtil.buildFullName(this);
     }
 
     public void updateName(String firstName, String middleName, String lastName, String suffix) {
@@ -165,6 +164,14 @@ public class StudentProfile {
 
     public boolean isClearedForEnrollment() {
         return financialClearance == ClearanceStatus.CLEARED && departmentalClearance == ClearanceStatus.CLEARED;
+    }
+
+    public void assignCollege(Department college) {
+        this.college = college;
+    }
+
+    public void setCollege(Department college) {
+        this.college = college;
     }
 
     public void updateClearance(ClearanceStatus financialClearance, ClearanceStatus departmentalClearance) {

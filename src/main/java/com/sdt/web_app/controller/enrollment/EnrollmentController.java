@@ -81,7 +81,7 @@ public class EnrollmentController {
 
     @Auditable(action = "READ_ENROLLMENT", entityName = "StudentEnrollment", entityId = "#studentId")
     @GetMapping("/student/{studentId}/term/{termId}")
-    @PreAuthorize("@enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'CASHIER') or @enrollmentSecurity.canAccessStudentEnrollment(authentication, #studentId)")
     public ResponseEntity<StudentEnrollmentResponse> getEnrollment(
             @PathVariable("studentId") Long studentId,
             @PathVariable("termId") Long termId) {

@@ -339,7 +339,7 @@ public class CashieringService {
 
     private CashierReceiptDto mapToReceiptDto(CashierReceipt r) {
         StudentProfile sp = r.getStudentProfile();
-        String studentName = (sp != null && sp.getUser() != null) ? sp.getUser().getUsername() : "Student #" + (sp != null ? sp.getStudentNumber() : r.getId());
+        String studentName = sp != null ? sp.getFullName() : "Student #" + r.getId();
 
         return new CashierReceiptDto(
                 r.getId(),

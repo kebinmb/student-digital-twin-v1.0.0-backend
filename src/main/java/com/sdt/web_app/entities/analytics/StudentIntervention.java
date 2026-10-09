@@ -100,9 +100,33 @@ public class StudentIntervention {
                 this.caseNotes = this.caseNotes + "\n[" + Instant.now() + "] " + additionalNotes;
             }
         }
-        if (newStatus == InterventionStatus.RESOLVED) {
-            this.resolvedAt = Instant.now();
+        if (newStatus == InterventionStatus.RESOLVED || newStatus == InterventionStatus.ACKNOWLEDGED) {
+            if (this.resolvedAt == null) {
+                this.resolvedAt = Instant.now();
+            }
         }
+    }
+
+    public Instant getAcknowledgedAt() {
+        return this.status == InterventionStatus.ACKNOWLEDGED
+                ? (this.resolvedAt != null ? this.resolvedAt : this.dispatchedAt)
+                : (this.resolvedAt != null ? this.resolvedAt : null);
+    }
+
+    public String getStudentResponse() {
+        return this.caseNotes;
+    }
+
+    public void setAcknowledgedAt(Instant acknowledgedAt) {
+        this.resolvedAt = acknowledgedAt;
+    }
+
+    public void setStudentResponse(String response) {
+        this.caseNotes = response;
+    }
+
+    public void setStatus(InterventionStatus status) {
+        this.status = status;
     }
 
     @Override

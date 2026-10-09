@@ -196,7 +196,7 @@ public class CurriculumController {
 
     @Auditable(action = "READ_CURRICULUM_LOOKUP_OPTIONS", entityName = "Curriculum")
     @GetMapping({"", "/lookup"})
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<CurriculumLookupOption>> getCurriculumLookupOptions() {
         return ResponseEntity.ok(designerService.getCurriculumLookupOptions());
     }

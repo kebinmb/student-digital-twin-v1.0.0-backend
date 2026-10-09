@@ -356,7 +356,7 @@ public class UnifastBillingService {
 
     private UnifastFheClaimItemDto mapToClaimItemDto(UnifastFheClaimItem i) {
         StudentProfile sp = i.getStudentProfile();
-        String studentName = (sp != null && sp.getUser() != null) ? sp.getUser().getUsername() : "Student #" + (sp != null ? sp.getStudentNumber() : i.getId());
+        String studentName = sp != null ? sp.getFullName() : "Student #" + i.getId();
         String progCode = (sp != null && sp.getProgram() != null) ? sp.getProgram().getCode() : "N/A";
 
         return new UnifastFheClaimItemDto(

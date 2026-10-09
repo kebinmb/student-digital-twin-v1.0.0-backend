@@ -28,13 +28,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        String[] origins = allowedOrigins != null && !allowedOrigins.isEmpty()
+                ? allowedOrigins.toArray(new String[0])
+                : new String[]{"http://localhost:4200"};
+
         // Plain WebSocket endpoint for native STOMP clients (primary)
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOriginPatterns(origins);
 
         // SockJS fallback endpoint
         registry.addEndpoint("/ws-sockjs")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(origins)
                 .withSockJS();
     }
 }

@@ -111,7 +111,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("Data integrity constraint violation: {}", ex.getMostSpecificCause().getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT,
-                "Database constraint violation: " + ex.getMostSpecificCause().getMessage()
+                "A database integrity constraint was violated. Please verify the request data."
         );
         problem.setTitle("Database Integrity Violation");
         problem.setType(URI.create("https://api.example.com/errors/data-integrity-violation"));
@@ -192,7 +192,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
         log.error("Unhandled exception processing request: ", ex);
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred: " + ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected internal server error occurred. Please contact the administrator if this persists.");
         problem.setTitle("Internal Server Error");
         problem.setType(URI.create("https://api.example.com/errors/internal-server-error"));
         problem.setProperty("timestamp", Instant.now());

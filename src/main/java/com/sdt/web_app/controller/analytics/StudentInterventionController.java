@@ -15,6 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.sdt.web_app.dto.analytics.AcknowledgeInterventionRequest;
+import com.sdt.web_app.service.security.SecurityUtils;
+import org.springframework.security.core.Authentication;
+
 import java.util.List;
 
 @RestController
@@ -23,6 +27,7 @@ import java.util.List;
 public class StudentInterventionController {
 
     private final StudentInterventionService interventionService;
+    private final SecurityUtils securityUtils;
 
     @Auditable(action = "READ_INTERVENTION_TYPES", entityName = "StudentIntervention")
     @GetMapping("/types")
@@ -49,6 +54,22 @@ public class StudentInterventionController {
             @PathVariable("id") Long id,
             @Valid @RequestBody UpdateInterventionStatusRequest request) {
         return ResponseEntity.ok(interventionService.updateInterventionStatus(id, request));
+    }
+
+    @Auditable(action = "ACKNOWLEDGE_INTERVENTION", entityName = "StudentIntervention", entityId = "#id")
+    @PostMapping("/{id}/acknowledge")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT', 'GUIDANCE', 'STUDENT_AFFAIRS')")
+    public ResponseEntity<StudentInterventionDto> acknowledgeIntervention(
+            @PathVariable("id") Long id,
+            Authentication authentication,
+            @RequestBody(required = false) AcknowledgeInterventionRequest request) {
+        boolean isStudent = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().contains("STUDENT"));
+        Long studentUserId = isStudent ? securityUtils.resolveUserId(authentication) : null;
+        if (isStudent && studentUserId == null) {
+            throw new IllegalStateException("Cannot resolve authenticated student user identity.");
+        }
+        return ResponseEntity.ok(interventionService.acknowledgeIntervention(id, studentUserId, request));
     }
 
     @Auditable(action = "READ_STUDENT_INTERVENTIONS", entityName = "StudentIntervention", entityId = "#studentId")

@@ -1,6 +1,7 @@
 package com.sdt.web_app.service.analytics;
 
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.*;
+import com.sdt.web_app.dto.analytics.AcknowledgeInterventionRequest;
 import com.sdt.web_app.entities.analytics.StudentRiskScore;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.repositories.analytics.AttendanceRecordRepository;
@@ -42,6 +43,11 @@ import com.sdt.web_app.entities.scheduling.ClassSection;
 import com.sdt.web_app.entities.enrollment.EnrollmentCourseItem;
 import com.sdt.web_app.entities.analytics.StudentIntervention;
 
+import com.sdt.web_app.service.security.AcademicScopeAssertionService;
+import com.sdt.web_app.service.security.AcademicScopeContext;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -56,6 +62,7 @@ public class DigitalTwinRiskService {
     private final StudentAssessmentScoreRepository assessmentScoreRepository;
     private final ClassSectionRepository classSectionRepository;
     private final EnrollmentCourseItemRepository enrollmentCourseItemRepository;
+    private final AcademicScopeAssertionService academicScopeAssertionService;
     private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
     private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
@@ -311,7 +318,7 @@ public class DigitalTwinRiskService {
             }
         }
 
-        String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
+        String studentName = student.getFullName();
         return new DigitalTwinRiskProfileDto(
                 student.getId(),
                 student.getStudentNumber(),
@@ -331,6 +338,21 @@ public class DigitalTwinRiskService {
 
     @Transactional(readOnly = true)
     public List<EarlyWarningRadarItemDto> getEarlyWarningRadar() {
+        return getEarlyWarningRadar(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EarlyWarningRadarItemDto> getEarlyWarningRadar(Authentication authentication) {
+        final AcademicScopeContext scope = (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())
+                && academicScopeAssertionService != null)
+                ? academicScopeAssertionService.assertAndResolveScope(authentication)
+                : null;
+
+        if (scope != null && scope.isFaculty() && (scope.assignedSectionIds() == null || scope.assignedSectionIds().isEmpty())) {
+            return List.of();
+        }
+
         List<StudentRiskScore> highRiskScores = riskScoreRepository.findByRiskLevelsWithDetails(
                 List.of(StudentRiskScore.RiskLevel.HIGH, StudentRiskScore.RiskLevel.CRITICAL)
         );
@@ -347,10 +369,32 @@ public class DigitalTwinRiskService {
             }
         }
 
-        return latestScoreByStudent.values().stream()
+        java.util.Collection<StudentRiskScore> filteredScores = latestScoreByStudent.values();
+        if (scope != null && !scope.isUnrestricted()) {
+            if (scope.isFaculty()) {
+                List<Long> enrolledStudentIds = profileRepository.findStudentIdsEnrolledInSections(scope.assignedSectionIds());
+                java.util.Set<Long> allowedStudentIdSet = new java.util.HashSet<>(enrolledStudentIds != null ? enrolledStudentIds : List.of());
+                filteredScores = filteredScores.stream()
+                        .filter(srs -> srs.getStudent() != null && allowedStudentIdSet.contains(srs.getStudent().getId()))
+                        .toList();
+            } else if (scope.isChairperson()) {
+                filteredScores = filteredScores.stream()
+                        .filter(srs -> srs.getStudent() != null && srs.getStudent().getProgram() != null
+                                && scope.programId().equals(srs.getStudent().getProgram().getId()))
+                        .toList();
+            } else if (scope.isDean()) {
+                filteredScores = filteredScores.stream()
+                        .filter(srs -> srs.getStudent() != null && srs.getStudent().getProgram() != null
+                                && scope.allowedProgramIds() != null
+                                && scope.allowedProgramIds().contains(srs.getStudent().getProgram().getId()))
+                        .toList();
+            }
+        }
+
+        return filteredScores.stream()
                 .map(srs -> {
                     StudentProfile sp = srs.getStudent();
-                    String name = sp.getUser() != null ? sp.getUser().getUsername() : "Student #" + sp.getStudentNumber();
+                    String name = sp != null ? sp.getFullName() : "Student";
                     String factor = srs.getAcademicRiskScore().doubleValue() > srs.getAttendanceRiskScore().doubleValue()
                             ? "Academic Deficit (GPA " + (sp.getCumulativeGpa() != null ? sp.getCumulativeGpa() : "3.50") + ")"
                             : "Attendance Absences";
@@ -372,12 +416,45 @@ public class DigitalTwinRiskService {
 
     @Transactional(readOnly = true)
     public SliceResponse<DigitalTwinRiskProfileDto> getEarlyWarningRadarSlice(int page, int size, String sortBy, String sortDir) {
+        return getEarlyWarningRadarSlice(page, size, sortBy, sortDir, SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Transactional(readOnly = true)
+    public SliceResponse<DigitalTwinRiskProfileDto> getEarlyWarningRadarSlice(int page, int size, String sortBy, String sortDir, Authentication authentication) {
+        final AcademicScopeContext scope = (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())
+                && academicScopeAssertionService != null)
+                ? academicScopeAssertionService.assertAndResolveScope(authentication)
+                : null;
+
         Pageable pageable = SortPropertyMapper.createStudentRiskScorePageable(page, size, sortBy, sortDir);
         List<StudentRiskScore.RiskLevel> levels = List.of(StudentRiskScore.RiskLevel.HIGH, StudentRiskScore.RiskLevel.CRITICAL);
-        Slice<StudentRiskScore> slice = riskScoreRepository.findByCompositeRiskLevelIn(levels, pageable);
+
+        Slice<StudentRiskScore> slice;
+        if (scope != null && !scope.isUnrestricted()) {
+            if (scope.isFaculty()) {
+                if (scope.assignedSectionIds() == null || scope.assignedSectionIds().isEmpty()) {
+                    return SliceResponse.from(new org.springframework.data.domain.SliceImpl<>(List.of(), pageable, false));
+                }
+                List<Long> enrolledStudentIds = profileRepository.findStudentIdsEnrolledInSections(scope.assignedSectionIds());
+                if (enrolledStudentIds == null || enrolledStudentIds.isEmpty()) {
+                    return SliceResponse.from(new org.springframework.data.domain.SliceImpl<>(List.of(), pageable, false));
+                }
+                slice = riskScoreRepository.findByCompositeRiskLevelInAndStudentIds(levels, enrolledStudentIds, pageable);
+            } else if (scope.isChairperson()) {
+                slice = riskScoreRepository.findByCompositeRiskLevelInAndProgramId(levels, scope.programId(), pageable);
+            } else if (scope.isDean()) {
+                slice = riskScoreRepository.findByCompositeRiskLevelInAndProgramIds(levels, scope.allowedProgramIds(), pageable);
+            } else {
+                slice = riskScoreRepository.findByCompositeRiskLevelIn(levels, pageable);
+            }
+        } else {
+            slice = riskScoreRepository.findByCompositeRiskLevelIn(levels, pageable);
+        }
+
         Slice<DigitalTwinRiskProfileDto> responseSlice = slice.map(srs -> {
             StudentProfile sp = srs.getStudent();
-            String name = sp != null && sp.getUser() != null ? sp.getUser().getUsername() : "Student #" + (sp != null ? sp.getStudentNumber() : srs.getId());
+            String name = sp != null ? sp.getFullName() : "Student #" + srs.getId();
             List<String> interventions = srs.getRecommendedInterventions() != null
                     ? Arrays.asList(srs.getRecommendedInterventions().split("; "))
                     : List.of("Dispatch Academic Counselor");
@@ -825,14 +902,43 @@ public class DigitalTwinRiskService {
 
     @Transactional
     public void acknowledgeIntervention(Long interventionId, Long studentUserId) {
+        acknowledgeIntervention(interventionId, studentUserId, null);
+    }
+
+    @Transactional
+    public void acknowledgeIntervention(Long interventionId, Long studentUserId, AcknowledgeInterventionRequest request) {
         StudentIntervention intervention = interventionRepository.findById(interventionId)
                 .orElseThrow(() -> new EntityNotFoundException("Intervention not found: " + interventionId));
-        if (intervention.getStudent() != null && intervention.getStudent().getUser() != null) {
-            if (!intervention.getStudent().getUser().getId().equals(studentUserId)) {
+
+        if (studentUserId != null && intervention.getStudent() != null) {
+            boolean matchesUser = intervention.getStudent().getUser() != null
+                    && intervention.getStudent().getUser().getId().equals(studentUserId);
+            boolean matchesStudentProfile = intervention.getStudent().getId() != null
+                    && intervention.getStudent().getId().equals(studentUserId);
+
+            if (!matchesUser && !matchesStudentProfile) {
                 throw new IllegalStateException("Unauthorized: intervention does not belong to student.");
             }
         }
-        intervention.updateStatus(StudentIntervention.InterventionStatus.ACKNOWLEDGED, "Acknowledged by student in digital twin portal.", "Student self-service feedback");
+
+        // Idempotency: if already acknowledged, return gracefully without 409 conflict
+        if (intervention.getStatus() == StudentIntervention.InterventionStatus.ACKNOWLEDGED) {
+            if (request != null && request.response() != null && !request.response().isBlank()) {
+                intervention.updateStatus(StudentIntervention.InterventionStatus.ACKNOWLEDGED,
+                        "Acknowledged by student in digital twin portal.",
+                        request.response());
+                interventionRepository.save(intervention);
+            }
+            return;
+        }
+
+        String notes = (request != null && request.response() != null && !request.response().isBlank())
+                ? request.response()
+                : "Student self-service feedback";
+
+        intervention.updateStatus(StudentIntervention.InterventionStatus.ACKNOWLEDGED,
+                "Acknowledged by student in digital twin portal.",
+                notes);
         interventionRepository.save(intervention);
     }
 }

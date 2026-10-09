@@ -1,6 +1,7 @@
 package com.sdt.web_app.controller.analytics;
 
 import com.sdt.web_app.annotation.Auditable;
+import com.sdt.web_app.dto.analytics.AcknowledgeInterventionRequest;
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.StudentSelfTelemetryDto;
 import com.sdt.web_app.service.analytics.DigitalTwinRiskService;
 import com.sdt.web_app.service.security.SecurityUtils;
@@ -31,15 +32,21 @@ public class StudentTelemetryController {
 
     @Auditable(action = "ACKNOWLEDGE_INTERVENTION", entityName = "StudentIntervention", entityId = "#interventionId")
     @PostMapping("/interventions/{id}/acknowledge")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
     public ResponseEntity<Void> acknowledgeIntervention(
             @PathVariable("id") Long interventionId,
-            Authentication authentication) {
-        Long studentUserId = securityUtils.resolveUserId(authentication);
-        if (studentUserId == null) {
+            Authentication authentication,
+            @RequestBody(required = false) AcknowledgeInterventionRequest request) {
+
+        boolean isStudent = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().contains("STUDENT"));
+
+        Long studentUserId = isStudent ? securityUtils.resolveUserId(authentication) : null;
+        if (isStudent && studentUserId == null) {
             throw new IllegalStateException("Cannot resolve authenticated student user identity.");
         }
-        riskService.acknowledgeIntervention(interventionId, studentUserId);
-        return ResponseEntity.noContent().build();
+
+        riskService.acknowledgeIntervention(interventionId, studentUserId, request);
+        return ResponseEntity.ok().build();
     }
 }

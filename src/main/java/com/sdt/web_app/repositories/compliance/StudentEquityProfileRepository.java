@@ -28,7 +28,10 @@ public interface StudentEquityProfileRepository extends JpaRepository<StudentEqu
         JOIN e.studentProfile sp
         JOIN sp.user u
         WHERE (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(sp.studentNumber) LIKE LOWER(CONCAT('%', :search, '%')))
+               OR LOWER(sp.studentNumber) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(sp.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(sp.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(CONCAT(sp.firstName, ' ', sp.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))
           AND (:status IS NULL OR e.verificationStatus = :status)
           AND (:is4ps IS NULL OR e.is4psBeneficiary = :is4ps)
           AND (:isIp IS NULL OR e.isIndigenousPeople = :isIp)
@@ -59,7 +62,10 @@ public interface StudentEquityProfileRepository extends JpaRepository<StudentEqu
         JOIN e.studentProfile sp
         JOIN sp.user u
         WHERE (:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(sp.studentNumber) LIKE LOWER(CONCAT('%', :search, '%')))
+               OR LOWER(sp.studentNumber) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(sp.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(sp.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(CONCAT(sp.firstName, ' ', sp.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))
           AND (:status IS NULL OR e.verificationStatus = :status)
           AND (:is4ps IS NULL OR e.is4psBeneficiary = :is4ps)
           AND (:isIp IS NULL OR e.isIndigenousPeople = :isIp)
@@ -115,34 +121,34 @@ public interface StudentEquityProfileRepository extends JpaRepository<StudentEqu
 
     // UniFAST & CHED HEMIS E-Form Affirmative Action Projection
     interface AffirmativeActionStatisticsProjection {
-        long getTotalCount();
-        long getPwdCount();
-        long getSoloParentCount();
-        long getRaisedBySoloParentCount();
-        long getFourPsCount();
-        long getIpCount();
-        long getOrphanCount();
-        long getGidaCount();
-        long getFarmerFisherfolkCount();
-        long getRebelReturneeCount();
-        long getBottom40Count();
-        long getFirstGenCount();
+        Long getTotalCount();
+        Long getPwdCount();
+        Long getSoloParentCount();
+        Long getRaisedBySoloParentCount();
+        Long getFourPsCount();
+        Long getIpCount();
+        Long getOrphanCount();
+        Long getGidaCount();
+        Long getFarmerFisherfolkCount();
+        Long getRebelReturneeCount();
+        Long getBottom40Count();
+        Long getFirstGenCount();
     }
 
     @Query("""
         SELECT 
             COUNT(e.id) AS totalCount,
-            SUM(CASE WHEN e.isPersonWithDisability = true THEN 1 ELSE 0 END) AS pwdCount,
-            SUM(CASE WHEN e.isSoloParent = true THEN 1 ELSE 0 END) AS soloParentCount,
-            SUM(CASE WHEN e.isRaisedBySoloParent = true THEN 1 ELSE 0 END) AS raisedBySoloParentCount,
-            SUM(CASE WHEN e.is4psBeneficiary = true THEN 1 ELSE 0 END) AS fourPsCount,
-            SUM(CASE WHEN e.isIndigenousPeople = true THEN 1 ELSE 0 END) AS ipCount,
-            SUM(CASE WHEN e.isOrphan = true THEN 1 ELSE 0 END) AS orphanCount,
-            SUM(CASE WHEN e.isGidaResident = true THEN 1 ELSE 0 END) AS gidaCount,
-            SUM(CASE WHEN e.isFarmerFisherfolk = true THEN 1 ELSE 0 END) AS farmerFisherfolkCount,
-            SUM(CASE WHEN e.isRebelReturneeFamily = true THEN 1 ELSE 0 END) AS rebelReturneeCount,
-            SUM(CASE WHEN e.isBottom40IncomeBracket = true THEN 1 ELSE 0 END) AS bottom40Count,
-            SUM(CASE WHEN e.isFirstGenerationCollege = true THEN 1 ELSE 0 END) AS firstGenCount
+            COALESCE(SUM(CASE WHEN e.isPersonWithDisability = true THEN 1L ELSE 0L END), 0L) AS pwdCount,
+            COALESCE(SUM(CASE WHEN e.isSoloParent = true THEN 1L ELSE 0L END), 0L) AS soloParentCount,
+            COALESCE(SUM(CASE WHEN e.isRaisedBySoloParent = true THEN 1L ELSE 0L END), 0L) AS raisedBySoloParentCount,
+            COALESCE(SUM(CASE WHEN e.is4psBeneficiary = true THEN 1L ELSE 0L END), 0L) AS fourPsCount,
+            COALESCE(SUM(CASE WHEN e.isIndigenousPeople = true THEN 1L ELSE 0L END), 0L) AS ipCount,
+            COALESCE(SUM(CASE WHEN e.isOrphan = true THEN 1L ELSE 0L END), 0L) AS orphanCount,
+            COALESCE(SUM(CASE WHEN e.isGidaResident = true THEN 1L ELSE 0L END), 0L) AS gidaCount,
+            COALESCE(SUM(CASE WHEN e.isFarmerFisherfolk = true THEN 1L ELSE 0L END), 0L) AS farmerFisherfolkCount,
+            COALESCE(SUM(CASE WHEN e.isRebelReturneeFamily = true THEN 1L ELSE 0L END), 0L) AS rebelReturneeCount,
+            COALESCE(SUM(CASE WHEN e.isBottom40IncomeBracket = true THEN 1L ELSE 0L END), 0L) AS bottom40Count,
+            COALESCE(SUM(CASE WHEN e.isFirstGenerationCollege = true THEN 1L ELSE 0L END), 0L) AS firstGenCount
         FROM StudentEquityProfile e
     """)
     AffirmativeActionStatisticsProjection getAffirmativeActionStatistics();

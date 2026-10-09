@@ -423,7 +423,7 @@ public class FeeAssessmentService {
 
     private StudentAssessmentInvoiceDto mapToInvoiceDto(StudentAssessmentInvoice i) {
         StudentProfile sp = i.getStudentProfile();
-        String studentName = (sp != null && sp.getUser() != null) ? sp.getUser().getUsername() : "Student #" + (sp != null ? sp.getStudentNumber() : i.getId());
+        String studentName = sp != null ? sp.getFullName() : "Student #" + i.getId();
 
         return new StudentAssessmentInvoiceDto(
                 i.getId(),

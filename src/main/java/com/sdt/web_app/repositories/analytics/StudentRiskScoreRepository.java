@@ -25,6 +25,21 @@ public interface StudentRiskScoreRepository extends JpaRepository<StudentRiskSco
     Slice<StudentRiskScore> findByCompositeRiskLevelIn(List<StudentRiskScore.RiskLevel> levels, Pageable pageable);
 
     @Query("SELECT srs FROM StudentRiskScore srs " +
+           "WHERE srs.compositeRiskLevel IN (:levels) " +
+           "AND srs.student.id IN (:studentIds)")
+    Slice<StudentRiskScore> findByCompositeRiskLevelInAndStudentIds(@Param("levels") List<StudentRiskScore.RiskLevel> levels, @Param("studentIds") java.util.Collection<Long> studentIds, Pageable pageable);
+
+    @Query("SELECT srs FROM StudentRiskScore srs " +
+           "WHERE srs.compositeRiskLevel IN (:levels) " +
+           "AND srs.student.program.id = :programId")
+    Slice<StudentRiskScore> findByCompositeRiskLevelInAndProgramId(@Param("levels") List<StudentRiskScore.RiskLevel> levels, @Param("programId") Long programId, Pageable pageable);
+
+    @Query("SELECT srs FROM StudentRiskScore srs " +
+           "WHERE srs.compositeRiskLevel IN (:levels) " +
+           "AND srs.student.program.id IN (:programIds)")
+    Slice<StudentRiskScore> findByCompositeRiskLevelInAndProgramIds(@Param("levels") List<StudentRiskScore.RiskLevel> levels, @Param("programIds") java.util.Collection<Long> programIds, Pageable pageable);
+
+    @Query("SELECT srs FROM StudentRiskScore srs " +
            "WHERE srs.student.id IN (:studentIds) " +
            "ORDER BY srs.evaluatedAt DESC")
     List<StudentRiskScore> findByStudentIdInOrderByEvaluatedAtDesc(@Param("studentIds") java.util.Collection<Long> studentIds);

@@ -31,21 +31,21 @@ public class CampusController {
 
     @Auditable(action = "READ_ALL_CAMPUSES", entityName = "Campus")
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<CampusResponse>> getAllCampuses() {
         return ResponseEntity.ok(campusService.getAllCampuses());
     }
 
     @Auditable(action = "READ_ACTIVE_CAMPUSES", entityName = "Campus")
     @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<CampusResponse>> getActiveCampuses() {
         return ResponseEntity.ok(campusService.getActiveCampuses());
     }
 
     @Auditable(action = "READ_CAMPUS", entityName = "Campus", entityId = "#id")
     @GetMapping("/{id:\\d+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<CampusResponse> getCampusById(@PathVariable Long id) {
         return ResponseEntity.ok(campusService.getCampusById(id));
     }

@@ -61,6 +61,7 @@ com\sdt\web_app\service\institution\MajorServiceImpl.class
 com\sdt\web_app\dto\scheduling\SchedulingDtos$ApproveOverloadRequest.class
 com\sdt\web_app\dto\financial\FinancialDtos$EodRcdFundClusterSummaryDto.class
 com\sdt\web_app\service\security\StudentProfileL2CacheService.class
+com\sdt\web_app\config\WebSocketBroadcastService$2.class
 com\sdt\web_app\repositories\financial\UnifastFheClaimItemRepository.class
 com\sdt\web_app\dto\institution\AcademicYearDtos$UpdateAcademicYearRequest.class
 com\sdt\web_app\dto\enrollment\EnrollmentDtos$StudentSearchResultDto.class
@@ -221,6 +222,7 @@ com\sdt\web_app\entities\grade\SectionGradingCategory$SectionGradingCategoryBuil
 com\sdt\web_app\specifications\ProgramSpecifications.class
 com\sdt\web_app\service\institution\GradeTransmutationService.class
 com\sdt\web_app\entities\financial\StudentAssessmentInvoice$InvoiceStatusConverter.class
+com\sdt\web_app\utils\NameUtil.class
 com\sdt\web_app\entities\grade\SectionGradingConfig$SectionGradingConfigBuilder.class
 com\sdt\web_app\websocket\dto\ClearanceStatusMessage$DepartmentClearanceItem.class
 com\sdt\web_app\entities\institution\ScholarshipDiscount.class
@@ -314,6 +316,7 @@ com\sdt\web_app\exceptions\UserAlreadyExistsException.class
 com\sdt\web_app\entities\faculty\FacultyProfile$HighestDegree.class
 com\sdt\web_app\entities\institution\CourseOutcome.class
 com\sdt\web_app\dto\institution\MajorDtos$CreateMajorRequest.class
+com\sdt\web_app\dto\analytics\AcknowledgeInterventionRequest.class
 com\sdt\web_app\dto\common\SliceResponse.class
 com\sdt\web_app\dto\institution\ProgramDtos$CreateProgramOutcomeRequest.class
 com\sdt\web_app\controller\institution\CourseOutcomeController.class
@@ -354,6 +357,7 @@ com\sdt\web_app\dto\enrollment\EnrollmentDtos$CourseEligibilityItemDto.class
 com\sdt\web_app\dto\admission\AdmissionDtos$PublicProgramDto.class
 com\sdt\web_app\entities\enrollment\StudentEnrollment.class
 com\sdt\web_app\dto\grade\GradeDtos$GradeEntryDto.class
+com\sdt\web_app\config\WebSocketBroadcastService$1.class
 com\sdt\web_app\dto\grade\ClassRecordDtos$UpdateSectionGradingConfigRequest.class
 com\sdt\web_app\entities\authentication\RefreshToken.class
 com\sdt\web_app\dto\push\PushDtos$VapidPublicKeyResponse.class
@@ -554,6 +558,7 @@ com\sdt\web_app\dto\lms\LmsDtos.class
 com\sdt\web_app\entities\enrollment\EnrollmentCourseItem$CompletionStatus.class
 com\sdt\web_app\repositories\scheduling\ClassScheduleRepository.class
 com\sdt\web_app\service\admission\AdmissionService.class
+com\sdt\web_app\dto\compliance\EquityProfileAccountingView.class
 com\sdt\web_app\controller\lms\LtiController.class
 com\sdt\web_app\dto\analytics\AnalyticsDtos$StudentSelfTelemetryDto.class
 com\sdt\web_app\dto\lms\LmsDtos$LtiLaunchResponse.class

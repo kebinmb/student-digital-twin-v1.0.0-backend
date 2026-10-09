@@ -157,7 +157,15 @@ public class User {
         this.college = college;
     }
 
+    public void setCollege(Department college) {
+        this.college = college;
+    }
+
     public void assignProgram(Program program) {
+        this.program = program;
+    }
+
+    public void setProgram(Program program) {
         this.program = program;
     }
 

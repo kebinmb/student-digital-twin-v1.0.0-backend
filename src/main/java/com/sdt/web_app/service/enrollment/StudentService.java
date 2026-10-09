@@ -7,6 +7,7 @@ import com.sdt.web_app.entities.authentication.User;
 import com.sdt.web_app.entities.enrollment.StudentProfile;
 import com.sdt.web_app.entities.enrollment.StudentProfile.StudentClassification;
 import com.sdt.web_app.entities.institution.Curriculum;
+import com.sdt.web_app.entities.institution.Department;
 import com.sdt.web_app.entities.institution.Program;
 import com.sdt.web_app.repositories.admission.AdmissionApplicationRepository;
 import com.sdt.web_app.repositories.authentication.UserRepository;
@@ -95,11 +96,15 @@ public class StudentService {
                 ? request.password().trim()
                 : "Student123!";
 
+        Department resolvedCollege = program.getCollege() != null ? program.getCollege() : program.getDepartment();
+
         User user = User.builder()
                 .username(trimmedUsername)
                 .email(trimmedEmail)
                 .password(passwordEncoder.encode(rawPassword))
                 .enabled(true)
+                .program(program)
+                .college(resolvedCollege)
                 .build();
         user.addRole(Roles.STUDENT);
         User savedUser = userRepository.save(user);
@@ -137,6 +142,7 @@ public class StudentService {
                 .lastName(lastName)
                 .suffix(suffix)
                 .program(program)
+                .college(resolvedCollege)
                 .curriculum(curriculum)
                 .yearLevel(yearLevel)
                 .classification(classification)
@@ -176,6 +182,24 @@ public class StudentService {
                     app.markAsEnrolled(ep.getId());
                     admissionApplicationRepository.save(app);
                 }
+                if (ep.getCollege() == null && ep.getProgram() != null) {
+                    Department col = ep.getProgram().getCollege() != null ? ep.getProgram().getCollege() : ep.getProgram().getDepartment();
+                    ep.setCollege(col);
+                    studentProfileRepository.save(ep);
+                }
+                User eu = existingUser.get();
+                boolean userUpdated = false;
+                if (eu.getProgram() == null && ep.getProgram() != null) {
+                    eu.setProgram(ep.getProgram());
+                    userUpdated = true;
+                }
+                if (eu.getCollege() == null && ep.getCollege() != null) {
+                    eu.setCollege(ep.getCollege());
+                    userUpdated = true;
+                }
+                if (userUpdated) {
+                    userRepository.save(eu);
+                }
                 return mapToProfileResponse(ep);
             }
         }
@@ -199,11 +223,17 @@ public class StudentService {
                         .findFirst()
                         .orElseThrow(() -> new EntityNotFoundException("No curriculum configured for program: " + program.getCode())));
 
+        Department resolvedCollege = program != null
+                ? (program.getCollege() != null ? program.getCollege() : program.getDepartment())
+                : null;
+
         User user = User.builder()
                 .username(username)
                 .email(email)
                 .password(passwordEncoder.encode("Student123!"))
                 .enabled(true)
+                .program(program)
+                .college(resolvedCollege)
                 .build();
         user.addRole(Roles.STUDENT);
         User savedUser = userRepository.save(user);
@@ -216,6 +246,7 @@ public class StudentService {
                 .lastName(app.getLastName())
                 .suffix(app.getSuffix())
                 .program(program)
+                .college(resolvedCollege)
                 .curriculum(curriculum)
                 .yearLevel(1)
                 .classification(StudentClassification.INCOMING_FIRST_YEAR)
@@ -423,6 +454,19 @@ public class StudentService {
     }
 
     private StudentProfileResponse mapToProfileResponse(StudentProfile sp) {
+        Long collegeId = null;
+        String collegeName = null;
+        if (sp.getCollege() != null) {
+            collegeId = sp.getCollege().getId();
+            collegeName = sp.getCollege().getName();
+        } else if (sp.getProgram() != null) {
+            Department col = sp.getProgram().getCollege() != null ? sp.getProgram().getCollege() : sp.getProgram().getDepartment();
+            if (col != null) {
+                collegeId = col.getId();
+                collegeName = col.getName();
+            }
+        }
+
         return new StudentProfileResponse(
                 sp.getId(),
                 sp.getStudentNumber(),
@@ -434,6 +478,8 @@ public class StudentService {
                 sp.getLastName(),
                 sp.getSuffix(),
                 sp.getFullName(),
+                collegeId,
+                collegeName,
                 sp.getProgram() != null ? sp.getProgram().getId() : null,
                 sp.getProgram() != null ? sp.getProgram().getCode() : "N/A",
                 sp.getProgram() != null ? sp.getProgram().getName() : "N/A",

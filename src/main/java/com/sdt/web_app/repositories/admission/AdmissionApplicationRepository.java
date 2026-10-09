@@ -128,37 +128,37 @@ public interface AdmissionApplicationRepository extends JpaRepository<AdmissionA
     );
 
     interface PostExamApplicantEquityStatisticsProjection {
-        long getTotalPostExamCount();
-        long getExamPassedCount();
-        long getExamFailedCount();
-        long getFourPsCount();
-        long getIpCount();
-        long getPwdCount();
-        long getSoloParentCount();
-        long getOrphanCount();
-        long getGidaCount();
-        long getFarmerFisherfolkCount();
-        long getBottom40Count();
-        long getFirstGenCount();
+        Long getTotalPostExamCount();
+        Long getExamPassedCount();
+        Long getExamFailedCount();
+        Long getFourPsCount();
+        Long getIpCount();
+        Long getPwdCount();
+        Long getSoloParentCount();
+        Long getOrphanCount();
+        Long getGidaCount();
+        Long getFarmerFisherfolkCount();
+        Long getBottom40Count();
+        Long getFirstGenCount();
     }
 
     @Query("""
         SELECT 
             COUNT(a.id) AS totalPostExamCount,
-            SUM(CASE WHEN a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_PASSED 
+            COALESCE(SUM(CASE WHEN a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_PASSED 
                           OR a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.INTERVIEW_ACCEPTED
                           OR a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ELIGIBLE_FOR_ENROLLMENT
-                          OR a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.APPROVED THEN 1 ELSE 0 END) AS examPassedCount,
-            SUM(CASE WHEN a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_FAILED THEN 1 ELSE 0 END) AS examFailedCount,
-            SUM(CASE WHEN a.is4psBeneficiary = true THEN 1 ELSE 0 END) AS fourPsCount,
-            SUM(CASE WHEN a.isIndigenousPeople = true THEN 1 ELSE 0 END) AS ipCount,
-            SUM(CASE WHEN a.isPersonWithDisability = true THEN 1 ELSE 0 END) AS pwdCount,
-            SUM(CASE WHEN a.isSoloParent = true OR a.isRaisedBySoloParent = true THEN 1 ELSE 0 END) AS soloParentCount,
-            SUM(CASE WHEN a.isOrphan = true THEN 1 ELSE 0 END) AS orphanCount,
-            SUM(CASE WHEN a.isGidaResident = true THEN 1 ELSE 0 END) AS gidaCount,
-            SUM(CASE WHEN a.isFarmerFisherfolk = true THEN 1 ELSE 0 END) AS farmerFisherfolkCount,
-            SUM(CASE WHEN a.isBottom40IncomeBracket = true THEN 1 ELSE 0 END) AS bottom40Count,
-            SUM(CASE WHEN a.isFirstGenerationCollege = true THEN 1 ELSE 0 END) AS firstGenCount
+                          OR a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.APPROVED THEN 1L ELSE 0L END), 0L) AS examPassedCount,
+            COALESCE(SUM(CASE WHEN a.applicationStatus = com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.EXAM_FAILED THEN 1L ELSE 0L END), 0L) AS examFailedCount,
+            COALESCE(SUM(CASE WHEN a.is4psBeneficiary = true THEN 1L ELSE 0L END), 0L) AS fourPsCount,
+            COALESCE(SUM(CASE WHEN a.isIndigenousPeople = true THEN 1L ELSE 0L END), 0L) AS ipCount,
+            COALESCE(SUM(CASE WHEN a.isPersonWithDisability = true THEN 1L ELSE 0L END), 0L) AS pwdCount,
+            COALESCE(SUM(CASE WHEN a.isSoloParent = true OR a.isRaisedBySoloParent = true THEN 1L ELSE 0L END), 0L) AS soloParentCount,
+            COALESCE(SUM(CASE WHEN a.isOrphan = true THEN 1L ELSE 0L END), 0L) AS orphanCount,
+            COALESCE(SUM(CASE WHEN a.isGidaResident = true THEN 1L ELSE 0L END), 0L) AS gidaCount,
+            COALESCE(SUM(CASE WHEN a.isFarmerFisherfolk = true THEN 1L ELSE 0L END), 0L) AS farmerFisherfolkCount,
+            COALESCE(SUM(CASE WHEN a.isBottom40IncomeBracket = true THEN 1L ELSE 0L END), 0L) AS bottom40Count,
+            COALESCE(SUM(CASE WHEN a.isFirstGenerationCollege = true THEN 1L ELSE 0L END), 0L) AS firstGenCount
         FROM AdmissionApplication a
         WHERE a.isEnrolled = false
           AND a.applicationStatus != com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus.ENROLLED

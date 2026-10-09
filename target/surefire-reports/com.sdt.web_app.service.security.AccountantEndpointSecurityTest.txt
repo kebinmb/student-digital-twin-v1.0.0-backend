@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.sdt.web_app.service.security.AccountantEndpointSecurityTest
+-------------------------------------------------------------------------------
+Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.59 s -- in com.sdt.web_app.service.security.AccountantEndpointSecurityTest

@@ -120,7 +120,7 @@ public class DegreeAuditService {
             }
         }
 
-        String studentName = student.getUser() != null ? student.getUser().getUsername() : "N/A";
+        String studentName = student.getFullName();
         String programCode = student.getProgram() != null ? student.getProgram().getCode() : "N/A";
 
         return new DegreeAuditResultDto(
@@ -201,8 +201,8 @@ public class DegreeAuditService {
     }
 
     private GraduationApplicationDto mapToGraduationDto(GraduationApplication entity) {
-        String studentName = entity.getStudentProfile().getUser() != null
-                ? entity.getStudentProfile().getUser().getUsername()
+        String studentName = entity.getStudentProfile() != null
+                ? entity.getStudentProfile().getFullName()
                 : "N/A";
 
         String termName = entity.getTerm().getTermType() != null ? entity.getTerm().getTermType().name() : "Term " + entity.getTerm().getId();

@@ -39,6 +39,7 @@ class DigitalTwinRiskServiceTest {
     @Mock private com.sdt.web_app.repositories.analytics.StudentInterventionRepository interventionRepository;
     @Mock private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
     @Mock private com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
+    @Mock private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
 
     @InjectMocks
     private DigitalTwinRiskService riskService;
@@ -146,6 +147,68 @@ class DigitalTwinRiskServiceTest {
         assertThat(radar.get(0).studentId()).isEqualTo(10L);
         assertThat(radar.get(0).riskLevel()).isEqualTo("CRITICAL");
         assertThat(radar.get(0).dropoutProbability()).isEqualTo(new BigDecimal("0.8500"));
+    }
+
+    @Test
+    @DisplayName("Early Warning Radar scopes data for FACULTY — only returns students in faculty's assigned sections")
+    void getEarlyWarningRadar_FacultyRole_ScopesToAssignedSections() {
+        StudentProfile enrolledStudent = StudentProfile.builder().id(10L).studentNumber("2024-0010").build();
+        StudentProfile otherStudent = StudentProfile.builder().id(20L).studentNumber("2024-0020").build();
+
+        StudentRiskScore scoreEnrolled = StudentRiskScore.builder()
+                .id(1L)
+                .student(enrolledStudent)
+                .evaluatedAt(java.time.Instant.now())
+                .academicRiskScore(new BigDecimal("90.00"))
+                .attendanceRiskScore(new BigDecimal("80.00"))
+                .socioeconomicRiskScore(new BigDecimal("30.00"))
+                .compositeRiskLevel(StudentRiskScore.RiskLevel.CRITICAL)
+                .predictedDropoutProbability(new BigDecimal("0.8000"))
+                .build();
+
+        StudentRiskScore scoreOther = StudentRiskScore.builder()
+                .id(2L)
+                .student(otherStudent)
+                .evaluatedAt(java.time.Instant.now())
+                .academicRiskScore(new BigDecimal("85.00"))
+                .attendanceRiskScore(new BigDecimal("75.00"))
+                .socioeconomicRiskScore(new BigDecimal("25.00"))
+                .compositeRiskLevel(StudentRiskScore.RiskLevel.HIGH)
+                .predictedDropoutProbability(new BigDecimal("0.7000"))
+                .build();
+
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getPrincipal()).thenReturn("facultyUser");
+
+        com.sdt.web_app.service.security.AcademicScopeContext facultyScope =
+                com.sdt.web_app.service.security.AcademicScopeContext.faculty(50L, 1L, 1L, List.of(101L, 102L));
+        when(academicScopeAssertionService.assertAndResolveScope(auth)).thenReturn(facultyScope);
+        when(riskScoreRepository.findByRiskLevelsWithDetails(anyList())).thenReturn(List.of(scoreEnrolled, scoreOther));
+        when(profileRepository.findStudentIdsEnrolledInSections(List.of(101L, 102L))).thenReturn(List.of(10L));
+
+        List<EarlyWarningRadarItemDto> radar = riskService.getEarlyWarningRadar(auth);
+
+        // Faculty must only see student 10L (enrolled in their class), NOT student 20L
+        assertThat(radar).hasSize(1);
+        assertThat(radar.get(0).studentId()).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("Early Warning Radar returns empty list when FACULTY has no assigned sections")
+    void getEarlyWarningRadar_FacultyWithNoSections_ReturnsEmpty() {
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getPrincipal()).thenReturn("facultyUser");
+
+        com.sdt.web_app.service.security.AcademicScopeContext facultyScope =
+                com.sdt.web_app.service.security.AcademicScopeContext.faculty(50L, 1L, 1L, List.of());
+        when(academicScopeAssertionService.assertAndResolveScope(auth)).thenReturn(facultyScope);
+
+        List<EarlyWarningRadarItemDto> radar = riskService.getEarlyWarningRadar(auth);
+
+        assertThat(radar).isEmpty();
+        verifyNoInteractions(riskScoreRepository);
     }
 
     @Test

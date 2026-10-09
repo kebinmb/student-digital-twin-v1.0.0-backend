@@ -68,12 +68,14 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\scheduling\SchedulingController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\webhook\InstitutionalWebhookController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\admission\AdmissionDtos.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\analytics\AcknowledgeInterventionRequest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\analytics\AnalyticsDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\authentication\AuthDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\authentication\UserDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\common\SliceResponse.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\compliance\ComplianceDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\compliance\EquityDtos.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\compliance\EquityProfileAccountingView.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\enrollment\EnrollmentDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\faculty\FacultyDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\financial\FinancialDtos.java
@@ -336,6 +338,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\specifications\FacultyProfileSpecifications.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\specifications\ProgramSpecifications.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\specifications\StudentProfileSpecifications.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\utils\NameUtil.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\utils\SortPropertyMapper.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\WebAppApplication.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\websocket\dto\ActiveTermMessage.java

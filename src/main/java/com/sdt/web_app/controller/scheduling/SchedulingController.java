@@ -66,7 +66,7 @@ public class SchedulingController {
 
     @Auditable(action = "READ_SECTIONS_BY_TERM", entityName = "ClassSection", entityId = "#termId")
     @GetMapping("/sections/term/{termId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<List<SectionDetailResponse>> getSectionsByTerm(
             @PathVariable("termId") Long termId,
             Authentication authentication) {
@@ -85,7 +85,7 @@ public class SchedulingController {
 
     @Auditable(action = "READ_SECTION", entityName = "ClassSection", entityId = "#id")
     @GetMapping("/sections/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON', 'REGISTRAR', 'FACULTY', 'CASHIER', 'ACCOUNTANT')")
     public ResponseEntity<SectionDetailResponse> getSectionById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(schedulingService.getSectionById(id));
     }

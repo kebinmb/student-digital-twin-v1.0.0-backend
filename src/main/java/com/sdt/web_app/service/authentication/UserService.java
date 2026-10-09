@@ -110,6 +110,14 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    public List<UserDetailResponse> getUsersByRole(Roles role) {
+        return userRepository.findAll().stream()
+                .filter(u -> u.getRoles() != null && u.getRoles().contains(role))
+                .map(this::mapToUserDetailResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public UserDetailResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));

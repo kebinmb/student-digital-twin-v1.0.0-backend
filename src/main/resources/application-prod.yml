@@ -30,6 +30,13 @@ spring:
           batch_size: 50
           batch_versioned_data: true
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    out-of-order: false
+    locations: classpath:db/migration
+
   # Production OAuth2 / OIDC Token Verification
   security:
     oauth2:
@@ -77,13 +84,15 @@ logging:
     org.flywaydb: INFO
 
 app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://sdt.chmsu.edu.ph}
   security:
     cookie:
       name: ${COOKIE_NAME:REFRESH_TOKEN}
-      secure: ${COOKIE_SECURE:false}
+      secure: ${COOKIE_SECURE:true}
       same-site: ${COOKIE_SAME_SITE:Lax}
       path: ${COOKIE_PATH:/}
       domain: ${COOKIE_DOMAIN:}
       max-age-seconds: ${COOKIE_MAX_AGE:604800}
     refresh-token:
-      expose-in-body: ${REFRESH_TOKEN_EXPOSE_BODY:true}
+      expose-in-body: ${REFRESH_TOKEN_EXPOSE_BODY:false}

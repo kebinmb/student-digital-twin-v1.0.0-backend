@@ -3,6 +3,7 @@ package com.sdt.web_app.controller.compliance;
 import com.sdt.web_app.annotation.Auditable;
 import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.dto.compliance.EquityDtos.*;
+import com.sdt.web_app.dto.compliance.EquityProfileAccountingView;
 import com.sdt.web_app.entities.admission.AdmissionApplication.ApplicationStatus;
 import com.sdt.web_app.entities.compliance.StudentEquityProfile.EquityVerificationStatus;
 import com.sdt.web_app.service.compliance.StudentEquityProfileService;
@@ -67,9 +68,11 @@ public class StudentEquityProfileController {
 
     @Auditable(action = "SEARCH_EQUITY_PROFILES", entityName = "StudentEquityProfile")
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS')")
-    public ResponseEntity<Page<StudentEquityProfileDto>> searchEquityProfiles(
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS', 'ACCOUNTANT')")
+    public ResponseEntity<?> searchEquityProfiles(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) EquityVerificationStatus status,
             @RequestParam(required = false) Boolean is4ps,
             @RequestParam(required = false) Boolean isIp,
@@ -82,19 +85,37 @@ public class StudentEquityProfileController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDir) {
+            @RequestParam(defaultValue = "DESC") String sortDir,
+            Authentication authentication) {
 
+        String effectiveSearch = (search != null && !search.isBlank()) ? search : query;
         Pageable pageable = SortPropertyMapper.createEquityProfilePageable(page, size, sortBy, sortDir);
+
+        boolean isAccountant = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ACCOUNTANT"));
+        boolean hasElevatedRole = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN")
+                        || a.getAuthority().equals("ROLE_REGISTRAR") || a.getAuthority().equals("ROLE_DEAN")
+                        || a.getAuthority().equals("ROLE_CHAIRPERSON") || a.getAuthority().equals("ROLE_GUIDANCE")
+                        || a.getAuthority().equals("ROLE_STUDENT_AFFAIRS"));
+
+        if (isAccountant && !hasElevatedRole) {
+            Page<EquityProfileAccountingView> accountingResult = equityProfileService.searchForAccounting(
+                    effectiveSearch, category, pageable);
+            return ResponseEntity.ok(accountingResult);
+        }
+
         Page<StudentEquityProfileDto> result = equityProfileService.searchEquityProfiles(
-                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
+                effectiveSearch, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
         return ResponseEntity.ok(result);
     }
 
     @Auditable(action = "SEARCH_EQUITY_PROFILES_SLICE", entityName = "StudentEquityProfile")
     @GetMapping("/search-slice")
-    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS')")
+    @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS', 'ACCOUNTANT')")
     public ResponseEntity<SliceResponse<StudentEquityProfileDto>> searchEquityProfilesSlice(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String query,
             @RequestParam(required = false) EquityVerificationStatus status,
             @RequestParam(required = false) Boolean is4ps,
             @RequestParam(required = false) Boolean isIp,
@@ -109,9 +130,10 @@ public class StudentEquityProfileController {
             @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDir) {
 
+        String effectiveSearch = (search != null && !search.isBlank()) ? search : query;
         Pageable pageable = SortPropertyMapper.createEquityProfilePageable(page, size, sortBy, sortDir);
         SliceResponse<StudentEquityProfileDto> result = equityProfileService.searchEquityProfilesSlice(
-                search, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
+                effectiveSearch, status, is4ps, isIp, isPwd, isGida, isFirstGen, isSoloParent, isFarmerFisherfolk, isBottom40, pageable);
         return ResponseEntity.ok(result);
     }
 
@@ -151,7 +173,9 @@ public class StudentEquityProfileController {
     @Auditable(action = "READ_APPLICANT_EQUITY_STATS", entityName = "ApplicantEquityAudit")
     @GetMapping("/admission-applicants/statistics")
     @PreAuthorize("hasAuthority('student:equity:manage') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS')")
-    public ResponseEntity<ApplicantEquityStatsDto> getAdmissionApplicantEquityStats() {
+    public ResponseEntity<ApplicantEquityStatsDto> getAdmissionApplicantEquityStats(
+            @RequestParam(required = false) String cohort,
+            @RequestParam(required = false) Long termId) {
         ApplicantEquityStatsDto stats = equityProfileService.getPostExamApplicantEquityStatistics();
         return ResponseEntity.ok(stats);
     }

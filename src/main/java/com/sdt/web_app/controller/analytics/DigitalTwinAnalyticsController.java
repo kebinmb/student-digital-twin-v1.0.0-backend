@@ -59,19 +59,20 @@ public class DigitalTwinAnalyticsController {
 
     @Auditable(action = "READ_EARLY_WARNING_RADAR", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/radar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS')")
-    public ResponseEntity<List<EarlyWarningRadarItemDto>> getEarlyWarningRadar() {
-        return ResponseEntity.ok(riskService.getEarlyWarningRadar());
+    @PreAuthorize("hasAuthority('analytics:early-warning:read') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT_AFFAIRS')")
+    public ResponseEntity<List<EarlyWarningRadarItemDto>> getEarlyWarningRadar(Authentication authentication) {
+        return ResponseEntity.ok(riskService.getEarlyWarningRadar(authentication));
     }
 
     @Auditable(action = "READ_EARLY_WARNING_RADAR_SLICE", entityName = "EarlyWarningRadar")
     @GetMapping("/early-warning/slice")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'DEAN', 'CHAIRPERSON', 'GUIDANCE', 'STUDENT_AFFAIRS')")
+    @PreAuthorize("hasAuthority('analytics:early-warning:read') or hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'FACULTY', 'GUIDANCE', 'STUDENT_AFFAIRS')")
     public ResponseEntity<com.sdt.web_app.dto.common.SliceResponse<DigitalTwinRiskProfileDto>> getEarlyWarningRadarSlice(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "sortBy", required = false) String sortBy,
-            @RequestParam(name = "sortDir", defaultValue = "DESC") String sortDir) {
-        return ResponseEntity.ok(riskService.getEarlyWarningRadarSlice(page, size, sortBy, sortDir));
+            @RequestParam(name = "sortDir", defaultValue = "DESC") String sortDir,
+            Authentication authentication) {
+        return ResponseEntity.ok(riskService.getEarlyWarningRadarSlice(page, size, sortBy, sortDir, authentication));
     }
 }

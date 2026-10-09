@@ -38,6 +38,7 @@ public class ClearanceAndChedController {
 
     @Auditable(action = "READ_CLEARANCE_BY_STUDENT_AND_TERM", entityName = "ClearanceRequest")
     @GetMapping({"/clearance/requests/student/{studentIdentifier}/term/{termId}", "/clearance/student/{studentIdentifier}/term/{termId}"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'FACULTY', 'STUDENT')")
     public ResponseEntity<ClearanceRequestDto> getClearanceByStudentAndTerm(@PathVariable String studentIdentifier, @PathVariable Long termId) {
         ClearanceRequestDto result = clearanceWorkflowService.getClearanceByStudentAndTerm(studentIdentifier, termId);
         return ResponseEntity.ok(result);
@@ -45,6 +46,7 @@ public class ClearanceAndChedController {
 
     @Auditable(action = "READ_CLEARANCE_BY_ID", entityName = "ClearanceRequest", entityId = "#id")
     @GetMapping("/clearance/requests/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON', 'CASHIER', 'ACCOUNTANT', 'GUIDANCE', 'FACULTY', 'STUDENT')")
     public ResponseEntity<ClearanceRequestDto> getClearanceById(@PathVariable Long id) {
         ClearanceRequestDto result = clearanceWorkflowService.getClearanceById(id);
         return ResponseEntity.ok(result);
@@ -82,6 +84,7 @@ public class ClearanceAndChedController {
     // Degree Audit & Graduation
     @Auditable(action = "EVALUATE_DEGREE_AUDIT", entityName = "DegreeAudit", entityId = "#studentProfileId")
     @GetMapping("/graduation/audit/{studentProfileId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON') or @enrollmentSecurity.canAccessStudentAdvising(authentication, #studentProfileId)")
     public ResponseEntity<DegreeAuditResultDto> evaluateDegreeAudit(@PathVariable Long studentProfileId) {
         DegreeAuditResultDto result = degreeAuditService.evaluateDegreeAudit(studentProfileId);
         return ResponseEntity.ok(result);

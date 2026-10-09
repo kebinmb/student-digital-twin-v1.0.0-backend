@@ -104,7 +104,53 @@ public class GradeChangeService {
 
     @Transactional(readOnly = true)
     public List<GradeChangeResponse> getPendingRequests() {
-        return requestRepository.findByStatusWithDetails(GradeChangeRequest.Status.PENDING).stream()
+        return getPendingRequests(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<GradeChangeResponse> getPendingRequests(Long termId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal()) || academicScopeAssertionService == null) {
+            return requestRepository.findByStatusWithDetails(GradeChangeRequest.Status.PENDING, termId).stream()
+                    .map(this::mapToResponse)
+                    .toList();
+        }
+
+        try {
+            AcademicScopeContext scope = academicScopeAssertionService.assertAndResolveScope(auth);
+            if (scope != null) {
+                if (scope.isUnrestricted()) {
+                    return requestRepository.findByStatusWithDetails(GradeChangeRequest.Status.PENDING, termId).stream()
+                            .map(this::mapToResponse)
+                            .toList();
+                } else if (scope.isDean()) {
+                    Long collegeId = scope.collegeId();
+                    if (collegeId != null) {
+                        return requestRepository.findPendingByCollegeId(GradeChangeRequest.Status.PENDING, collegeId, termId).stream()
+                                .map(this::mapToResponse)
+                                .toList();
+                    }
+                } else if (scope.isChairperson()) {
+                    Long programId = scope.programId();
+                    if (programId != null) {
+                        return requestRepository.findPendingByProgramId(GradeChangeRequest.Status.PENDING, programId, termId).stream()
+                                .map(this::mapToResponse)
+                                .toList();
+                    }
+                } else if (scope.isFaculty()) {
+                    Long facultyUserId = scope.userId();
+                    if (facultyUserId != null) {
+                        return requestRepository.findPendingByRequestedById(GradeChangeRequest.Status.PENDING, facultyUserId, termId).stream()
+                                .map(this::mapToResponse)
+                                .toList();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not assert academic scope for pending grade requests, falling back to default lookup: {}", e.getMessage());
+        }
+
+        return requestRepository.findByStatusWithDetails(GradeChangeRequest.Status.PENDING, termId).stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -285,12 +331,33 @@ public class GradeChangeService {
     }
 
     private GradeChangeResponse mapToResponse(GradeChangeRequest gcr) {
-        String studentName = gcr.getStudent().getUser() != null ? gcr.getStudent().getUser().getUsername() : "Student #" + gcr.getStudent().getStudentNumber();
+        String studentName = gcr.getStudent() != null ? gcr.getStudent().getFullName() : "Student";
+        Long programId = null;
+        String programCode = null;
+        Long collegeId = null;
+        if (gcr.getStudent() != null) {
+            if (gcr.getStudent().getProgram() != null) {
+                programId = gcr.getStudent().getProgram().getId();
+                programCode = gcr.getStudent().getProgram().getCode();
+            }
+            if (gcr.getStudent().getCollege() != null) {
+                collegeId = gcr.getStudent().getCollege().getId();
+            } else if (gcr.getStudent().getProgram() != null) {
+                if (gcr.getStudent().getProgram().getCollege() != null) {
+                    collegeId = gcr.getStudent().getProgram().getCollege().getId();
+                } else if (gcr.getStudent().getProgram().getDepartment() != null) {
+                    collegeId = gcr.getStudent().getProgram().getDepartment().getId();
+                }
+            }
+        }
         return new GradeChangeResponse(
                 gcr.getId(),
                 gcr.getStudent().getId(),
                 gcr.getStudent().getStudentNumber(),
                 studentName,
+                programId,
+                programCode,
+                collegeId,
                 gcr.getCourse().getId(),
                 gcr.getCourse().getCode(),
                 gcr.getCourse().getTitle(),

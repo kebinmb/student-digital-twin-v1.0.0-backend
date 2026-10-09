@@ -1,6 +1,7 @@
 package com.sdt.web_app.service.analytics;
 
 import com.sdt.web_app.dto.analytics.AnalyticsDtos.*;
+import com.sdt.web_app.dto.analytics.AcknowledgeInterventionRequest;
 import com.sdt.web_app.dto.common.SliceResponse;
 import com.sdt.web_app.entities.analytics.StudentIntervention;
 import com.sdt.web_app.entities.analytics.StudentRiskScore;
@@ -147,7 +148,7 @@ public class StudentInterventionService {
 
     private StudentInterventionDto mapToDto(StudentIntervention entity) {
         StudentProfile sp = entity.getStudent();
-        String studentName = sp.getUser() != null ? sp.getUser().getUsername() : "Student #" + sp.getStudentNumber();
+        String studentName = sp != null ? sp.getFullName() : "Student";
         String counselorName = entity.getAssignedCounselor() != null ? entity.getAssignedCounselor().getUsername() : null;
 
         return new StudentInterventionDto(
@@ -166,5 +167,56 @@ public class StudentInterventionService {
                 entity.getDispatchedAt(),
                 entity.getResolvedAt()
         );
+    }
+
+    @Transactional
+    public StudentInterventionDto acknowledgeIntervention(Long interventionId, Long studentUserId, AcknowledgeInterventionRequest request) {
+        StudentIntervention intervention = interventionRepository.findById(interventionId)
+                .orElseThrow(() -> new EntityNotFoundException("Student intervention not found: " + interventionId));
+
+        if (studentUserId != null && intervention.getStudent() != null) {
+            boolean matchesUser = intervention.getStudent().getUser() != null
+                    && intervention.getStudent().getUser().getId().equals(studentUserId);
+            boolean matchesStudentProfile = intervention.getStudent().getId() != null
+                    && intervention.getStudent().getId().equals(studentUserId);
+
+            if (!matchesUser && !matchesStudentProfile) {
+                throw new IllegalStateException("Unauthorized: intervention does not belong to student.");
+            }
+        }
+
+        if (intervention.getStatus() == StudentIntervention.InterventionStatus.ACKNOWLEDGED) {
+            if (request != null && request.response() != null && !request.response().isBlank()) {
+                intervention.updateStatus(StudentIntervention.InterventionStatus.ACKNOWLEDGED,
+                        "Acknowledged by student in digital twin portal.",
+                        request.response());
+                interventionRepository.save(intervention);
+            }
+            return mapToDto(intervention);
+        }
+
+        String notes = (request != null && request.response() != null && !request.response().isBlank())
+                ? request.response()
+                : "Student self-service feedback";
+
+        intervention.updateStatus(StudentIntervention.InterventionStatus.ACKNOWLEDGED,
+                "Acknowledged by student in digital twin portal.",
+                notes);
+        StudentIntervention saved = interventionRepository.save(intervention);
+
+        if (saved.getStudent() != null) {
+            PerformanceSummaryMessage updateMsg = new PerformanceSummaryMessage(
+                    saved.getStudent().getId(),
+                    null,
+                    null,
+                    saved.getInterventionType().name(),
+                    saved.getStatus().name(),
+                    Instant.now()
+            );
+            broadcastService.broadcast(WebSocketTopics.performance(saved.getStudent().getId()), updateMsg);
+            broadcastService.broadcast(WebSocketTopics.ADMIN_TELEMETRY, updateMsg);
+        }
+
+        return mapToDto(saved);
     }
 }

@@ -20,15 +20,19 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
 
     Optional<StudentProfile> findByStudentNumber(String studentNumber);
 
-    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.user LEFT JOIN FETCH sp.program LEFT JOIN FETCH sp.curriculum WHERE sp.id = :id")
+    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.user LEFT JOIN FETCH sp.program LEFT JOIN FETCH sp.curriculum LEFT JOIN FETCH sp.college WHERE sp.id = :id")
     Optional<StudentProfile> findByIdWithProgramAndCurriculum(@Param("id") Long id);
 
-    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.user LEFT JOIN FETCH sp.program LEFT JOIN FETCH sp.curriculum WHERE sp.user.id = :userId")
+    @Query("SELECT sp FROM StudentProfile sp JOIN FETCH sp.user LEFT JOIN FETCH sp.program LEFT JOIN FETCH sp.curriculum LEFT JOIN FETCH sp.college WHERE sp.user.id = :userId")
     Optional<StudentProfile> findByUserIdWithProgramAndCurriculum(@Param("userId") Long userId);
 
     boolean existsByStudentNumber(String studentNumber);
 
     long countByProgramId(Long programId);
+
+    long countByCollegeId(Long collegeId);
+
+    java.util.List<StudentProfile> findByCollegeId(Long collegeId);
 
     @Query("SELECT sp.id FROM StudentProfile sp")
     java.util.List<Long> findAllStudentIds();
@@ -55,4 +59,11 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
           AND item.section.id IN :sectionIds
     """)
     boolean existsEnrolledInSections(@Param("studentId") Long studentId, @Param("sectionIds") java.util.Collection<Long> sectionIds);
+
+    @Query("""
+        SELECT DISTINCT item.enrollment.student.id
+        FROM EnrollmentCourseItem item
+        WHERE item.section.id IN :sectionIds
+    """)
+    java.util.List<Long> findStudentIdsEnrolledInSections(@Param("sectionIds") java.util.Collection<Long> sectionIds);
 }

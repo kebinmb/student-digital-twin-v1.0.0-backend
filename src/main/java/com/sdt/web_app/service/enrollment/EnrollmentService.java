@@ -222,7 +222,7 @@ public class EnrollmentService {
         return new AdvisingEligibilityResponse(
                 student.getId(),
                 student.getStudentNumber(),
-                student.getUser().getUsername(),
+                student.getFullName(),
                 student.getProgram().getCode(),
                 student.getProgram().getName(),
                 student.getCurriculum().getCode(),

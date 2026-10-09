@@ -21,6 +21,9 @@ public class GradeChangeDtos {
             Long studentId,
             String studentNumber,
             String studentName,
+            Long programId,
+            String programCode,
+            Long collegeId,
             Long courseId,
             String courseCode,
             String courseTitle,
@@ -33,5 +36,26 @@ public class GradeChangeDtos {
             String requestedByUsername,
             String approvedByUsername,
             Instant createdAt
-    ) {}
+    ) {
+        public GradeChangeResponse(
+                Long id,
+                Long studentId,
+                String studentNumber,
+                String studentName,
+                Long courseId,
+                String courseCode,
+                String courseTitle,
+                Long termId,
+                String termName,
+                BigDecimal previousGrade,
+                BigDecimal newGrade,
+                String reason,
+                String status,
+                String requestedByUsername,
+                String approvedByUsername,
+                Instant createdAt
+        ) {
+            this(id, studentId, studentNumber, studentName, null, null, null, courseId, courseCode, courseTitle, termId, termName, previousGrade, newGrade, reason, status, requestedByUsername, approvedByUsername, createdAt);
+        }
+    }
 }

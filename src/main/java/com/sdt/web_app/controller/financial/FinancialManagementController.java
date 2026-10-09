@@ -39,6 +39,7 @@ public class FinancialManagementController {
 
     @Auditable(action = "READ_ACTIVE_FEE_TEMPLATE", entityName = "FeeTemplate")
     @GetMapping("/fee-templates/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'ACCOUNTANT', 'CASHIER', 'DEAN', 'CHAIRPERSON', 'STUDENT')")
     public ResponseEntity<FeeTemplateDto> getActiveFeeTemplate(@RequestParam(name = "academicYearId", required = false) Long academicYearId) {
         FeeTemplateDto result = feeAssessmentService.getActiveFeeTemplate(academicYearId);
         return ResponseEntity.ok(result);
@@ -64,6 +65,7 @@ public class FinancialManagementController {
 
     @Auditable(action = "READ_INVOICE_BY_ENROLLMENT", entityName = "StudentAssessmentInvoice", entityId = "#enrollmentId")
     @GetMapping("/invoices/enrollment/{enrollmentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'REGISTRAR', 'ACCOUNTANT', 'CASHIER', 'STUDENT')")
     public ResponseEntity<StudentAssessmentInvoiceDto> getInvoiceByEnrollmentId(@PathVariable Long enrollmentId) {
         StudentAssessmentInvoiceDto result = feeAssessmentService.getInvoiceByEnrollmentId(enrollmentId);
         return ResponseEntity.ok(result);
@@ -98,6 +100,7 @@ public class FinancialManagementController {
 
     @Auditable(action = "READ_RECEIPT_BY_OR", entityName = "CashierReceipt", entityId = "#orNumber")
     @GetMapping("/receipts/{orNumber}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CASHIER', 'REGISTRAR')")
     public ResponseEntity<CashierReceiptDto> getReceiptByOrNumber(@PathVariable String orNumber) {
         CashierReceiptDto result = cashieringService.getReceiptByOrNumber(orNumber);
         return ResponseEntity.ok(result);
@@ -184,7 +187,7 @@ public class FinancialManagementController {
 
     @Auditable(action = "READ_UNIFAST_CLAIMS_BY_TERM", entityName = "UnifastFheClaim", entityId = "#termId")
     @GetMapping("/unifast/claims/term/{termId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR', 'CASHIER')")
     public ResponseEntity<List<UnifastFheClaimDto>> getClaimsByTerm(@PathVariable Long termId) {
         List<UnifastFheClaimDto> result = unifastBillingService.getClaimsByTerm(termId);
         return ResponseEntity.ok(result);
@@ -192,7 +195,7 @@ public class FinancialManagementController {
 
     @Auditable(action = "READ_UNIFAST_CLAIM_BATCH", entityName = "UnifastFheClaim", entityId = "#claimBatchId")
     @GetMapping("/unifast/claims/{claimBatchId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR', 'CASHIER')")
     public ResponseEntity<UnifastFheClaimDto> getClaimBatchDetails(@PathVariable Long claimBatchId) {
         UnifastFheClaimDto result = unifastBillingService.getClaimBatch(claimBatchId);
         return ResponseEntity.ok(result);
@@ -200,7 +203,7 @@ public class FinancialManagementController {
 
     @Auditable(action = "DISALLOW_UNIFAST_CLAIM_ITEM", entityName = "UnifastFheClaimItem", entityId = "#itemId")
     @PutMapping("/unifast/claims/items/{itemId}/disallow")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR', 'CASHIER')")
     public ResponseEntity<UnifastFheClaimItemDto> disallowClaimItem(@PathVariable Long itemId, @Valid @RequestBody DisallowClaimItemRequest request, Authentication authentication) {
         Long actorUserId = securityUtils.resolveUserId(authentication);
         UnifastFheClaimItemDto result = unifastBillingService.disallowClaimItem(itemId, request, actorUserId);
@@ -209,7 +212,7 @@ public class FinancialManagementController {
 
     @Auditable(action = "EXPORT_UNIFAST_FORM2_CSV", entityName = "UnifastFheClaim", entityId = "#claimBatchId")
     @GetMapping(value = "/unifast/claims/{claimBatchId}/form2/export", produces = "text/csv")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'REGISTRAR', 'CASHIER')")
     public ResponseEntity<String> exportForm2Csv(@PathVariable Long claimBatchId) {
         String csvContent = unifastBillingService.exportForm2Csv(claimBatchId);
         return ResponseEntity.ok()
