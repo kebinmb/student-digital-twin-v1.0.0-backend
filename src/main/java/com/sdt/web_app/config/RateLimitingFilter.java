@@ -12,11 +12,18 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
+
+    private static final List<String> EXCLUDED_PATHS = List.of(
+            "/api/public/",
+            "/ws/",
+            "/ws-sockjs/"
+    );
 
     private static final int MAX_REQUESTS = 5;
     private static final long WINDOW_MS = 15 * 60 * 1000L; // 15 minutes in milliseconds
@@ -44,9 +51,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
 
         String path = request.getRequestURI();
-        return !(path.equals("/api/public/auth/login") ||
-                 path.equals("/api/public/auth/register") ||
-                 path.equals("/api/public/auth/forgot-password"));
+        return !(path.startsWith("/api/public/auth/login") ||
+                 path.startsWith("/api/public/auth/register") ||
+                 path.startsWith("/api/public/auth/forgot-password"));
     }
 
     @Override

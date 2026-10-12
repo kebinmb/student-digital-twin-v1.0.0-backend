@@ -92,7 +92,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    @Order(2)
+    @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(
             HttpSecurity http,
             @Qualifier("localJwtDecoder") JwtDecoder jwtDecoder,

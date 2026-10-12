@@ -96,6 +96,7 @@ com\sdt\web_app\service\security\AccountantEndpointSecurityTest.class
 com\sdt\web_app\controller\analytics\DigitalTwinAnalyticsControllerTest.class
 com\sdt\web_app\controller\TestSecurityControllers$DummyAdminController.class
 com\sdt\web_app\service\analytics\EquityTargetServiceTest.class
+com\sdt\web_app\service\security\StudentDashboardAuthorizationTest.class
 com\sdt\web_app\service\institution\CurriculumMajorLinkingTest.class
 com\sdt\web_app\service\institution\HonorRollCertificateServiceTest.class
 com\sdt\web_app\service\analytics\StudentInterventionServiceTest.class
