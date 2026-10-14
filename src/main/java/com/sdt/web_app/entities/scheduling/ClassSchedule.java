@@ -57,6 +57,24 @@ public class ClassSchedule {
     @Builder.Default
     private String scheduleType = "LECTURE";
 
+    @Column(name = "is_locked", nullable = false)
+    @Builder.Default
+    private boolean isLocked = false;
+
+    @Column(name = "lock_reason", length = 50)
+    @Builder.Default
+    private String lockReason = "NONE";
+
+    public void lock(String reason) {
+        this.isLocked = true;
+        this.lockReason = reason != null ? reason : "PENDING_APPROVAL";
+    }
+
+    public void unlock() {
+        this.isLocked = false;
+        this.lockReason = "NONE";
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

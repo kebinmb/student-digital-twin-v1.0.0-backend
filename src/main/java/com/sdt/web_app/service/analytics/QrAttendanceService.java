@@ -76,6 +76,11 @@ public class QrAttendanceService {
         ClassSchedule schedule = scheduleRepository.findById(request.sectionScheduleId())
                 .orElseThrow(() -> new EntityNotFoundException("Class schedule not found: " + request.sectionScheduleId()));
 
+        if (schedule.isLocked()) {
+            throw new IllegalStateException(
+                    "Cannot start attendance session: Schedule assignment is locked pending cross-unit override approval (" + schedule.getLockReason() + ").");
+        }
+
         User creatorUser = null;
         if (creatorUserId != null) {
             creatorUser = userRepository.findById(creatorUserId).orElse(null);

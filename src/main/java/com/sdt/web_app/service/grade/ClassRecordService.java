@@ -619,5 +619,8 @@ public class ClassRecordService {
             section.getGradeStatus() == ClassSection.GradeStatus.SEALED) {
             throw new IllegalStateException("Class record modifications blocked: Section " + section.getSectionCode() + " is in " + section.getGradeStatus() + " status.");
         }
+        if (section.getSchedules() != null && section.getSchedules().stream().anyMatch(com.sdt.web_app.entities.scheduling.ClassSchedule::isLocked)) {
+            throw new IllegalStateException("Class record modifications blocked: Section " + section.getSectionCode() + " has schedule assignments locked pending override approval.");
+        }
     }
 }

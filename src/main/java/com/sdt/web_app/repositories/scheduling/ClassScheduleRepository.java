@@ -113,4 +113,24 @@ public interface ClassScheduleRepository extends JpaRepository<ClassSchedule, Lo
     long countDistinctCoursesByFacultyAndTerm(
             @Param("instructorId") Long instructorId,
             @Param("termId") Long termId);
+
+    @Query("SELECT s FROM ClassSchedule s " +
+           "WHERE s.room.id = :roomId " +
+           "  AND s.section.term.id = :termId " +
+           "  AND s.dayOfWeek = :dayOfWeek " +
+           "  AND s.isLocked = false")
+    List<ClassSchedule> findActiveByRoomAndDay(
+            @Param("roomId") Long roomId,
+            @Param("termId") Long termId,
+            @Param("dayOfWeek") String dayOfWeek);
+
+    @Query("SELECT s FROM ClassSchedule s " +
+           "WHERE s.instructor.id = :instructorId " +
+           "  AND s.section.term.id = :termId " +
+           "  AND s.dayOfWeek = :dayOfWeek " +
+           "  AND s.isLocked = false")
+    List<ClassSchedule> findActiveByInstructorAndDay(
+            @Param("instructorId") Long instructorId,
+            @Param("termId") Long termId,
+            @Param("dayOfWeek") String dayOfWeek);
 }

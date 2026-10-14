@@ -2,6 +2,7 @@ package com.sdt.web_app.service.scheduling;
 
 import com.sdt.web_app.dto.scheduling.SchedulingDtos.*;
 import com.sdt.web_app.entities.authentication.User;
+import com.sdt.web_app.entities.faculty.FacultyProfile;
 import com.sdt.web_app.entities.institution.AcademicYear;
 import com.sdt.web_app.entities.institution.Campus;
 import com.sdt.web_app.entities.institution.Course;
@@ -13,6 +14,7 @@ import com.sdt.web_app.entities.scheduling.ClassSection;
 import com.sdt.web_app.entities.scheduling.FacultyWorkload;
 import com.sdt.web_app.entities.scheduling.Room;
 import com.sdt.web_app.repositories.authentication.UserRepository;
+import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
 import com.sdt.web_app.repositories.institution.CampusRepository;
 import com.sdt.web_app.repositories.institution.CourseRepository;
 import com.sdt.web_app.repositories.institution.CurriculumCourseRepository;
@@ -66,6 +68,8 @@ class SchedulingServiceTest {
     private CourseRepository courseRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private FacultyProfileRepository facultyProfileRepository;
     @Mock
     private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
     @Mock
@@ -561,5 +565,101 @@ class SchedulingServiceTest {
         assertThat(dto.sectionCode()).isEqualTo("BSIT-1B");
         assertThat(dto.schedules()).hasSize(1);
         assertThat(dto.schedules().get(0).scheduleType()).isEqualTo("LABORATORY");
+    }
+
+    @Test
+    @DisplayName("Dropdown: Should return faculty full name from faculty_profiles instead of username")
+    void shouldReturnFacultyFullNameFromProfileInGetAvailableInstructors() {
+        User user = User.builder()
+                .username("jmoraca")
+                .email("jmoraca@chmsu.edu.ph")
+                .build();
+        ReflectionTestUtils.setField(user, "id", 15L);
+
+        FacultyProfile profile = FacultyProfile.builder()
+                .user(user)
+                .facultyIdNumber("FAC-001")
+                .firstName("John")
+                .middleName("Kevin")
+                .lastName("Moraca")
+                .build();
+        ReflectionTestUtils.setField(profile, "id", 101L);
+
+        given(userRepository.findByEnabledTrueAndRolesIn(any()))
+                .willReturn(List.of(user));
+        given(facultyProfileRepository.findAll())
+                .willReturn(List.of(profile));
+
+        List<InstructorOptionDto> instructors = schedulingService.getAvailableInstructors();
+
+        assertThat(instructors).hasSize(1);
+        InstructorOptionDto dto = instructors.get(0);
+        assertThat(dto.id()).isEqualTo(15L);
+        assertThat(dto.username()).isEqualTo("jmoraca");
+        assertThat(dto.fullName()).isEqualTo("John Kevin Moraca");
+    }
+
+    @Test
+    @DisplayName("Mapping: Should map faculty full name into section schedule slot when profile exists")
+    void shouldMapFacultyFullNameIntoSectionScheduleSlot() {
+        ClassSection section1 = ClassSection.builder()
+                .term(term)
+                .curriculum(activeCurriculum)
+                .course(course)
+                .sectionCode("BSIT-1A")
+                .maxCapacity(40)
+                .build();
+        ReflectionTestUtils.setField(section1, "id", 101L);
+
+        ClassSchedule schedule1 = ClassSchedule.builder()
+                .section(section1)
+                .room(room)
+                .instructor(instructor)
+                .dayOfWeek("MONDAY")
+                .startTime(LocalTime.of(8, 0))
+                .endTime(LocalTime.of(10, 0))
+                .scheduleType("LECTURE")
+                .build();
+        ReflectionTestUtils.setField(schedule1, "id", 201L);
+
+        FacultyProfile profile = FacultyProfile.builder()
+                .user(instructor)
+                .facultyIdNumber("FAC-002")
+                .firstName("Alice")
+                .lastName("Wonderland")
+                .build();
+
+        given(sectionRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class)))
+                .willReturn(List.of(section1));
+        given(scheduleRepository.findBySectionIdInWithRoomAndInstructor(List.of(101L)))
+                .willReturn(List.of(schedule1));
+        given(facultyProfileRepository.findByUserIdIn(any()))
+                .willReturn(List.of(profile));
+
+        List<SectionDetailResponse> result = schedulingService.getSectionsByTerm(10L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).schedules().get(0).instructorName()).isEqualTo("Alice Wonderland");
+    }
+
+    @Test
+    @DisplayName("Workload: Should map faculty full name from profile in getFacultyWorkload")
+    void shouldMapFacultyFullNameInFacultyWorkload() {
+        FacultyProfile profile = FacultyProfile.builder()
+                .user(instructor)
+                .facultyIdNumber("FAC-003")
+                .firstName("Alice")
+                .lastName("Wonderland")
+                .build();
+
+        given(userRepository.findById(30L)).willReturn(Optional.of(instructor));
+        given(facultyProfileRepository.findByUserId(30L)).willReturn(Optional.of(profile));
+        given(workloadRepository.findByTermIdAndFacultyId(10L, 30L)).willReturn(Optional.empty());
+        given(scheduleRepository.findByInstructorIdAndSectionTermId(30L, 10L)).willReturn(List.of());
+
+        FacultyLoadSummaryResponse response = schedulingService.getFacultyWorkload(10L, 30L);
+
+        assertThat(response.facultyUserId()).isEqualTo(30L);
+        assertThat(response.facultyName()).isEqualTo("Alice Wonderland");
     }
 }

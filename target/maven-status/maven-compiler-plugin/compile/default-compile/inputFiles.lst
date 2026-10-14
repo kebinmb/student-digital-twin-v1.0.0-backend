@@ -66,6 +66,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\notice\CampusNoticeController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\push\WebPushSubscriptionController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\scheduling\SchedulingController.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\scheduling\SchedulingOverrideController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\controller\webhook\InstitutionalWebhookController.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\admission\AdmissionDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\analytics\AcknowledgeInterventionRequest.java
@@ -102,6 +103,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\notice\NoticeDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\push\PushDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\scheduling\SchedulingDtos.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\scheduling\SchedulingOverrideDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\dto\webhook\WebhookDtos.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\admission\AdmissionApplication.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\admission\AdmissionConfig.java
@@ -175,10 +177,16 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\notice\CampusNotice.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\notice\NoticeAcknowledgment.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\push\WebPushSubscription.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\ApprovalStepStatus.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\ApprovalStepType.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\ClassSchedule.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\ClassSection.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\FacultyWorkload.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\OverrideRequestStatus.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\OverrideType.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\Room.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\SchedulingOverrideApproval.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\scheduling\SchedulingOverrideRequest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\webhook\InstitutionalWebhook.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\entities\webhook\InstitutionalWebhookDelivery.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\event\lms\StudentStreamingEvent.java
@@ -257,6 +265,8 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\ClassSectionRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\FacultyWorkloadRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\RoomRepository.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\SchedulingOverrideApprovalRepository.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\scheduling\SchedulingOverrideRequestRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\webhook\InstitutionalWebhookDeliveryRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\repositories\webhook\InstitutionalWebhookRepository.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\admission\AdmissionQueueService.java
@@ -321,6 +331,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\push\VapidJwtService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\push\WebPushPayloadEncryptionService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\push\WebPushSubscriptionService.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\scheduling\SchedulingOverrideService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\scheduling\SchedulingService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\scheduling\SectionEventPublisherService.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\main\java\com\sdt\web_app\service\scheduling\SectionSecurity.java

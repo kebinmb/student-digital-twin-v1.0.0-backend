@@ -170,6 +170,10 @@ public class GradeService {
             throw new IllegalStateException("Cannot update grades: section " + section.getSectionCode() + " is currently in " + section.getGradeStatus() + " status.");
         }
 
+        if (section.getSchedules() != null && section.getSchedules().stream().anyMatch(com.sdt.web_app.entities.scheduling.ClassSchedule::isLocked)) {
+            throw new IllegalStateException("Cannot update grades: section " + section.getSectionCode() + " has schedule assignments locked pending override approval.");
+        }
+
         int updatedCount = 0;
         if (request.grades() != null) {
             for (GradeEntryDto entry : request.grades()) {

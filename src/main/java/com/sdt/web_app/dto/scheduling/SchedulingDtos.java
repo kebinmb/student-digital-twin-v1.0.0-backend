@@ -189,8 +189,25 @@ public class SchedulingDtos {
             String dayOfWeek,
             LocalTime startTime,
             LocalTime endTime,
-            String scheduleType
-    ) {}
+            String scheduleType,
+            boolean isLocked,
+            String lockReason
+    ) {
+        public ScheduleSlotResponse(
+                Long id,
+                Long roomId,
+                String roomCode,
+                String roomName,
+                Long instructorUserId,
+                String instructorName,
+                String dayOfWeek,
+                LocalTime startTime,
+                LocalTime endTime,
+                String scheduleType
+        ) {
+            this(id, roomId, roomCode, roomName, instructorUserId, instructorName, dayOfWeek, startTime, endTime, scheduleType, false, "NONE");
+        }
+    }
 
     public record FacultyLoadSummaryResponse(
             Long facultyUserId,
@@ -276,6 +293,15 @@ public class SchedulingDtos {
     public record InstructorOptionDto(
             Long id,
             String username,
-            String email
-    ) {}
+            String email,
+            String fullName,
+            Long programId,
+            String programCode,
+            Long collegeId,
+            String collegeCode
+    ) {
+        public InstructorOptionDto(Long id, String username, String email) {
+            this(id, username, email, username, null, null, null, null);
+        }
+    }
 }

@@ -53,6 +53,7 @@ com\sdt\web_app\service\institution\CurriculumControllerSecurityIntegrationTest.
 com\sdt\web_app\service\authentication\JwtDenylistSecurityTest.class
 com\sdt\web_app\service\enrollment\EnrollmentSecurityTest.class
 com\sdt\web_app\GrpcSecurityInterceptorIntegrationTest.class
+com\sdt\web_app\service\scheduling\SchedulingOverrideWorkflowTest.class
 com\sdt\web_app\AuthenticationIntegrationTest.class
 com\sdt\web_app\service\institution\HonorRollComputationServiceTest.class
 com\sdt\web_app\service\institution\InstitutionalComprehensiveCrudVerificationTest.class

@@ -71,6 +71,7 @@ C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\push\VapidJwtServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\push\WebPushPayloadEncryptionServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\push\WebPushSubscriptionServiceTest.java
+C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\scheduling\SchedulingOverrideWorkflowTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\scheduling\SchedulingServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\scheduling\SectionEventPublisherServiceTest.java
 C:\Users\USER\Documents\Github\backend-repo\student-digital-twin-v1.0.0\student-digital-twin-v1.0.0-backend\src\test\java\com\sdt\web_app\service\security\AcademicHierarchyScopingIntegrationTest.java

@@ -38,9 +38,11 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,6 +63,7 @@ public class SchedulingService {
     private final CurriculumCourseRepository curriculumCourseRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final com.sdt.web_app.repositories.faculty.FacultyProfileRepository facultyProfileRepository;
     private final AcademicScopeAssertionService academicScopeAssertionService;
     private final com.sdt.web_app.config.WebSocketBroadcastService broadcastService;
 
@@ -200,7 +203,7 @@ public class SchedulingService {
                             term.getId(), slot.instructorUserId(), dayUpper, slot.startTime(), slot.endTime());
                     if (facultyOverlap) {
                         User instructor = userRepository.findById(slot.instructorUserId()).orElse(null);
-                        String facultyName = instructor != null ? instructor.getUsername() : String.valueOf(slot.instructorUserId());
+                        String facultyName = instructor != null ? resolveUserDisplayName(instructor, instructor.getUsername()) : String.valueOf(slot.instructorUserId());
                         throw new IllegalStateException(String.format(
                             "Gate 2 Violation: Faculty collision detected. Instructor '%s' is already scheduled on %s between %s and %s.",
                             facultyName, dayUpper, slot.startTime(), slot.endTime()));
@@ -364,7 +367,7 @@ public class SchedulingService {
                             term.getId(), sectionId, slot.instructorUserId(), dayUpper, slot.startTime(), slot.endTime());
                     if (facultyOverlap) {
                         User instructor = userRepository.findById(slot.instructorUserId()).orElse(null);
-                        String facultyName = instructor != null ? instructor.getUsername() : String.valueOf(slot.instructorUserId());
+                        String facultyName = instructor != null ? resolveUserDisplayName(instructor, instructor.getUsername()) : String.valueOf(slot.instructorUserId());
                         throw new IllegalStateException(String.format(
                                 "Gate 2 Violation: Faculty collision detected. Instructor '%s' is already scheduled on %s between %s and %s.",
                                 facultyName, dayUpper, slot.startTime(), slot.endTime()));
@@ -507,7 +510,8 @@ public class SchedulingService {
 
     private void recalculateFacultyWorkload(Term term, User instructor) {
         if (instructor == null || term == null) return;
-        List<ClassSchedule> schedules = scheduleRepository.findByInstructorIdAndSectionTermId(instructor.getId(), term.getId());
+        List<ClassSchedule> schedules = scheduleRepository.findByInstructorIdAndSectionTermId(instructor.getId(), term.getId())
+                .stream().filter(s -> !s.isLocked()).toList();
 
         Set<Long> distinctCourseIds = schedules.stream()
                 .map(s -> s.getSection().getCourse().getId())
@@ -642,8 +646,10 @@ public class SchedulingService {
         Map<Long, List<ClassSchedule>> schedulesBySection = allSchedules.stream()
                 .collect(Collectors.groupingBy(s -> s.getSection().getId()));
 
+        Map<Long, String> instructorNames = resolveInstructorNames(allSchedules);
+
         return sections.stream()
-                .map(sec -> mapToSectionDetail(sec, schedulesBySection.getOrDefault(sec.getId(), List.of())))
+                .map(sec -> mapToSectionDetail(sec, schedulesBySection.getOrDefault(sec.getId(), List.of()), instructorNames))
                 .toList();
     }
 
@@ -694,9 +700,11 @@ public class SchedulingService {
         int preps = workload != null ? workload.getNumberOfPreparations() : (int) scheduleRepository.countDistinctCoursesByFacultyAndTerm(facultyUserId, termId);
         BigDecimal effectiveMax = workload != null ? workload.getEffectiveMaxLoad() : (preps <= 2 ? new BigDecimal("21.00") : new BigDecimal("18.00"));
 
+        String facultyDisplayName = resolveUserDisplayName(faculty, faculty.getUsername());
+
         return new FacultyLoadSummaryResponse(
                 faculty.getId(),
-                faculty.getUsername(),
+                facultyDisplayName,
                 faculty.getEmail(),
                 term.getId(),
                 term.getTermType().name(),
@@ -903,11 +911,40 @@ public class SchedulingService {
 
     @Transactional(readOnly = true)
     public List<InstructorOptionDto> getAvailableInstructors() {
-        return userRepository.findByEnabledTrueAndRolesIn(
+        List<User> users = userRepository.findByEnabledTrueAndRolesIn(
                 List.of(Roles.FACULTY, Roles.CHAIRPERSON, Roles.DEAN, Roles.ADMIN)
-        ).stream()
-        .map(u -> new InstructorOptionDto(u.getId(), u.getUsername(), u.getEmail()))
-        .toList();
+        );
+
+        List<com.sdt.web_app.entities.faculty.FacultyProfile> profiles = facultyProfileRepository.findAll();
+        Map<Long, com.sdt.web_app.entities.faculty.FacultyProfile> profileMap = profiles.stream()
+                .filter(p -> p.getUser() != null)
+                .collect(Collectors.toMap(p -> p.getUser().getId(), p -> p, (a, b) -> a));
+
+        return users.stream()
+                .map(u -> {
+                    com.sdt.web_app.entities.faculty.FacultyProfile prof = profileMap.get(u.getId());
+                    String fullName = (prof != null && prof.getFullName() != null && !prof.getFullName().isBlank())
+                            ? prof.getFullName()
+                            : u.getUsername();
+
+                    Long programId = prof != null && prof.getProgram() != null ? prof.getProgram().getId() : (u.getProgram() != null ? u.getProgram().getId() : null);
+                    String programCode = prof != null && prof.getProgram() != null ? prof.getProgram().getCode() : (u.getProgram() != null ? u.getProgram().getCode() : null);
+
+                    Long collegeId = prof != null && prof.getCollege() != null ? prof.getCollege().getId() : (u.getCollege() != null ? u.getCollege().getId() : null);
+                    String collegeCode = prof != null && prof.getCollege() != null ? prof.getCollege().getCode() : (u.getCollege() != null ? u.getCollege().getCode() : null);
+
+                    return new InstructorOptionDto(
+                            u.getId(),
+                            u.getUsername(),
+                            u.getEmail(),
+                            fullName,
+                            programId,
+                            programCode,
+                            collegeId,
+                            collegeCode
+                    );
+                })
+                .toList();
     }
 
     private String formatTermType(String termType) {
@@ -941,24 +978,81 @@ public class SchedulingService {
         );
     }
 
+    private Map<Long, String> resolveInstructorNames(java.util.Collection<ClassSchedule> schedules) {
+        if (schedules == null || schedules.isEmpty() || facultyProfileRepository == null) {
+            return Collections.emptyMap();
+        }
+        Set<Long> userIds = schedules.stream()
+                .map(ClassSchedule::getInstructor)
+                .filter(Objects::nonNull)
+                .map(User::getId)
+                .collect(Collectors.toSet());
+        if (userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            List<com.sdt.web_app.entities.faculty.FacultyProfile> profiles = facultyProfileRepository.findByUserIdIn(userIds);
+            return profiles.stream()
+                    .filter(p -> p.getUser() != null && p.getFullName() != null && !p.getFullName().isBlank())
+                    .collect(Collectors.toMap(p -> p.getUser().getId(), com.sdt.web_app.entities.faculty.FacultyProfile::getFullName, (a, b) -> a));
+        } catch (Exception e) {
+            log.warn("Failed to resolve faculty profile names: {}", e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    private String resolveUserDisplayName(User user, String fallback) {
+        if (user == null) return fallback;
+        if (facultyProfileRepository != null) {
+            try {
+                return facultyProfileRepository.findByUserId(user.getId())
+                        .map(p -> (p.getFullName() != null && !p.getFullName().isBlank()) ? p.getFullName() : user.getUsername())
+                        .orElse(user.getUsername());
+            } catch (Exception e) {
+                log.warn("Failed to resolve user display name for userId {}: {}", user.getId(), e.getMessage());
+            }
+        }
+        return user.getUsername() != null ? user.getUsername() : fallback;
+    }
+
     private SectionDetailResponse mapToSectionDetail(ClassSection sec) {
         return mapToSectionDetail(sec, sec.getSchedules() != null ? sec.getSchedules() : java.util.Collections.emptySet());
     }
 
     private SectionDetailResponse mapToSectionDetail(ClassSection sec, java.util.Collection<ClassSchedule> schedules) {
+        Map<Long, String> instructorNames = resolveInstructorNames(schedules);
+        return mapToSectionDetail(sec, schedules, instructorNames);
+    }
+
+    private SectionDetailResponse mapToSectionDetail(
+            ClassSection sec,
+            java.util.Collection<ClassSchedule> schedules,
+            Map<Long, String> instructorNames
+    ) {
         List<ScheduleSlotResponse> slotResponses = schedules.stream()
-                .map(s -> new ScheduleSlotResponse(
-                        s.getId(),
-                        s.getRoom().getId(),
-                        s.getRoom().getCode(),
-                        s.getRoom().getName(),
-                        s.getInstructor() != null ? s.getInstructor().getId() : null,
-                        s.getInstructor() != null ? s.getInstructor().getUsername() : "Unassigned",
-                        s.getDayOfWeek(),
-                        s.getStartTime(),
-                        s.getEndTime(),
-                        s.getScheduleType()
-                ))
+                .map(s -> {
+                    String instructorName = "Unassigned";
+                    if (s.getInstructor() != null) {
+                        Long instId = s.getInstructor().getId();
+                        instructorName = (instructorNames != null && instructorNames.containsKey(instId))
+                                ? instructorNames.get(instId)
+                                : s.getInstructor().getUsername();
+                    }
+                    return new ScheduleSlotResponse(
+                            s.getId(),
+                            s.getRoom().getId(),
+                            s.getRoom().getCode(),
+                            s.getRoom().getName(),
+                            s.getInstructor() != null ? s.getInstructor().getId() : null,
+                            instructorName,
+                            s.getDayOfWeek(),
+                            s.getStartTime(),
+                            s.getEndTime(),
+                            s.getScheduleType(),
+                            s.isLocked(),
+                            s.getLockReason()
+                    );
+                })
                 .toList();
 
         return new SectionDetailResponse(
