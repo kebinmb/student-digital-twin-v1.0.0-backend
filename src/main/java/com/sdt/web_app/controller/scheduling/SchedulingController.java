@@ -58,7 +58,7 @@ public class SchedulingController {
     // -------------------------------------------------------------------------
     @Auditable(action = "CREATE_SECTION", entityName = "ClassSection")
     @PostMapping("/sections")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<SectionDetailResponse> createSection(@Valid @RequestBody CreateSectionRequest request) {
         SectionDetailResponse response = schedulingService.createSection(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -75,7 +75,10 @@ public class SchedulingController {
             if (scope.isDean()) {
                 return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(scope.allowedProgramIds()), scope.userId()));
             } else if (scope.isChairperson()) {
-                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(List.of(scope.programId())), scope.userId()));
+                List<Long> pids = (scope.allowedProgramIds() != null && !scope.allowedProgramIds().isEmpty())
+                        ? scope.allowedProgramIds()
+                        : (scope.programId() != null ? List.of(scope.programId()) : List.of());
+                return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.of(pids), scope.userId()));
             } else if (scope.isFaculty()) {
                 return ResponseEntity.ok(schedulingService.getSectionsByTerm(termId, java.util.Optional.empty(), scope.userId()));
             }
@@ -92,7 +95,7 @@ public class SchedulingController {
 
     @Auditable(action = "UPDATE_SECTION", entityName = "ClassSection", entityId = "#id")
     @PutMapping("/sections/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<SectionDetailResponse> updateSection(
             @PathVariable("id") Long id,
             @Valid @RequestBody UpdateSectionRequest request) {
@@ -102,7 +105,7 @@ public class SchedulingController {
 
     @Auditable(action = "DELETE_SECTION", entityName = "ClassSection", entityId = "#id")
     @DeleteMapping("/sections/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<Void> deleteSection(@PathVariable("id") Long id) {
         schedulingService.deleteSection(id);
         return ResponseEntity.noContent().build();
@@ -110,7 +113,7 @@ public class SchedulingController {
 
     @Auditable(action = "CREATE_SCHEDULE_SLOT", entityName = "ScheduleSlot", entityId = "#sectionId")
     @PostMapping("/sections/{sectionId}/slots")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<SectionDetailResponse> addScheduleSlots(
             @PathVariable("sectionId") Long sectionId,
             @Valid @RequestBody CreateScheduleSlotRequest request) {
@@ -177,7 +180,7 @@ public class SchedulingController {
 
     @Auditable(action = "UPDATE_TERM_MAX_HOURS_PER_CLASS", entityName = "Term", entityId = "#termId")
     @PutMapping("/terms/{termId}/max-class-hours")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR')")
     public ResponseEntity<SchedulingTermDto> updateTermMaxHoursPerClass(
             @PathVariable("termId") Long termId,
             @Valid @RequestBody UpdateTermClassHourLimitRequest request) {

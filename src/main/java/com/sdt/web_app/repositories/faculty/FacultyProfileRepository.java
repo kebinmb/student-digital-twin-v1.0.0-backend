@@ -22,6 +22,9 @@ public interface FacultyProfileRepository extends JpaRepository<FacultyProfile, 
     @EntityGraph(attributePaths = {"user", "college", "program"})
     Optional<FacultyProfile> findByUserId(Long userId);
 
+    @EntityGraph(attributePaths = {"user"})
+    List<FacultyProfile> findByUserIdIn(java.util.Collection<Long> userIds);
+
     @EntityGraph(attributePaths = {"user", "college", "program"})
     Optional<FacultyProfile> findByFacultyIdNumber(String facultyIdNumber);
 

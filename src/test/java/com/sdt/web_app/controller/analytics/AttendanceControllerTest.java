@@ -84,4 +84,42 @@ class AttendanceControllerTest {
                 .andExpect(jsonPath("$.qrSeed").value("QR-ATT-SESSION-123"))
                 .andExpect(jsonPath("$.qrCodeDataUrl").value("data:image/png;base64,mockQrBarcode"));
     }
+
+    @Test
+    @DisplayName("POST /api/v1/attendance/creator/verify records conductor check-in")
+    void verifyCreatorAttendance_ReturnsRecord() throws Exception {
+        com.sdt.web_app.dto.analytics.AnalyticsDtos.VerifyCreatorAttendanceRequest request =
+                new com.sdt.web_app.dto.analytics.AnalyticsDtos.VerifyCreatorAttendanceRequest(
+                        "QR-ATT-SESSION-123",
+                        new BigDecimal("10.6385"),
+                        new BigDecimal("122.9723"),
+                        "Host-Console"
+                );
+
+        com.sdt.web_app.dto.analytics.AnalyticsDtos.FacultyAttendanceRecordResponse mockResponse =
+                new com.sdt.web_app.dto.analytics.AnalyticsDtos.FacultyAttendanceRecordResponse(
+                        55L,
+                        101L,
+                        "BSIT 3-A",
+                        "IT311",
+                        25L,
+                        "Dr. Dean Instructor",
+                        "DEAN",
+                        "PRESENT",
+                        true,
+                        Instant.now(),
+                        "Host-Console"
+                );
+
+        when(securityUtils.resolveUserId(any())).thenReturn(25L);
+        when(attendanceService.verifyCreatorAttendance(any(), eq(25L))).thenReturn(mockResponse);
+
+        mockMvc.perform(post("/api/v1/attendance/creator/verify")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recordId").value(55L))
+                .andExpect(jsonPath("$.facultyRole").value("DEAN"))
+                .andExpect(jsonPath("$.facultyName").value("Dr. Dean Instructor"));
+    }
 }

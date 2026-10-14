@@ -67,7 +67,17 @@ public class DataScopingService {
 
         // DEAN: Scoped to assigned College and child departments
         if (roles.contains("ROLE_DEAN")) {
-            List<Department> colleges = departmentRepository.findByDeanUserId(userId);
+            List<Department> colleges = new ArrayList<>(departmentRepository.findByDeanUserId(userId));
+            if (userRepository != null) {
+                userRepository.findById(userId).ifPresent(u -> {
+                    if (u.getCollege() != null && colleges.stream().noneMatch(c -> c.getId().equals(u.getCollege().getId()))) {
+                        colleges.add(u.getCollege());
+                    } else if (u.getFacultyProfile() != null && u.getFacultyProfile().getCollege() != null
+                            && colleges.stream().noneMatch(c -> c.getId().equals(u.getFacultyProfile().getCollege().getId()))) {
+                        colleges.add(u.getFacultyProfile().getCollege());
+                    }
+                });
+            }
             List<Long> deptIds = new ArrayList<>();
             for (Department college : colleges) {
                 deptIds.add(college.getId());
@@ -76,8 +86,14 @@ public class DataScopingService {
                     deptIds.add(child.getId());
                 }
             }
-            List<Program> programs = deptIds.isEmpty() ? List.of() : programRepository.findByDepartmentIdIn(deptIds);
-            List<Long> programIds = programs.stream().map(Program::getId).toList();
+            Set<Long> programIdSet = new java.util.LinkedHashSet<>();
+            if (!deptIds.isEmpty()) {
+                programRepository.findByDepartmentIdIn(deptIds).forEach(p -> programIdSet.add(p.getId()));
+            }
+            for (Department college : colleges) {
+                programRepository.findByCollegeId(college.getId()).forEach(p -> programIdSet.add(p.getId()));
+            }
+            List<Long> programIds = new ArrayList<>(programIdSet);
             log.debug("DEAN user {} scoped to program IDs: {}", userId, programIds);
             return Optional.of(programIds);
         }
@@ -89,6 +105,9 @@ public class DataScopingService {
                 userRepository.findById(userId).ifPresent(u -> {
                     if (u.getProgram() != null && programs.stream().noneMatch(p -> p.getId().equals(u.getProgram().getId()))) {
                         programs.add(u.getProgram());
+                    } else if (u.getFacultyProfile() != null && u.getFacultyProfile().getProgram() != null
+                            && programs.stream().noneMatch(p -> p.getId().equals(u.getFacultyProfile().getProgram().getId()))) {
+                        programs.add(u.getFacultyProfile().getProgram());
                     }
                 });
             }

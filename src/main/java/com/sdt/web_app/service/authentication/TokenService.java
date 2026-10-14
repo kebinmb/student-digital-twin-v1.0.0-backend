@@ -24,13 +24,16 @@ public class TokenService {
     private List<String> audiences;
 
     private final ProgramRepository programRepository;
+    private final com.sdt.web_app.repositories.institution.DepartmentRepository departmentRepository;
     private final com.sdt.web_app.repositories.enrollment.StudentProfileRepository studentProfileRepository;
 
     public TokenService(JwtEncoder jwtEncoder,
                         ProgramRepository programRepository,
+                        com.sdt.web_app.repositories.institution.DepartmentRepository departmentRepository,
                         com.sdt.web_app.repositories.enrollment.StudentProfileRepository studentProfileRepository) {
         this.jwtEncoder = jwtEncoder;
         this.programRepository = programRepository;
+        this.departmentRepository = departmentRepository;
         this.studentProfileRepository = studentProfileRepository;
     }
 
@@ -50,10 +53,24 @@ public class TokenService {
                 .claim("email", user.getEmail())
                 .claim("roles", roleNames);
 
-        if (user.getCollege() != null) {
-            claimsBuilder.claim("college_id", user.getCollege().getId());
+        Long collegeId = user.getCollege() != null ? user.getCollege().getId() : null;
+        if (collegeId == null && user.getFacultyProfile() != null && user.getFacultyProfile().getCollege() != null) {
+            collegeId = user.getFacultyProfile().getCollege().getId();
         }
+        if (collegeId == null && departmentRepository != null && user.getId() != null) {
+            collegeId = departmentRepository.findByDeanUserId(user.getId()).stream()
+                    .findFirst()
+                    .map(com.sdt.web_app.entities.institution.Department::getId)
+                    .orElse(null);
+        }
+        if (collegeId != null) {
+            claimsBuilder.claim("college_id", collegeId);
+        }
+
         Long programId = user.getProgram() != null ? user.getProgram().getId() : null;
+        if (programId == null && user.getFacultyProfile() != null && user.getFacultyProfile().getProgram() != null) {
+            programId = user.getFacultyProfile().getProgram().getId();
+        }
         if (programId == null && programRepository != null && user.getId() != null) {
             programId = programRepository.findFirstByChairpersonUserId(user.getId())
                     .map(com.sdt.web_app.entities.institution.Program::getId)

@@ -42,7 +42,7 @@ public class CurriculumController {
 
     @Auditable(action = "UPDATE_CURRICULUM", entityName = "Curriculum", entityId = "#id")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<com.sdt.web_app.dto.institution.CurriculumDtos.CurriculumResponse> updateCurriculum(
             @PathVariable("id") Long id,
             @Valid @RequestBody com.sdt.web_app.dto.institution.CurriculumDtos.UpdateCurriculumRequest request) {
@@ -51,7 +51,7 @@ public class CurriculumController {
 
     @Auditable(action = "DELETE_CURRICULUM", entityName = "Curriculum", entityId = "#id")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<Void> deleteCurriculum(@PathVariable("id") Long id) {
         designerService.deleteCurriculum(id);
         return ResponseEntity.noContent().build();
@@ -66,7 +66,7 @@ public class CurriculumController {
 
     @Auditable(action = "CREATE_CURRICULUM", entityName = "Curriculum")
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEAN', 'CHAIRPERSON')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'REGISTRAR', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<CurriculumSummaryResponse> createCurriculum(@Valid @RequestBody CreateCurriculumRequest request) {
         CurriculumSummaryResponse response = designerService.createCurriculum(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

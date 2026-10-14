@@ -40,7 +40,7 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, Long
     @EntityGraph(attributePaths = {
         "term", "course", "curriculum", "curriculum.program", "curriculum.program.department", "curriculum.program.college",
         "primaryInstructor", "primaryInstructor.facultyProfile",
-        "schedules", "schedules.room", "schedules.instructor"
+        "schedules", "schedules.room", "schedules.instructor", "schedules.instructor.facultyProfile"
     })
     @Query("SELECT DISTINCT s FROM ClassSection s WHERE s.id = :id")
     Optional<ClassSection> findByIdWithSchedules(@Param("id") Long id);

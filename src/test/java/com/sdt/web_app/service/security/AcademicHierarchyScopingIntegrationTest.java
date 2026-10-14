@@ -648,4 +648,26 @@ class AcademicHierarchyScopingIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
     }
+
+    @Test
+    @DisplayName("REGISTRAR: Possesses unrestricted institutional scope and can view all schedules across all colleges")
+    @WithMockUser(username = "registrar_user", roles = {"REGISTRAR"})
+    void registrar_UnrestrictedSchedulingScope_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/scheduling/sections/" + sectionA1.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sectionCode").value("BSIT-1A"));
+
+        mockMvc.perform(get("/api/v1/scheduling/sections/" + sectionB1.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sectionCode").value("BSCE-1A"));
+
+        mockMvc.perform(get("/api/v1/scheduling/sections/term/" + term.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+
+        mockMvc.perform(put("/api/v1/scheduling/terms/" + term.getId() + "/max-class-hours")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"maxHoursPerClass\": 4.5}"))
+                .andExpect(status().isOk());
+    }
 }

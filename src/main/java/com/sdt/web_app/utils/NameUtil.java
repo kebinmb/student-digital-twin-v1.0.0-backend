@@ -1,10 +1,11 @@
 package com.sdt.web_app.utils;
 
 import com.sdt.web_app.entities.enrollment.StudentProfile;
+import com.sdt.web_app.entities.faculty.FacultyProfile;
 
 /**
- * Utility for building human-readable full names from student_profiles fields.
- * Used across all modules that expose studentName or fullName in DTOs.
+ * Utility for building human-readable full names from student_profiles and faculty_profiles fields.
+ * Used across all modules that expose studentName, facultyName, or fullName in DTOs.
  */
 public final class NameUtil {
 
@@ -79,6 +80,28 @@ public final class NameUtil {
                 return profile.getUser().getUsername();
             }
             return profile.getStudentNumber() != null ? profile.getStudentNumber() : "";
+        }
+        return name;
+    }
+
+    /**
+     * Overload accepting FacultyProfile entity directly.
+     */
+    public static String buildFullName(FacultyProfile profile) {
+        if (profile == null) {
+            return "";
+        }
+        String name = buildFullName(
+                profile.getFirstName(),
+                profile.getMiddleName(),
+                profile.getLastName(),
+                profile.getSuffix()
+        );
+        if (name.isEmpty()) {
+            if (profile.getUser() != null && profile.getUser().getUsername() != null && !profile.getUser().getUsername().isBlank()) {
+                return profile.getUser().getUsername();
+            }
+            return profile.getFacultyIdNumber() != null ? profile.getFacultyIdNumber() : "";
         }
         return name;
     }

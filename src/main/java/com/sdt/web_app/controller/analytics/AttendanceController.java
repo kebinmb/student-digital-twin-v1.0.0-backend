@@ -27,7 +27,7 @@ public class AttendanceController {
         entityId = "#result?.sessionId != null ? #result.sessionId : #request.sectionScheduleId"
     )
     @PostMapping("/session/start")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<AttendanceSessionResponse> startSession(
             @Valid @RequestBody StartAttendanceSessionRequest request,
             org.springframework.security.core.Authentication authentication) {
@@ -41,7 +41,7 @@ public class AttendanceController {
         entityId = "#result?.recordId != null ? #result.recordId : #result?.sessionId"
     )
     @PostMapping("/creator/verify")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<FacultyAttendanceRecordResponse> verifyCreatorAttendance(
             @Valid @RequestBody VerifyCreatorAttendanceRequest request,
             org.springframework.security.core.Authentication authentication) {
@@ -67,7 +67,7 @@ public class AttendanceController {
         entityId = "#result?.recordId != null ? #result.recordId : #request.studentId"
     )
     @PostMapping("/scan")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'FACULTY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'FACULTY', 'DEAN', 'CHAIRPERSON')")
     public ResponseEntity<AttendanceRecordResponse> scanAttendance(
             @Valid @RequestBody ScanAttendanceRequest request,
             org.springframework.security.core.Authentication authentication) {
@@ -87,7 +87,7 @@ public class AttendanceController {
             }
         } else {
             Long currentUserId = securityUtils.resolveUserId(authentication);
-            // Non-student (admin/faculty) checking in themselves should be recorded in faculty_attendance_records
+            // Non-student (admin/faculty/dean/chairperson) checking in themselves should be recorded in faculty_attendance_records
             if (currentUserId != null && currentUserId.equals(request.studentId())) {
                 FacultyAttendanceRecordResponse creatorResp = attendanceService.verifyCreatorAttendance(
                         new VerifyCreatorAttendanceRequest(request.qrSeed(), request.latitude(), request.longitude(), request.deviceFingerprint()),
@@ -133,7 +133,7 @@ public class AttendanceController {
 
     @Auditable(action = "READ_STUDENT_ATTENDANCE_SLICE", entityName = "AttendanceRecord", entityId = "#studentId")
     @GetMapping("/student/{studentId:[0-9]+}/slice")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACULTY', 'DEAN', 'CHAIRPERSON', 'STUDENT')")
     public ResponseEntity<SliceResponse<AttendanceRecordResponse>> getStudentAttendanceSlice(
             @PathVariable("studentId") Long studentId,
             @RequestParam(name = "page", defaultValue = "0") int page,

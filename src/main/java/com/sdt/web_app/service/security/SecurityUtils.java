@@ -45,7 +45,8 @@ public class SecurityUtils {
                         return id;
                     }
                 }
-                Optional<User> userOpt = userRepository.findByUsername(username);
+                Optional<User> userOpt = userRepository.findByUsername(username)
+                        .or(() -> userRepository.findByEmail(username));
                 if (userOpt.isPresent()) {
                     Long id = userOpt.get().getId();
                     if (attributes != null) {
@@ -70,7 +71,10 @@ public class SecurityUtils {
                     return id;
                 }
             }
-            Long resolvedId = userRepository.findByUsername(name).map(User::getId).orElse(null);
+            Long resolvedId = userRepository.findByUsername(name)
+                    .or(() -> userRepository.findByEmail(name))
+                    .map(User::getId)
+                    .orElse(null);
             if (resolvedId == null) {
                 resolvedId = (long) Math.abs(name.hashCode());
             }

@@ -70,90 +70,121 @@ public class AcademicScopeAssertionService {
             resolvedScope = AcademicScopeContext.unrestricted(userId);
         } else {
             Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isEmpty() && authentication.getName() != null) {
+                userOpt = userRepository.findByUsername(authentication.getName())
+                        .or(() -> userRepository.findByEmail(authentication.getName()));
+            }
             if (userOpt.isEmpty()) {
-                log.warn("Authenticated user record not found in database for userId={}. Resolving unrestricted scope.", userId);
-                resolvedScope = AcademicScopeContext.unrestricted(userId);
-            } else {
-                User user = userOpt.get();
+                log.warn("Authenticated user record not found in database for userId={}. Denying access.", userId);
+                throw new AccessDeniedException("Authenticated user record not found in database.");
+            }
+            User user = userOpt.get();
 
-                // 2. DEAN: Mandatory assignment chain: Account -> college_id
-                if (authorities.contains("ROLE_DEAN")) {
-                    Long collegeId = null;
-                    if (user.getCollege() != null) {
-                        collegeId = user.getCollege().getId();
-                    } else {
-                        List<Department> colleges = departmentRepository.findByDeanUserId(userId);
-                        if (!colleges.isEmpty()) {
-                            collegeId = colleges.get(0).getId();
-                        }
+            // 2. DEAN: Mandatory assignment chain: Account -> college_id
+            if (authorities.contains("ROLE_DEAN")) {
+                Long collegeId = null;
+                if (user.getCollege() != null) {
+                    collegeId = user.getCollege().getId();
+                } else if (user.getFacultyProfile() != null && user.getFacultyProfile().getCollege() != null) {
+                    collegeId = user.getFacultyProfile().getCollege().getId();
+                } else {
+                    List<Department> colleges = departmentRepository.findByDeanUserId(user.getId());
+                    if (!colleges.isEmpty()) {
+                        collegeId = colleges.get(0).getId();
                     }
+                }
 
-                    if (collegeId == null) {
-                        log.warn("DEAN user {} is not linked to any College.", userId);
-                        throw new AccessDeniedException("Account not linked to an active College.");
-                    }
+                if (collegeId == null) {
+                    log.warn("DEAN user {} is not linked to any College.", user.getId());
+                    throw new AccessDeniedException("Account not linked to an active College.");
+                }
 
-                    // Resolve all programs under this college (both direct and child departments)
-                    List<Long> deptIds = new ArrayList<>();
-                    deptIds.add(collegeId);
-                    List<Department> children = departmentRepository.findByParentDepartmentId(collegeId);
-                    for (Department child : children) {
-                        deptIds.add(child.getId());
-                    }
+                // Resolve all programs under this college (both direct and child departments)
+                List<Long> deptIds = new ArrayList<>();
+                deptIds.add(collegeId);
+                List<Department> children = departmentRepository.findByParentDepartmentId(collegeId);
+                for (Department child : children) {
+                    deptIds.add(child.getId());
+                }
 
-                    Set<Long> allowedProgramIdSet = new java.util.LinkedHashSet<>();
-                    List<Program> programsByDept = programRepository.findByDepartmentIdIn(deptIds);
-                    for (Program p : programsByDept) {
-                        allowedProgramIdSet.add(p.getId());
-                    }
-                    List<Program> programsByCollege = programRepository.findByCollegeId(collegeId);
-                    for (Program p : programsByCollege) {
-                        allowedProgramIdSet.add(p.getId());
-                    }
-                    List<Long> allowedProgramIds = new ArrayList<>(allowedProgramIdSet);
+                Set<Long> allowedProgramIdSet = new java.util.LinkedHashSet<>();
+                List<Program> programsByDept = programRepository.findByDepartmentIdIn(deptIds);
+                for (Program p : programsByDept) {
+                    allowedProgramIdSet.add(p.getId());
+                }
+                List<Program> programsByCollege = programRepository.findByCollegeId(collegeId);
+                for (Program p : programsByCollege) {
+                    allowedProgramIdSet.add(p.getId());
+                }
+                List<Long> allowedProgramIds = new ArrayList<>(allowedProgramIdSet);
 
-                    log.debug("Resolved DEAN scope for user {}: collegeId={}, allowedPrograms={}", userId, collegeId, allowedProgramIds);
-                    resolvedScope = AcademicScopeContext.dean(userId, collegeId, allowedProgramIds);
-                } else if (authorities.contains("ROLE_CHAIRPERSON")) {
-                    // 3. CHAIRPERSON: Mandatory assignment chain: Account -> college_id AND program_id
-                    Long collegeId = user.getCollege() != null ? user.getCollege().getId() : null;
-                    Long programId = user.getProgram() != null ? user.getProgram().getId() : null;
+                log.debug("Resolved DEAN scope for user {}: collegeId={}, allowedPrograms={}", user.getId(), collegeId, allowedProgramIds);
+                resolvedScope = AcademicScopeContext.dean(user.getId(), collegeId, allowedProgramIds);
+            } else if (authorities.contains("ROLE_CHAIRPERSON")) {
+                // 3. CHAIRPERSON: Mandatory assignment chain: Account -> college_id AND program_id
+                Long collegeId = user.getCollege() != null ? user.getCollege().getId() : null;
+                Long programId = user.getProgram() != null ? user.getProgram().getId() : null;
 
+                if (collegeId == null && user.getFacultyProfile() != null && user.getFacultyProfile().getCollege() != null) {
+                    collegeId = user.getFacultyProfile().getCollege().getId();
+                }
+                if (programId == null && user.getFacultyProfile() != null && user.getFacultyProfile().getProgram() != null) {
+                    programId = user.getFacultyProfile().getProgram().getId();
+                }
+
+                List<Program> chairedPrograms = programRepository.findByChairpersonUserId(user.getId());
+                Set<Long> allowedProgramIdSet = new java.util.LinkedHashSet<>();
+                for (Program cp : chairedPrograms) {
+                    allowedProgramIdSet.add(cp.getId());
                     if (programId == null) {
-                        Optional<Program> progOpt = programRepository.findFirstByChairpersonUserId(userId);
-                        if (progOpt.isPresent()) {
-                            Program p = progOpt.get();
-                            programId = p.getId();
-                            if (collegeId == null) {
-                                collegeId = resolveProgramCollegeId(p);
-                            }
+                        programId = cp.getId();
+                    }
+                    if (collegeId == null) {
+                        collegeId = resolveProgramCollegeId(cp);
+                    }
+                }
+
+                if (programId == null) {
+                    Optional<Program> progOpt = programRepository.findFirstByChairpersonUserId(user.getId());
+                    if (progOpt.isPresent()) {
+                        Program p = progOpt.get();
+                        programId = p.getId();
+                        allowedProgramIdSet.add(programId);
+                        if (collegeId == null) {
+                            collegeId = resolveProgramCollegeId(p);
                         }
-                    } else if (collegeId == null) {
+                    }
+                } else {
+                    allowedProgramIdSet.add(programId);
+                    if (collegeId == null) {
                         Program p = programRepository.findById(programId).orElse(null);
                         if (p != null) {
                             collegeId = resolveProgramCollegeId(p);
                         }
                     }
+                }
 
-                    if (collegeId == null || programId == null) {
-                        log.warn("CHAIRPERSON user {} is missing college or program linkage: collegeId={}, programId={}",
-                                userId, collegeId, programId);
+                if (collegeId == null || programId == null || allowedProgramIdSet.isEmpty()) {
+                    log.warn("CHAIRPERSON user {} is missing college or program linkage: collegeId={}, programId={}",
+                            user.getId(), collegeId, programId);
+                    throw new AccessDeniedException("Account not linked to an active College and Program.");
+                }
+
+                // Verify program actually belongs to the assigned college
+                Program assignedProg = programRepository.findById(programId).orElse(null);
+                if (assignedProg != null) {
+                    Long actualCollegeId = resolveProgramCollegeId(assignedProg);
+                    if (actualCollegeId != null && !actualCollegeId.equals(collegeId)) {
+                        log.warn("CHAIRPERSON user {} has mismatched collegeId {} vs program's collegeId {}",
+                                user.getId(), collegeId, actualCollegeId);
                         throw new AccessDeniedException("Account not linked to an active College and Program.");
                     }
+                }
 
-                    // Verify program actually belongs to the assigned college
-                    Program assignedProg = programRepository.findById(programId).orElse(null);
-                    if (assignedProg != null) {
-                        Long actualCollegeId = resolveProgramCollegeId(assignedProg);
-                        if (actualCollegeId != null && !actualCollegeId.equals(collegeId)) {
-                            log.warn("CHAIRPERSON user {} has mismatched collegeId {} vs program's collegeId {}",
-                                    userId, collegeId, actualCollegeId);
-                            throw new AccessDeniedException("Account not linked to an active College and Program.");
-                        }
-                    }
-
-                    log.debug("Resolved CHAIRPERSON scope for user {}: collegeId={}, programId={}", userId, collegeId, programId);
-                    resolvedScope = AcademicScopeContext.chairperson(userId, collegeId, programId);
+                List<Long> allowedProgramIds = new ArrayList<>(allowedProgramIdSet);
+                log.debug("Resolved CHAIRPERSON scope for user {}: collegeId={}, programId={}, allowedPrograms={}",
+                        user.getId(), collegeId, programId, allowedProgramIds);
+                resolvedScope = AcademicScopeContext.chairperson(user.getId(), collegeId, programId, allowedProgramIds);
                 } else if (authorities.contains("ROLE_FACULTY")) {
                     // 4. FACULTY: Scoped to assigned load & sections
                     FacultyProfile fp = user.getFacultyProfile() != null
@@ -171,7 +202,6 @@ public class AcademicScopeAssertionService {
                     resolvedScope = AcademicScopeContext.other(userId);
                 }
             }
-        }
 
         if (attributes != null && resolvedScope != null) {
             attributes.setAttribute(cacheKey, resolvedScope, org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
@@ -212,7 +242,9 @@ public class AcademicScopeAssertionService {
                 throw new AccessDeniedException("Access Denied: Target program is outside your assigned College.");
             }
         } else if (scope.isChairperson()) {
-            if (targetProgramId == null || !scope.programId().equals(targetProgramId)) {
+            boolean matches = (scope.programId() != null && scope.programId().equals(targetProgramId))
+                    || (scope.allowedProgramIds() != null && scope.allowedProgramIds().contains(targetProgramId));
+            if (targetProgramId == null || !matches) {
                 throw new AccessDeniedException("Access Denied: Target entity does not belong to your assigned Program.");
             }
         } else if (scope.isFaculty()) {
@@ -245,11 +277,15 @@ public class AcademicScopeAssertionService {
                 }
             }
         } else if (scope.isChairperson()) {
-            Long secProgramId = section.getCurriculum().getProgram().getId();
+            Long secProgramId = (section.getCurriculum() != null && section.getCurriculum().getProgram() != null)
+                    ? section.getCurriculum().getProgram().getId()
+                    : null;
             boolean isInstructor = (section.getPrimaryInstructor() != null && scope.userId().equals(section.getPrimaryInstructor().getId()))
                     || (section.getSchedules() != null && section.getSchedules().stream()
                         .anyMatch(s -> s.getInstructor() != null && scope.userId().equals(s.getInstructor().getId())));
-            if (!isInstructor && !scope.programId().equals(secProgramId)) {
+            boolean matchesProgram = (scope.programId() != null && scope.programId().equals(secProgramId))
+                    || (scope.allowedProgramIds() != null && scope.allowedProgramIds().contains(secProgramId));
+            if (!isInstructor && !matchesProgram) {
                 throw new AccessDeniedException("Access Denied: Section does not belong to your assigned Program.");
             }
         } else if (scope.isFaculty()) {
@@ -282,7 +318,10 @@ public class AcademicScopeAssertionService {
                 throw new AccessDeniedException("Access Denied: Student does not belong to your assigned College.");
             }
         } else if (scope.isChairperson()) {
-            if (!scope.programId().equals(student.getProgram().getId())) {
+            Long studentProgId = (student.getProgram() != null) ? student.getProgram().getId() : null;
+            boolean matches = (scope.programId() != null && scope.programId().equals(studentProgId))
+                    || (scope.allowedProgramIds() != null && scope.allowedProgramIds().contains(studentProgId));
+            if (!matches) {
                 throw new AccessDeniedException("Access Denied: Student does not belong to your assigned Program.");
             }
         } else if (scope.isFaculty()) {

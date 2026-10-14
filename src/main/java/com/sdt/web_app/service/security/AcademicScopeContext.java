@@ -22,7 +22,11 @@ public record AcademicScopeContext(
     }
 
     public static AcademicScopeContext chairperson(Long userId, Long collegeId, Long programId) {
-        return new AcademicScopeContext(userId, false, false, true, false, collegeId, programId, List.of(programId), List.of());
+        return new AcademicScopeContext(userId, false, false, true, false, collegeId, programId, programId != null ? List.of(programId) : List.of(), List.of());
+    }
+
+    public static AcademicScopeContext chairperson(Long userId, Long collegeId, Long programId, List<Long> allowedProgramIds) {
+        return new AcademicScopeContext(userId, false, false, true, false, collegeId, programId, allowedProgramIds != null ? allowedProgramIds : (programId != null ? List.of(programId) : List.of()), List.of());
     }
 
     public static AcademicScopeContext faculty(Long userId, Long collegeId, Long programId, List<Long> assignedSectionIds) {

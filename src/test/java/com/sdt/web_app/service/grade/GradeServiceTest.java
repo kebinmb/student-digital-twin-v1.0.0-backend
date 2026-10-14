@@ -15,6 +15,8 @@ import com.sdt.web_app.repositories.authentication.UserRepository;
 import com.sdt.web_app.repositories.enrollment.EnrollmentCourseItemRepository;
 import com.sdt.web_app.repositories.enrollment.StudentCourseGradeRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
+import com.sdt.web_app.entities.faculty.FacultyProfile;
+import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
 import com.sdt.web_app.repositories.grade.GradeSealingAuditRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +49,8 @@ class GradeServiceTest {
     private StudentCourseGradeRepository gradeRepository;
     @Mock
     private StudentProfileRepository profileRepository;
+    @Mock
+    private FacultyProfileRepository facultyProfileRepository;
     @Mock
     private com.sdt.web_app.service.security.AcademicScopeAssertionService academicScopeAssertionService;
     @Mock
@@ -138,6 +142,104 @@ class GradeServiceTest {
         assertThat(response.primaryInstructorName()).isEqualTo("faculty_bob");
         assertThat(response.students()).hasSize(1);
         assertThat(response.students().get(0).studentNumber()).isEqualTo("2026-IT-0001");
+    }
+
+    @Test
+    @DisplayName("Should return full faculty name (John Kevin Moraca) when primary instructor has FacultyProfile")
+    void getSectionRoster_WithFacultyProfile_ReturnsProfileFullName() {
+        User instructorWithProfile = User.builder().username("jmoraca").build();
+        ReflectionTestUtils.setField(instructorWithProfile, "id", 101L);
+
+        FacultyProfile profile = FacultyProfile.builder()
+                .firstName("John")
+                .middleName("Kevin")
+                .lastName("Moraca")
+                .facultyIdNumber("FAC-2026-001")
+                .build();
+        instructorWithProfile.assignFacultyProfile(profile);
+        section.setPrimaryInstructor(instructorWithProfile);
+
+        given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(section));
+        given(itemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(item));
+
+        SectionRosterResponse response = gradeService.getSectionRoster(201L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.primaryInstructorName()).isEqualTo("John Kevin Moraca");
+        assertThat(response.primaryInstructorId()).isEqualTo(101L);
+    }
+
+    @Test
+    @DisplayName("Should return full faculty name from schedule instructor when section primary instructor is null")
+    void getSectionRoster_WithScheduleInstructorFacultyProfile_ReturnsProfileFullName() {
+        section.setPrimaryInstructor(null);
+
+        User scheduleInstructor = User.builder().username("jmoraca").build();
+        ReflectionTestUtils.setField(scheduleInstructor, "id", 101L);
+
+        FacultyProfile profile = FacultyProfile.builder()
+                .firstName("John")
+                .middleName("Kevin")
+                .lastName("Moraca")
+                .build();
+        scheduleInstructor.assignFacultyProfile(profile);
+
+        com.sdt.web_app.entities.scheduling.ClassSchedule schedule = com.sdt.web_app.entities.scheduling.ClassSchedule.builder()
+                .section(section)
+                .instructor(scheduleInstructor)
+                .dayOfWeek("MONDAY")
+                .startTime(java.time.LocalTime.of(8, 0))
+                .endTime(java.time.LocalTime.of(10, 0))
+                .build();
+        section.getSchedules().add(schedule);
+
+        given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(section));
+        given(itemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(item));
+
+        SectionRosterResponse response = gradeService.getSectionRoster(201L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.primaryInstructorName()).isEqualTo("John Kevin Moraca");
+        assertThat(response.primaryInstructorId()).isEqualTo(101L);
+    }
+
+    @Test
+    @DisplayName("Should return Unassigned when section has no primary instructor or schedule instructors")
+    void getSectionRoster_WithUnassignedInstructor_ReturnsUnassigned() {
+        section.setPrimaryInstructor(null);
+        section.getSchedules().clear();
+
+        given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(section));
+        given(itemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(item));
+
+        SectionRosterResponse response = gradeService.getSectionRoster(201L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.primaryInstructorName()).isEqualTo("Unassigned");
+        assertThat(response.primaryInstructorId()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should fallback to FacultyProfileRepository when instructor entity profile is null")
+    void getSectionRoster_WithProfileFromRepositoryFallback_ReturnsProfileFullName() {
+        User instructorNoProfile = User.builder().username("jmoraca").build();
+        ReflectionTestUtils.setField(instructorNoProfile, "id", 101L);
+        section.setPrimaryInstructor(instructorNoProfile);
+
+        FacultyProfile repoProfile = FacultyProfile.builder()
+                .firstName("John")
+                .middleName("Kevin")
+                .lastName("Moraca")
+                .build();
+
+        given(sectionRepository.findByIdWithSchedules(201L)).willReturn(Optional.of(section));
+        given(itemRepository.findBySectionIdWithStudentDetails(201L)).willReturn(List.of(item));
+        given(facultyProfileRepository.findByUserId(101L)).willReturn(Optional.of(repoProfile));
+
+        SectionRosterResponse response = gradeService.getSectionRoster(201L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.primaryInstructorName()).isEqualTo("John Kevin Moraca");
     }
 
     @Test

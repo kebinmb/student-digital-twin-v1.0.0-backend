@@ -3,6 +3,7 @@ package com.sdt.web_app.repositories.analytics;
 import com.sdt.web_app.entities.analytics.AttendanceRecord;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,8 @@ import java.util.Optional;
 public interface AttendanceRecordRepository extends JpaRepository<AttendanceRecord, Long> {
     Optional<AttendanceRecord> findBySessionIdAndStudentId(Long sessionId, Long studentId);
     List<AttendanceRecord> findByStudentId(Long studentId);
+
+    @EntityGraph(attributePaths = {"student.user", "session.schedule.section.course"})
     Slice<AttendanceRecord> findByStudentId(Long studentId, Pageable pageable);
     
     @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.student.id = :studentId AND ar.status IN ('PRESENT', 'LATE')")

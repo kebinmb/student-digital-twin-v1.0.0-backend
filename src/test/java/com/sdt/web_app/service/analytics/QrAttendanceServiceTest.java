@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,8 +31,10 @@ import static org.mockito.Mockito.*;
 
 import com.sdt.web_app.entities.analytics.FacultyAttendanceRecord;
 import com.sdt.web_app.entities.authentication.User;
+import com.sdt.web_app.entities.faculty.FacultyProfile;
 import com.sdt.web_app.repositories.analytics.FacultyAttendanceRecordRepository;
 import com.sdt.web_app.repositories.authentication.UserRepository;
+import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
 import com.sdt.web_app.service.security.StudentProfileL2CacheService;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +46,7 @@ class QrAttendanceServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private ClassScheduleRepository scheduleRepository;
     @Mock private StudentProfileRepository studentProfileRepository;
+    @Mock private FacultyProfileRepository facultyProfileRepository;
     @Mock private StudentProfileL2CacheService studentProfileL2CacheService;
     @Mock private org.springframework.context.ApplicationEventPublisher eventPublisher;
     @Mock private com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
@@ -251,5 +255,194 @@ class QrAttendanceServiceTest {
         assertThatThrownBy(() -> attendanceService.verifyCreatorAttendance(req, 10L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Geofence Violation");
+    }
+
+    @Test
+    @DisplayName("Scan attendance resolves student full legal name instead of username")
+    void scanAttendance_ResolvesStudentFullName() {
+        StudentProfile studentWithFullName = StudentProfile.builder()
+                .id(205L)
+                .studentNumber("2024-9999")
+                .firstName("John Kevin")
+                .lastName("Moraca")
+                .build();
+
+        when(sessionRepository.findByQrSeed("QR-SEED-12345")).thenReturn(Optional.of(mockSession));
+        when(studentProfileL2CacheService.findById(205L)).thenReturn(studentWithFullName);
+        when(recordRepository.findBySessionIdAndStudentId(1L, 205L)).thenReturn(Optional.empty());
+
+        AttendanceRecord record = AttendanceRecord.builder()
+                .id(51L)
+                .session(mockSession)
+                .student(studentWithFullName)
+                .status(AttendanceRecord.Status.PRESENT)
+                .build();
+
+        when(recordRepository.save(any(AttendanceRecord.class))).thenReturn(record);
+
+        ScanAttendanceRequest req = new ScanAttendanceRequest(
+                "QR-SEED-12345", 205L, new BigDecimal("10.7202"), new BigDecimal("122.5621"), "Device-Mobile-1"
+        );
+
+        AttendanceRecordResponse res = attendanceService.scanAttendance(req);
+
+        assertThat(res).isNotNull();
+        assertThat(res.studentName()).isEqualTo("John Kevin Moraca");
+    }
+
+    @Test
+    @DisplayName("Daily attendance log resolves student full legal name instead of username")
+    void getDailyAttendance_ResolvesStudentFullName() {
+        StudentProfile studentWithFullName = StudentProfile.builder()
+                .id(205L)
+                .studentNumber("2024-9999")
+                .firstName("John Kevin")
+                .lastName("Moraca")
+                .build();
+
+        AttendanceRecord record = AttendanceRecord.builder()
+                .id(60L)
+                .session(mockSession)
+                .student(studentWithFullName)
+                .status(AttendanceRecord.Status.PRESENT)
+                .build();
+
+        when(recordRepository.findDailyAttendanceRecords(any(LocalDate.class), any())).thenReturn(List.of(record));
+
+        List<AttendanceRecordResponse> list = attendanceService.getDailyAttendance(LocalDate.now(), null);
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).studentName()).isEqualTo("John Kevin Moraca");
+    }
+
+    @Test
+    @DisplayName("Verify creator attendance resolves faculty full legal name instead of username")
+    void verifyCreatorAttendance_ResolvesFacultyFullName() {
+        FacultyProfile facultyProfile = FacultyProfile.builder()
+                .id(15L)
+                .firstName("John Kevin")
+                .lastName("Moraca")
+                .build();
+        User creator = User.builder()
+                .id(10L)
+                .username("jmoraca")
+                .email("jmoraca@chmsu.edu.ph")
+                .facultyProfile(facultyProfile)
+                .build();
+
+        when(sessionRepository.findByQrSeed("QR-SEED-12345")).thenReturn(Optional.of(mockSession));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(creator));
+        when(facultyAttendanceRecordRepository.findBySessionIdAndFacultyUserId(1L, 10L)).thenReturn(Optional.empty());
+
+        FacultyAttendanceRecord savedFacultyRecord = FacultyAttendanceRecord.builder()
+                .id(101L)
+                .session(mockSession)
+                .facultyUser(creator)
+                .facultyProfile(facultyProfile)
+                .status(FacultyAttendanceRecord.Status.PRESENT)
+                .isGeofenceValid(true)
+                .verifiedAt(Instant.now())
+                .deviceFingerprint("Faculty-Console")
+                .build();
+        when(facultyAttendanceRecordRepository.save(any(FacultyAttendanceRecord.class))).thenReturn(savedFacultyRecord);
+
+        VerifyCreatorAttendanceRequest req = new VerifyCreatorAttendanceRequest(
+                "QR-SEED-12345", new BigDecimal("10.7202"), new BigDecimal("122.5621"), "Faculty-Console"
+        );
+
+        FacultyAttendanceRecordResponse res = attendanceService.verifyCreatorAttendance(req, 10L);
+
+        assertThat(res).isNotNull();
+        assertThat(res.facultyName()).isEqualTo("John Kevin Moraca");
+    }
+
+    @Test
+    @DisplayName("Daily faculty attendance log resolves faculty full legal name instead of username")
+    void getDailyFacultyAttendance_ResolvesFacultyFullName() {
+        FacultyProfile facultyProfile = FacultyProfile.builder()
+                .id(15L)
+                .firstName("John Kevin")
+                .lastName("Moraca")
+                .build();
+        User creator = User.builder()
+                .id(10L)
+                .username("jmoraca")
+                .email("jmoraca@chmsu.edu.ph")
+                .facultyProfile(facultyProfile)
+                .build();
+
+        FacultyAttendanceRecord record = FacultyAttendanceRecord.builder()
+                .id(102L)
+                .session(mockSession)
+                .facultyUser(creator)
+                .facultyProfile(facultyProfile)
+                .status(FacultyAttendanceRecord.Status.PRESENT)
+                .isGeofenceValid(true)
+                .verifiedAt(Instant.now())
+                .build();
+
+        when(facultyAttendanceRecordRepository.findDailyFacultyAttendanceRecords(any(LocalDate.class), any()))
+                .thenReturn(List.of(record));
+
+        List<FacultyAttendanceRecordResponse> list = attendanceService.getDailyFacultyAttendance(LocalDate.now(), null);
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).facultyName()).isEqualTo("John Kevin Moraca");
+    }
+
+    @Test
+    @DisplayName("Start session with 0,0 coordinates defaults to campus location and expands radius")
+    void startSession_WithZeroCoordinates_FallsBackToCampusDefaults() {
+        when(scheduleRepository.findById(100L)).thenReturn(Optional.of(mockSchedule));
+        when(sessionRepository.save(any(AttendanceSession.class))).thenAnswer(invocation -> {
+            AttendanceSession s = invocation.getArgument(0);
+            return AttendanceSession.builder()
+                    .id(88L)
+                    .schedule(s.getSchedule())
+                    .sessionDate(s.getSessionDate())
+                    .qrSeed(s.getQrSeed())
+                    .secretKey(s.getSecretKey())
+                    .qrExpiresAt(s.getQrExpiresAt())
+                    .latitude(s.getLatitude())
+                    .longitude(s.getLongitude())
+                    .allowedRadiusMeters(s.getAllowedRadiusMeters())
+                    .build();
+        });
+
+        StartAttendanceSessionRequest req = new StartAttendanceSessionRequest(100L, BigDecimal.ZERO, BigDecimal.ZERO, 50);
+        AttendanceSessionResponse res = attendanceService.startSession(req);
+
+        assertThat(res).isNotNull();
+        assertThat(res.latitude()).isEqualTo(new BigDecimal("10.7428"));
+        assertThat(res.longitude()).isEqualTo(new BigDecimal("122.9694"));
+        assertThat(res.allowedRadiusMeters()).isEqualTo(300);
+    }
+
+    @Test
+    @DisplayName("Scan attendance with 0,0 coordinates does not trigger false geofence violation")
+    void scanAttendance_WithZeroCoordinates_DoesNotThrowViolation() {
+        when(sessionRepository.findByQrSeed("QR-SEED-12345")).thenReturn(Optional.of(mockSession));
+        when(studentProfileL2CacheService.findById(200L)).thenReturn(mockStudent);
+        when(recordRepository.findBySessionIdAndStudentId(1L, 200L)).thenReturn(Optional.empty());
+
+        AttendanceRecord record = AttendanceRecord.builder()
+                .id(52L)
+                .session(mockSession)
+                .student(mockStudent)
+                .status(AttendanceRecord.Status.PRESENT)
+                .build();
+        when(recordRepository.save(any(AttendanceRecord.class))).thenReturn(record);
+
+        // Student sends (0, 0) because GPS fix failed on device
+        ScanAttendanceRequest req = new ScanAttendanceRequest(
+                "QR-SEED-12345", 200L, BigDecimal.ZERO, BigDecimal.ZERO, "Device-Mobile-No-Gps"
+        );
+
+        AttendanceRecordResponse res = attendanceService.scanAttendance(req);
+
+        assertThat(res).isNotNull();
+        assertThat(res.attendanceStatus()).isEqualTo("PRESENT");
+        // Geofence is flagged as false rather than throwing a false-positive exception
+        assertThat(res.isGeofenceValid()).isFalse();
     }
 }

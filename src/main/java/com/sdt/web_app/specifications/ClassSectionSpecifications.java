@@ -50,14 +50,15 @@ public final class ClassSectionSpecifications {
 
     public static Specification<ClassSection> assignedToInstructor(Long instructorId) {
         return (root, query, cb) -> {
-            if (instructorId == null) return cb.conjunction();
+            if (instructorId == null) return cb.disjunction();
             Subquery<Long> subquery = query.subquery(Long.class);
             Root<ClassSchedule> schedRoot = subquery.from(ClassSchedule.class);
             subquery.select(schedRoot.get("section").get("id"))
                     .where(cb.equal(schedRoot.get("instructor").get("id"), instructorId));
 
+            Join<Object, Object> instructorJoin = root.join("primaryInstructor", JoinType.LEFT);
             return cb.or(
-                    cb.equal(root.get("primaryInstructor").get("id"), instructorId),
+                    cb.equal(instructorJoin.get("id"), instructorId),
                     root.get("id").in(subquery)
             );
         };

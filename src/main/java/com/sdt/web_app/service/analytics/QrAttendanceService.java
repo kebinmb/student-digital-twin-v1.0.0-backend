@@ -31,8 +31,10 @@ import java.util.Optional;
 
 import com.sdt.web_app.entities.analytics.FacultyAttendanceRecord;
 import com.sdt.web_app.entities.authentication.User;
+import com.sdt.web_app.entities.faculty.FacultyProfile;
 import com.sdt.web_app.repositories.analytics.FacultyAttendanceRecordRepository;
 import com.sdt.web_app.repositories.authentication.UserRepository;
+import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +47,7 @@ public class QrAttendanceService {
     private final UserRepository userRepository;
     private final ClassScheduleRepository scheduleRepository;
     private final StudentProfileRepository studentProfileRepository;
+    private final FacultyProfileRepository facultyProfileRepository;
     private final StudentProfileL2CacheService studentProfileL2CacheService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
     private final com.sdt.web_app.service.lms.StudentNotificationPublisherService studentNotificationPublisherService;
@@ -86,10 +89,14 @@ public class QrAttendanceService {
         String secretKey = UUID.randomUUID().toString().replace("-", "");
         Instant expiresAt = Instant.now().plus(15, ChronoUnit.MINUTES);
 
-        // Dynamically resolve campus coordinates if request coordinates are null
+        // Dynamically resolve campus coordinates if request coordinates are null or invalid (0, 0)
         BigDecimal sessionLat = request.latitude();
         BigDecimal sessionLon = request.longitude();
-        if (sessionLat == null || sessionLon == null) {
+        boolean isRequestCoordsInvalid = sessionLat == null || sessionLon == null
+                || (sessionLat.compareTo(BigDecimal.ZERO) == 0 && sessionLon.compareTo(BigDecimal.ZERO) == 0);
+        int effectiveRadius = request.allowedRadiusMeters() != null ? request.allowedRadiusMeters() : 50;
+
+        if (isRequestCoordsInvalid) {
             BigDecimal defaultLat = new BigDecimal("10.7428");
             BigDecimal defaultLon = new BigDecimal("122.9694");
             if (schedule.getRoom() != null && schedule.getRoom().getCampus() != null) {
@@ -115,8 +122,12 @@ public class QrAttendanceService {
                     }
                 }
             }
-            if (sessionLat == null) sessionLat = defaultLat;
-            if (sessionLon == null) sessionLon = defaultLon;
+            sessionLat = defaultLat;
+            sessionLon = defaultLon;
+            // When fallback campus center is used without instructor GPS fix, expand radius to cover campus grounds
+            if (request.allowedRadiusMeters() == null || request.allowedRadiusMeters() <= 50) {
+                effectiveRadius = 300;
+            }
         }
 
         AttendanceSession session = AttendanceSession.builder()
@@ -127,7 +138,7 @@ public class QrAttendanceService {
                 .qrExpiresAt(expiresAt)
                 .latitude(sessionLat)
                 .longitude(sessionLon)
-                .allowedRadiusMeters(request.allowedRadiusMeters() != null ? request.allowedRadiusMeters() : 50)
+                .allowedRadiusMeters(effectiveRadius)
                 .creatorUser(creatorUser)
                 .build();
 
@@ -185,10 +196,14 @@ public class QrAttendanceService {
                     .findBySessionIdAndFacultyUserId(session.getId(), creatorUser.getId())
                     .orElse(null);
             if (existing == null) {
+                FacultyProfile facultyProfile = creatorUser.getFacultyProfile();
+                if (facultyProfile == null && facultyProfileRepository != null) {
+                    facultyProfile = facultyProfileRepository.findByUserId(creatorUser.getId()).orElse(null);
+                }
                 FacultyAttendanceRecord record = FacultyAttendanceRecord.builder()
                         .session(session)
                         .facultyUser(creatorUser)
-                        .facultyProfile(creatorUser.getFacultyProfile())
+                        .facultyProfile(facultyProfile)
                         .verifiedAt(Instant.now())
                         .status(FacultyAttendanceRecord.Status.PRESENT)
                         .deviceFingerprint("Session-Host-Console")
@@ -298,7 +313,12 @@ public class QrAttendanceService {
 
         // Geofence GPS Distance Verification using Haversine formula
         boolean isGeofenceValid = true;
-        if (session.getLatitude() != null && session.getLongitude() != null && request.latitude() != null && request.longitude() != null) {
+        boolean hasValidSessionCoords = session.getLatitude() != null && session.getLongitude() != null
+                && !(session.getLatitude().compareTo(BigDecimal.ZERO) == 0 && session.getLongitude().compareTo(BigDecimal.ZERO) == 0);
+        boolean hasValidStudentCoords = request.latitude() != null && request.longitude() != null
+                && !(request.latitude().compareTo(BigDecimal.ZERO) == 0 && request.longitude().compareTo(BigDecimal.ZERO) == 0);
+
+        if (hasValidSessionCoords && hasValidStudentCoords) {
             double distanceMeters = calculateHaversineDistance(
                     session.getLatitude().doubleValue(), session.getLongitude().doubleValue(),
                     request.latitude().doubleValue(), request.longitude().doubleValue()
@@ -309,17 +329,23 @@ public class QrAttendanceService {
                         "Geofence Violation: Device location (%.2f meters away) exceeds allowed %d-meter classroom radius.",
                         distanceMeters, session.getAllowedRadiusMeters()));
             }
+        } else if (hasValidSessionCoords && !hasValidStudentCoords) {
+            // Student submitted check-in without valid coordinates (GPS offline or permission blocked)
+            isGeofenceValid = false;
         }
 
         final StudentProfile finalStudent = student;
         AttendanceRecord record = recordRepository.findBySessionIdAndStudentId(session.getId(), finalStudent.getId())
                 .orElse(null);
 
+        BigDecimal storedLat = hasValidStudentCoords ? request.latitude() : null;
+        BigDecimal storedLon = hasValidStudentCoords ? request.longitude() : null;
+
         if (record != null) {
             // Update existing record rather than creating a duplicate
             record.setScannedAt(Instant.now());
-            record.setVerifiedLatitude(request.latitude());
-            record.setVerifiedLongitude(request.longitude());
+            record.setVerifiedLatitude(storedLat);
+            record.setVerifiedLongitude(storedLon);
             record.setDeviceFingerprint(deviceFp);
             record.setStatus(AttendanceRecord.Status.PRESENT);
         } else {
@@ -328,8 +354,8 @@ public class QrAttendanceService {
                     .student(finalStudent)
                     .status(AttendanceRecord.Status.PRESENT)
                     .deviceFingerprint(deviceFp)
-                    .verifiedLatitude(request.latitude())
-                    .verifiedLongitude(request.longitude())
+                    .verifiedLatitude(storedLat)
+                    .verifiedLongitude(storedLon)
                     .build();
         }
 
@@ -379,7 +405,12 @@ public class QrAttendanceService {
             broadcastService.broadcast(com.sdt.web_app.config.WebSocketTopics.ADMIN_ATTENDANCE, msg);
         }
 
-        String studentName = student.getUser() != null ? student.getUser().getUsername() : "Student #" + student.getStudentNumber();
+        String resolvedStudentName = student.getFullName();
+        String studentName = (resolvedStudentName != null && !resolvedStudentName.isBlank())
+                ? resolvedStudentName
+                : (student.getUser() != null && student.getUser().getUsername() != null && !student.getUser().getUsername().isBlank()
+                        ? student.getUser().getUsername()
+                        : "Student #" + student.getStudentNumber());
         AttendanceRecordResponse response = new AttendanceRecordResponse(
                 saved.getId(),
                 session.getId(),
@@ -452,7 +483,12 @@ public class QrAttendanceService {
         Slice<AttendanceRecord> slice = recordRepository.findByStudentId(studentId, pageable);
         Slice<AttendanceRecordResponse> responseSlice = slice.map(saved -> {
             StudentProfile student = saved.getStudent();
-            String studentName = student != null && student.getUser() != null ? student.getUser().getUsername() : "Student #" + (student != null ? student.getStudentNumber() : saved.getId());
+            String resolvedStudentName = student != null ? student.getFullName() : null;
+            String studentName = (resolvedStudentName != null && !resolvedStudentName.isBlank())
+                    ? resolvedStudentName
+                    : (student != null && student.getUser() != null && student.getUser().getUsername() != null && !student.getUser().getUsername().isBlank()
+                            ? student.getUser().getUsername()
+                            : "Student #" + (student != null ? student.getStudentNumber() : saved.getId()));
             String secCode = saved.getSession() != null && saved.getSession().getSchedule() != null && saved.getSession().getSchedule().getSection() != null
                     ? saved.getSession().getSchedule().getSection().getSectionCode() : "N/A";
             String crsCode = saved.getSession() != null && saved.getSession().getSchedule() != null && saved.getSession().getSchedule().getSection() != null && saved.getSession().getSchedule().getSection().getCourse() != null
@@ -487,7 +523,12 @@ public class QrAttendanceService {
 
             String secCode = section != null ? section.getSectionCode() : "N/A";
             String crsCode = (section != null && section.getCourse() != null) ? section.getCourse().getCode() : "N/A";
-            String studentName = (student != null && student.getUser() != null) ? student.getUser().getUsername() : "Student #" + (student != null ? student.getStudentNumber() : saved.getId());
+            String resolvedStudentName = student != null ? student.getFullName() : null;
+            String studentName = (resolvedStudentName != null && !resolvedStudentName.isBlank())
+                    ? resolvedStudentName
+                    : (student != null && student.getUser() != null && student.getUser().getUsername() != null && !student.getUser().getUsername().isBlank()
+                            ? student.getUser().getUsername()
+                            : "Student #" + (student != null ? student.getStudentNumber() : saved.getId()));
 
             return new AttendanceRecordResponse(
                     saved.getId(),
@@ -519,7 +560,12 @@ public class QrAttendanceService {
 
         // Geofence GPS Distance Verification using Haversine formula
         boolean isGeofenceValid = true;
-        if (session.getLatitude() != null && session.getLongitude() != null && request.latitude() != null && request.longitude() != null) {
+        boolean hasValidSessionCoords = session.getLatitude() != null && session.getLongitude() != null
+                && !(session.getLatitude().compareTo(BigDecimal.ZERO) == 0 && session.getLongitude().compareTo(BigDecimal.ZERO) == 0);
+        boolean hasValidHostCoords = request.latitude() != null && request.longitude() != null
+                && !(request.latitude().compareTo(BigDecimal.ZERO) == 0 && request.longitude().compareTo(BigDecimal.ZERO) == 0);
+
+        if (hasValidSessionCoords && hasValidHostCoords) {
             double distanceMeters = calculateHaversineDistance(
                     session.getLatitude().doubleValue(), session.getLongitude().doubleValue(),
                     request.latitude().doubleValue(), request.longitude().doubleValue()
@@ -530,6 +576,8 @@ public class QrAttendanceService {
                         "Geofence Violation: Conductor device location (%.2f meters away) exceeds allowed %d-meter classroom radius.",
                         distanceMeters, session.getAllowedRadiusMeters()));
             }
+        } else if (hasValidSessionCoords && !hasValidHostCoords) {
+            isGeofenceValid = false;
         }
 
         String deviceFp = request.deviceFingerprint() != null && !request.deviceFingerprint().isBlank()
@@ -537,26 +585,45 @@ public class QrAttendanceService {
                 : "Host-Console";
 
         // Idempotent: Update existing faculty attendance record or create new if not yet present
+        FacultyProfile facultyProfile = creatorUser.getFacultyProfile();
+        if (facultyProfile == null && facultyProfileRepository != null) {
+            facultyProfile = facultyProfileRepository.findByUserId(creatorUserId).orElse(null);
+        }
+
+        final FacultyProfile effectiveProfile = facultyProfile;
         FacultyAttendanceRecord record = facultyAttendanceRecordRepository
                 .findBySessionIdAndFacultyUserId(session.getId(), creatorUser.getId())
                 .orElseGet(() -> FacultyAttendanceRecord.builder()
                         .session(session)
                         .facultyUser(creatorUser)
-                        .facultyProfile(creatorUser.getFacultyProfile())
+                        .facultyProfile(effectiveProfile)
                         .build());
 
+        BigDecimal storedHostLat = hasValidHostCoords ? request.latitude() : null;
+        BigDecimal storedHostLon = hasValidHostCoords ? request.longitude() : null;
+
         record.setVerifiedAt(Instant.now());
-        record.setVerifiedLatitude(request.latitude());
-        record.setVerifiedLongitude(request.longitude());
+        record.setVerifiedLatitude(storedHostLat);
+        record.setVerifiedLongitude(storedHostLon);
         record.setDeviceFingerprint(deviceFp);
         record.setIsGeofenceValid(isGeofenceValid);
         record.setStatus(FacultyAttendanceRecord.Status.PRESENT);
-        if (record.getFacultyProfile() == null && creatorUser.getFacultyProfile() != null) {
-            record.setFacultyProfile(creatorUser.getFacultyProfile());
+        if (record.getFacultyProfile() == null && effectiveProfile != null) {
+            record.setFacultyProfile(effectiveProfile);
         }
 
         FacultyAttendanceRecord saved = facultyAttendanceRecordRepository.save(record);
         log.info("Faculty/Host geofenced attendance verified for user {} in session #{}", creatorUser.getUsername(), session.getId());
+
+        FacultyProfile resolvedProfile = saved.getFacultyProfile() != null
+                ? saved.getFacultyProfile()
+                : effectiveProfile;
+        String resolvedFacultyName = resolvedProfile != null ? resolvedProfile.getFullName() : null;
+        String facultyName = (resolvedFacultyName != null && !resolvedFacultyName.isBlank())
+                ? resolvedFacultyName
+                : (creatorUser.getUsername() != null && !creatorUser.getUsername().isBlank()
+                        ? creatorUser.getUsername()
+                        : "Faculty #" + creatorUser.getId());
 
         if (broadcastService != null) {
             Long classSecId = session.getSchedule() != null && session.getSchedule().getSection() != null
@@ -566,7 +633,7 @@ public class QrAttendanceService {
                     classSecId,
                     LocalDate.now(),
                     saved.getStatus().name(),
-                    "Faculty verified: " + creatorUser.getUsername(),
+                    "Faculty verified: " + facultyName,
                     Instant.now()
             );
             if (classSecId != null) {
@@ -588,7 +655,7 @@ public class QrAttendanceService {
                 sectionCode,
                 courseCode,
                 creatorUser.getId(),
-                creatorUser.getUsername(),
+                facultyName,
                 roleName,
                 saved.getStatus().name(),
                 Boolean.TRUE.equals(saved.getIsGeofenceValid()),
@@ -601,6 +668,20 @@ public class QrAttendanceService {
     public List<FacultyAttendanceRecordResponse> getDailyFacultyAttendance(LocalDate date, Long sectionId) {
         LocalDate queryDate = date != null ? date : LocalDate.now();
         List<FacultyAttendanceRecord> records = facultyAttendanceRecordRepository.findDailyFacultyAttendanceRecords(queryDate, sectionId);
+
+        // Preload missing faculty profiles in batch to guarantee zero N+1 queries
+        java.util.Set<Long> missingProfileUserIds = records.stream()
+                .filter(r -> r.getFacultyProfile() == null && r.getFacultyUser() != null)
+                .map(r -> r.getFacultyUser().getId())
+                .collect(java.util.stream.Collectors.toSet());
+
+        java.util.Map<Long, FacultyProfile> profileByUserIdMap =
+                (facultyProfileRepository != null && !missingProfileUserIds.isEmpty())
+                        ? facultyProfileRepository.findByUserIdIn(missingProfileUserIds).stream()
+                                .filter(fp -> fp.getUser() != null)
+                                .collect(java.util.stream.Collectors.toMap(fp -> fp.getUser().getId(), fp -> fp, (a, b) -> a))
+                        : java.util.Collections.emptyMap();
+
         return records.stream().map(saved -> {
             AttendanceSession session = saved.getSession();
             ClassSchedule schedule = session != null ? session.getSchedule() : null;
@@ -609,7 +690,19 @@ public class QrAttendanceService {
 
             String secCode = section != null ? section.getSectionCode() : "N/A";
             String crsCode = (section != null && section.getCourse() != null) ? section.getCourse().getCode() : "N/A";
-            String userName = user != null ? user.getUsername() : "Faculty #" + saved.getId();
+
+            FacultyProfile profile = saved.getFacultyProfile();
+            if (profile == null && user != null) {
+                profile = profileByUserIdMap.get(user.getId());
+            }
+
+            String resolvedFacultyName = profile != null ? profile.getFullName() : null;
+            String facultyName = (resolvedFacultyName != null && !resolvedFacultyName.isBlank())
+                    ? resolvedFacultyName
+                    : (user != null && user.getUsername() != null && !user.getUsername().isBlank()
+                            ? user.getUsername()
+                            : "Faculty #" + saved.getId());
+
             String roleName = user != null && user.getRoles() != null && !user.getRoles().isEmpty()
                     ? user.getRoles().iterator().next().name() : "FACULTY";
 
@@ -619,7 +712,7 @@ public class QrAttendanceService {
                     secCode,
                     crsCode,
                     user != null ? user.getId() : null,
-                    userName,
+                    facultyName,
                     roleName,
                     saved.getStatus() != null ? saved.getStatus().name() : "PRESENT",
                     Boolean.TRUE.equals(saved.getIsGeofenceValid()),

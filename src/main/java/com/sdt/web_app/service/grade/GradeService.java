@@ -13,6 +13,9 @@ import com.sdt.web_app.repositories.enrollment.StudentCourseGradeRepository;
 import com.sdt.web_app.repositories.enrollment.StudentProfileRepository;
 import com.sdt.web_app.repositories.grade.GradeSealingAuditRepository;
 import com.sdt.web_app.repositories.scheduling.ClassSectionRepository;
+import com.sdt.web_app.entities.faculty.FacultyProfile;
+import com.sdt.web_app.repositories.faculty.FacultyProfileRepository;
+import com.sdt.web_app.utils.NameUtil;
 import com.sdt.web_app.service.security.AcademicScopeAssertionService;
 import com.sdt.web_app.service.security.AcademicScopeContext;
 import jakarta.persistence.EntityNotFoundException;
@@ -47,6 +50,7 @@ public class GradeService {
     private final EnrollmentCourseItemRepository itemRepository;
     private final StudentCourseGradeRepository gradeRepository;
     private final StudentProfileRepository profileRepository;
+    private final FacultyProfileRepository facultyProfileRepository;
     private final AcademicScopeAssertionService academicScopeAssertionService;
     private final GradeSealingAuditRepository sealingAuditRepository;
     private final UserRepository userRepository;
@@ -85,19 +89,17 @@ public class GradeService {
                 })
                 .toList();
 
-        String instructorName = section.getPrimaryInstructor() != null
-                ? section.getPrimaryInstructor().getUsername()
-                : (section.getSchedules().stream()
-                        .filter(s -> s.getInstructor() != null)
-                        .map(s -> s.getInstructor().getUsername())
-                        .findFirst().orElse("Unassigned"));
+        User instructor = section.getPrimaryInstructor();
+        if (instructor == null) {
+            instructor = section.getSchedules().stream()
+                    .filter(s -> s.getInstructor() != null)
+                    .map(com.sdt.web_app.entities.scheduling.ClassSchedule::getInstructor)
+                    .findFirst()
+                    .orElse(null);
+        }
 
-        Long primaryInstructorId = section.getPrimaryInstructor() != null
-                ? section.getPrimaryInstructor().getId()
-                : (section.getSchedules().stream()
-                        .filter(s -> s.getInstructor() != null)
-                        .map(s -> s.getInstructor().getId())
-                        .findFirst().orElse(null));
+        Long primaryInstructorId = instructor != null ? instructor.getId() : null;
+        String instructorName = resolveInstructorFullName(instructor);
 
         Long updatedAtEpochMs = section.getUpdatedAt() != null ? section.getUpdatedAt().toEpochMilli() : null;
         return new SectionRosterResponse(
@@ -117,6 +119,32 @@ public class GradeService {
                 students,
                 updatedAtEpochMs
         );
+    }
+
+    private String resolveInstructorFullName(User instructor) {
+        if (instructor == null) {
+            return "Unassigned";
+        }
+
+        FacultyProfile profile = instructor.getFacultyProfile();
+        if (profile == null && facultyProfileRepository != null && instructor.getId() != null) {
+            profile = facultyProfileRepository.findByUserId(instructor.getId()).orElse(null);
+        }
+
+        if (profile != null) {
+            String fullName = profile.getFullName();
+            if (fullName != null && !fullName.isBlank()) {
+                return fullName;
+            }
+            String utilName = NameUtil.buildFullName(profile);
+            if (utilName != null && !utilName.isBlank()) {
+                return utilName;
+            }
+        }
+
+        return (instructor.getUsername() != null && !instructor.getUsername().isBlank())
+                ? instructor.getUsername()
+                : "Faculty #" + instructor.getId();
     }
 
     @Transactional

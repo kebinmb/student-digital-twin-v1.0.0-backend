@@ -73,4 +73,59 @@ class SchedulingControllerSecurityTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/v1/scheduling/faculty-workload/term/11/faculty/8"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @DisplayName("REGISTRAR role can delete class section (204 No Content)")
+    @WithMockUser(username = "registrar", roles = {"REGISTRAR"})
+    void deleteSection_Registrar_Success() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/scheduling/sections/101")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("SUPER_ADMIN role can delete class section (204 No Content)")
+    @WithMockUser(username = "superadmin", roles = {"SUPER_ADMIN"})
+    void deleteSection_SuperAdmin_Success() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/scheduling/sections/101")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("FACULTY role is forbidden from deleting class section (403 Forbidden)")
+    @WithMockUser(username = "faculty", roles = {"FACULTY"})
+    void deleteSection_Faculty_Forbidden() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/scheduling/sections/101")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("REGISTRAR role can update term max class hours (200 OK)")
+    @WithMockUser(username = "registrar", roles = {"REGISTRAR"})
+    void updateTermMaxHours_Registrar_Success() throws Exception {
+        com.sdt.web_app.dto.scheduling.SchedulingDtos.SchedulingTermDto dummy =
+                new com.sdt.web_app.dto.scheduling.SchedulingDtos.SchedulingTermDto(
+                        11L, 1L, "AY-2026", "FIRST_SEMESTER", "AY 2026 - 1st Sem", true, true, true, BigDecimal.valueOf(4.0)
+                );
+        given(schedulingService.updateTermMaxHoursPerClass(eq(11L), eq(BigDecimal.valueOf(4.0)))).willReturn(dummy);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/scheduling/terms/11/max-class-hours")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("{\"maxHoursPerClass\": 4.0}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("DEAN role is forbidden from updating term max class hours (403 Forbidden)")
+    @WithMockUser(username = "dean", roles = {"DEAN"})
+    void updateTermMaxHours_Dean_Forbidden() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/scheduling/terms/11/max-class-hours")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("{\"maxHoursPerClass\": 4.0}"))
+                .andExpect(status().isForbidden());
+    }
 }
